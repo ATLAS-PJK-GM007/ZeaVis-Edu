@@ -37,7 +37,6 @@ Write this exact file:
 .moon/cache
 node_modules
 **/node_modules
-bun.lock
 .env
 .env.*
 !.env.example
@@ -47,7 +46,8 @@ Machine_Learning/dataset
 Machine_Learning/dataset.zip
 Machine_Learning/dataset_*.zip
 Machine_Learning/model
-Machine_Learning/best_model
+Machine_Learning/best_model/*
+!Machine_Learning/best_model/best_model.keras
 apps/web/dist
 apps/api/dist
 __pycache__
@@ -55,6 +55,8 @@ __pycache__
 .pytest_cache
 .venv
 venv
+**/.venv
+**/venv
 ```
 
 - [ ] **Step 2: Verify ignore file exists**

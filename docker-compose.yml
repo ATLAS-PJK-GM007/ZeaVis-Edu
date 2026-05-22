@@ -1,0 +1,61 @@
+networks:
+  app-shared-net:
+    external: true
+    name: app-shared-net
+
+services:
+  web:
+    image: ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/web:main
+    container_name: zeavis-web
+    restart: always
+    networks:
+      - app-shared-net
+    env_file:
+      - .env
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.zeavis-web.rule: Host(`zeavisedu.asepharyana.tech`)
+      traefik.http.routers.zeavis-web.entrypoints: websecure
+      traefik.http.routers.zeavis-web.tls: "true"
+      traefik.http.routers.zeavis-web.tls.certresolver: letsencrypt
+      traefik.http.services.zeavis-web.loadbalancer.server.port: "80"
+
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/api:main
+    container_name: zeavis-api
+    restart: always
+    networks:
+      - app-shared-net
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      API_PORT: "3000"
+      WEB_APP_URL: https://zeavisedu.asepharyana.tech
+      ML_SERVICE_URL: https://ml.zeavisedu.asepharyana.tech
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.zeavis-api.rule: Host(`api.zeavisedu.asepharyana.tech`)
+      traefik.http.routers.zeavis-api.entrypoints: websecure
+      traefik.http.routers.zeavis-api.tls: "true"
+      traefik.http.routers.zeavis-api.tls.certresolver: letsencrypt
+      traefik.http.services.zeavis-api.loadbalancer.server.port: "3000"
+
+  ml:
+    image: ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/ml:main
+    container_name: zeavis-ml
+    restart: always
+    networks:
+      - app-shared-net
+    env_file:
+      - .env
+    environment:
+      MODEL_PATH: /app/model/best_model.keras
+      MODEL_INPUT_SIZE: "224"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.zeavis-ml.rule: Host(`ml.zeavisedu.asepharyana.tech`)
+      traefik.http.routers.zeavis-ml.entrypoints: websecure
+      traefik.http.routers.zeavis-ml.tls: "true"
+      traefik.http.routers.zeavis-ml.tls.certresolver: letsencrypt
+      traefik.http.services.zeavis-ml.loadbalancer.server.port: "8000"
