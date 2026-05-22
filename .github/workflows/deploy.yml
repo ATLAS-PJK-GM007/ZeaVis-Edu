@@ -89,8 +89,16 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            cd /opt/ZeaVis-Edu
-            git pull origin main
+            DEPLOY_PATH="${DEPLOY_PATH:-/opt/ZeaVis-Edu}"
+
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              mkdir -p "$DEPLOY_PATH"
+              git clone https://github.com/${{ github.repository }}.git "$DEPLOY_PATH"
+            fi
+
+            cd "$DEPLOY_PATH"
+            git checkout main
+            git pull --ff-only origin main
 
             cat > .env << 'ENVEOF'
             GITHUB_REPOSITORY=${{ github.repository }}
