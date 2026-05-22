@@ -30,7 +30,11 @@ export function LoginPage() {
           isSubmitting={mutation.isPending}
           error={error}
           googleOAuthEnabled={Boolean(meQuery.data?.features.googleOAuthEnabled)}
-          onSubmit={async ({ email, password }) => mutation.mutateAsync({ email, password })}
+          onSubmit={async ({ email, password }) => {
+            setError(null);
+            return mutation.mutateAsync({ email, password });
+          }}
+          onFieldChange={() => setError(null)}
         />
         <p className="text-center text-sm text-muted-foreground">
           Belum punya akun? <Link className="text-primary" to="/register">Daftar</Link>

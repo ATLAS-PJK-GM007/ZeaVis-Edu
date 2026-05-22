@@ -30,7 +30,11 @@ export function RegisterPage() {
           isSubmitting={mutation.isPending}
           error={error}
           googleOAuthEnabled={Boolean(meQuery.data?.features.googleOAuthEnabled)}
-          onSubmit={async ({ name, email, password }) => mutation.mutateAsync({ name: name ?? '', email, password })}
+          onSubmit={async ({ name, email, password }) => {
+            setError(null);
+            return mutation.mutateAsync({ name: name ?? '', email, password });
+          }}
+          onFieldChange={() => setError(null)}
         />
         <p className="text-center text-sm text-muted-foreground">
           Sudah punya akun? <Link className="text-primary" to="/login">Masuk</Link>
