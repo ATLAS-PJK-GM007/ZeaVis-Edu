@@ -68,12 +68,15 @@ export function ExpertReviewsPage() {
             </div>
 
             <div className="space-y-2">
-              {reviews.length === 0 ? (
+              {reviewsQuery.isPending || diseasesQuery.isPending ? (
+                <p className="text-sm text-muted-foreground">Loading reviews and diseases...</p>
+              ) : reviews.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No diagnoses pending review</p>
               ) : (
                 reviews.map((review) => (
                   <button
                     key={review.id}
+                    type="button"
                     onClick={() => setSearchParams({ diagnosis: review.id })}
                     className={`w-full text-left transition ${
                       selected?.id === review.id
@@ -108,7 +111,13 @@ export function ExpertReviewsPage() {
 
           {/* Right: Detail and form */}
           <div className="lg:col-span-2 space-y-6">
-            {selected ? (
+            {reviewsQuery.isPending || diseasesQuery.isPending ? (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  Loading reviews and diseases...
+                </CardContent>
+              </Card>
+            ) : selected ? (
               <>
                 {/* Detail card */}
                 <Card>
@@ -121,7 +130,7 @@ export function ExpertReviewsPage() {
                   <CardContent className="space-y-4">
                     <img
                       src={selected.imageUrl}
-                      alt="Daun jagung"
+                      alt={`Gambar daun jagung untuk ${selected.disease?.commonName ?? 'diagnosis'}`}
                       className="h-64 w-full rounded-lg object-cover"
                     />
 
@@ -166,19 +175,24 @@ export function ExpertReviewsPage() {
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Verdict</label>
                         <div className="flex gap-3">
-                          <label className="flex items-center gap-2">
+                          <label htmlFor="verdict-verified" className="flex items-center gap-2">
                             <input
+                              id="verdict-verified"
                               type="radio"
                               name="verdict"
                               value="verified"
                               checked={verdict === 'verified'}
-                              onChange={(e) => setVerdict(e.target.value as 'verified' | 'corrected')}
+                              onChange={(e) => {
+                                setVerdict(e.target.value as 'verified' | 'corrected');
+                                setCorrectedDiseaseSlug('');
+                              }}
                               className="h-4 w-4"
                             />
                             <span className="text-sm">Verified</span>
                           </label>
-                          <label className="flex items-center gap-2">
+                          <label htmlFor="verdict-corrected" className="flex items-center gap-2">
                             <input
+                              id="verdict-corrected"
                               type="radio"
                               name="verdict"
                               value="corrected"
@@ -201,6 +215,7 @@ export function ExpertReviewsPage() {
                             id="disease"
                             value={correctedDiseaseSlug}
                             onChange={(e) => setCorrectedDiseaseSlug(e.target.value as DiseaseSlug | '')}
+                            required={verdict === 'corrected'}
                             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                           >
                             <option value="">Select a disease...</option>
