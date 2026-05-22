@@ -26,3 +26,4 @@ tasks:
       - package.json
       - tsconfig.json
       - drizzle.config.ts
+      - ../../packages/shared/dist/**/*
