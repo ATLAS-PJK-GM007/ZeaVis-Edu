@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
-import type { DiagnosisPrediction, DiagnosisRecord, ExpertReviewRecord } from '@zeavis/shared';
+import type { DiagnosisPrediction, DiagnosisRecord, ExpertReviewRecord, DiseaseCatalogItem } from '@zeavis/shared';
+import { DiagnosisStatus, DiseaseSlug, isDiseaseSlug } from '@zeavis/shared';
 import { and, desc, eq } from 'drizzle-orm';
 import { createDbClient } from '../db/client';
 import { diagnoses, diagnosisPredictions, diseaseCatalog, expertReviews, users } from '../db/schema';
@@ -7,7 +8,6 @@ import { badGateway, badRequest, notFound, serviceUnavailable, unauthorized } fr
 import { getCurrentUser } from '../lib/auth';
 import { classifyImage } from '../lib/image-model';
 import { uploadImageToStorage } from '../lib/uploader-client';
-import { toDisease } from '../lib/disease-mappers';
 import { env } from '../config/env';
 
 function toReview(row: any): ExpertReviewRecord | null {
@@ -93,18 +93,22 @@ async function loadDiagnosisRecord(id: string, userId: string | null, expertAcce
 
   const predictions: DiagnosisPrediction[] = predictionRows.map((prediction) => ({
     id: prediction.id,
-    diseaseSlug: prediction.diseaseSlug as any,
+    diseaseSlug: prediction.diseaseSlug && isDiseaseSlug(prediction.diseaseSlug) ? prediction.diseaseSlug : null,
     modelLabel: prediction.modelLabel,
     confidence: prediction.confidence,
     rank: prediction.rank,
   }));
 
+  const predictedDiseaseSlug = row.predictedDiseaseSlug && isDiseaseSlug(row.predictedDiseaseSlug) ? row.predictedDiseaseSlug : null;
+  const status = row.status as DiagnosisStatus;
+  const disease = row.disease && row.disease.slug ? (row.disease as DiseaseCatalogItem) : null;
+
   return {
     id: row.id,
     userId: row.userId,
-    predictedDiseaseSlug: row.predictedDiseaseSlug as any,
+    predictedDiseaseSlug,
     confidence: row.confidence,
-    status: row.status as any,
+    status,
     failureReason: row.failureReason,
     imageUrl: row.imageUrl,
     uploaderPublicId: row.uploaderPublicId,
@@ -113,7 +117,7 @@ async function loadDiagnosisRecord(id: string, userId: string | null, expertAcce
     imageSizeBytes: row.imageSizeBytes,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    disease: row.disease?.slug ? toDisease(row.disease as any) : null,
+    disease,
     predictions,
     latestReview: toReview(row),
   };
@@ -183,7 +187,8 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
       );
 
       const record = await loadDiagnosisRecord(inserted[0].id, user.id, false);
-      return record!;
+      if (!record) return serviceUnavailable('Database unavailable');
+      return record;
     } catch (error) {
       const inserted = await db
         .insert(diagnoses)
@@ -200,7 +205,8 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
         .returning();
 
       const record = await loadDiagnosisRecord(inserted[0].id, user.id, false);
-      return record!;
+      if (!record) return serviceUnavailable('Database unavailable');
+      return record;
     }
   })
   .get('/diagnoses', async ({ request }) => {
