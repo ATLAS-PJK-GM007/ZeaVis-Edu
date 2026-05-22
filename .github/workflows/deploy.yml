@@ -69,10 +69,15 @@ jobs:
       packages: read
     steps:
       - name: Validate deploy secrets
-        if: ${{ !secrets.VPS_HOST || !secrets.VPS_USER || !secrets.VPS_SSH_KEY }}
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
-          echo "Missing deploy secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY." >&2
-          exit 1
+          if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$VPS_SSH_KEY" ]; then
+            echo "Missing deploy secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY." >&2
+            exit 1
+          fi
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
