@@ -1,382 +1,336 @@
 # ZeaVis Edu
 
-ZeaVis Edu adalah aplikasi fullstack untuk klasifikasi penyakit daun jagung menggunakan machine learning. Sistem ini terdiri dari tiga layanan utama: web frontend, API backend, dan layanan ML, yang dapat dijalankan secara lokal atau di-deploy dengan Docker.
+ZeaVis Edu adalah aplikasi edukasi untuk membantu mengenali penyakit daun jagung melalui klasifikasi gambar berbasis machine learning. Repositori ini menggabungkan aplikasi web, API backend, layanan inferensi ML, serta pipeline pelatihan dan ekspor model EfficientNetV2B0.
 
-## Fitur
+## Fitur Utama
 
-- **Klasifikasi Penyakit Daun Jagung**: Mengidentifikasi 4 jenis penyakit daun jagung
-- **Antarmuka Web Modern**: Dibangun dengan React, Vite, dan TypeScript
-- **API RESTful**: Backend Elysia dengan Drizzle ORM untuk PostgreSQL
-- **Layanan ML Terpisah**: FastAPI dengan model TensorFlow EfficientNetV2B0
-- **Docker Deployment**: Containerized dengan docker-compose dan Traefik reverse proxy
-- **Workflow ML Lengkap**: Dari preprocessing data hingga export model produksi
+- Aplikasi web untuk pengalaman pengguna dan interaksi edukatif.
+- API backend untuk status layanan, integrasi data, dan komunikasi dengan layanan ML.
+- ML service berbasis FastAPI untuk inferensi penyakit daun jagung dari gambar.
+- Pipeline machine learning untuk preprocessing dataset, training di Google Colab, dan ekspor model produksi.
+- Dukungan Docker untuk deployment web, API, dan ML service.
+- Workspace monorepo berbasis Bun dan Moon untuk menjalankan task development, typecheck, dan build secara terpusat.
 
-## Kelas Penyakit yang Dideteksi
+## Kelas Penyakit
 
-Model machine learning dapat mengklasifikasikan 4 kondisi daun jagung:
+Model klasifikasi menargetkan empat label berbahasa Indonesia:
 
-1. **Bercak Daun** — Gray Leaf Spot
-2. **Hawar Daun** — Northern/Southern Leaf Blight  
-3. **Karat Daun** — Common Rust
-4. **Daun Sehat** — healthy corn leaf
+| Label | Deskripsi |
+|---|---|
+| Bercak Daun | Gray Leaf Spot |
+| Hawar Daun | Northern/Southern Leaf Blight |
+| Karat Daun | Common Rust |
+| Daun Sehat | Daun jagung tanpa gejala penyakit |
 
 ## Struktur Proyek
 
-```
-ZeaVis-Edu/
+```text
+.
 ├── apps/
-│   ├── web/          # Frontend React + Vite + TypeScript
-│   ├── api/          # Backend Elysia + Drizzle + PostgreSQL
-│   └── ml-service/   # FastAPI + TensorFlow ML service
+│   ├── api/              # Backend Elysia/Bun
+│   ├── ml-service/       # Layanan inferensi FastAPI + TensorFlow
+│   └── web/              # Frontend React + Vite
+├── Machine_Learning/     # Pipeline dataset, training, dan ekspor model
 ├── packages/
-│   └── shared/       # Shared TypeScript types dan utilities
-├── Machine_Learning/ # Pipeline ML: preprocessing, training, export
-├── docker-compose.yml
-└── package.json      # Root workspace dengan Moon tasks
+│   └── shared/           # Tipe dan utilitas bersama TypeScript
+├── docker-compose.yml    # Konfigurasi deployment container
+├── package.json          # Script dan workspace root Bun
+└── README.md             # Dokumentasi utama proyek
 ```
 
 ## Tech Stack
 
-### Frontend (apps/web)
-- **React 18** dengan TypeScript
-- **Vite** untuk build tool
-- **React Router** untuk routing
-- **TanStack Query** untuk data fetching
-- **Zustand** untuk state management
-- **Tailwind CSS** untuk styling
-- **shadcn/ui** untuk komponen UI
+### Frontend
 
-### Backend (apps/api)
-- **Bun** runtime
-- **Elysia** framework web
-- **Drizzle ORM** dengan PostgreSQL
-- **TypeScript**
+- React
+- Vite
+- TypeScript
+- React Router
+- TanStack Query
+- Zustand
+- Tailwind CSS
 
-### ML Service (apps/ml-service)
-- **FastAPI** dengan Python
-- **TensorFlow** untuk inferensi model
-- **EfficientNetV2B0** arsitektur model
-- **Pydantic** untuk validasi data
+### Backend API
 
-### ML Pipeline (Machine_Learning/)
-- **Python** dengan TensorFlow/Keras
-- **EfficientNetV2B0** untuk training
-- **Google Colab** untuk training dengan GPU
-- **TensorFlow SavedModel, TFLite, TensorFlow.js** untuk export
+- Bun
+- Elysia
+- Drizzle ORM
+- PostgreSQL
 
-### Infrastruktur
-- **Docker** dan **docker-compose** untuk containerization
-- **Traefik** sebagai reverse proxy
-- **PostgreSQL** database
-- **Moon** sebagai task runner untuk monorepo
+### Machine Learning
+
+- Python
+- TensorFlow/Keras
+- EfficientNetV2B0
+- FastAPI
+- Uvicorn
+- TFLite
+- TensorFlow.js
+
+### Tooling & Deployment
+
+- Bun workspaces
+- Moon task runner
+- Docker
+- Docker Compose
+- GitHub Container Registry
+- Traefik labels untuk routing deployment
 
 ## Prasyarat
 
-- **Node.js 18+** atau **Bun** (direkomendasikan)
-- **Python 3.9+** dengan pip
-- **Docker** dan **docker-compose** (untuk deployment)
-- **Git**
+Untuk menjalankan seluruh project secara lokal, siapkan:
 
-## Instalasi
+- Bun
+- Python 3.9–3.11 untuk pipeline ML
+- Python 3.10+ untuk `apps/ml-service`
+- Docker dan Docker Compose jika ingin menjalankan/deploy via container
+- PostgreSQL jika fitur backend yang membutuhkan database digunakan
+- File model `Machine_Learning/best_model/best_model.keras` untuk inferensi ML lokal
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/mytheclipse/ZeaVis-Edu.git
-cd ZeaVis-Edu
-```
+## Instalasi Root Workspace
 
-### 2. Install Dependencies
+Jalankan dari root repository:
+
 ```bash
 bun install
 ```
 
-### 3. Setup Environment Variables
-Salin file `.env.example` ke `.env` dan sesuaikan nilai-nilainya:
+## Menjalankan Project Lokal
+
+### Menjalankan Semua Task Development
+
 ```bash
-cp .env.example .env
+bun run dev
 ```
 
-## Menjalankan Secara Lokal
+Script ini menjalankan task `dev` melalui Moon untuk workspace yang tersedia.
 
-### Perintah Root (Menggunakan Moon)
+### Type Check
+
 ```bash
-# Development mode (semua layanan)
-bun run dev
-
-# Build production
-bun run build
-
-# Type checking
 bun run typecheck
 ```
 
-### Web App (apps/web)
+### Build Produksi
+
+```bash
+bun run build
+```
+
+## Menjalankan Service Secara Terpisah
+
+### Web App
+
 ```bash
 cd apps/web
 bun run dev
 ```
-Akses di: http://localhost:5173
 
-### API (apps/api)
+Secara default Vite akan menjalankan server development dan menampilkan URL lokal di terminal.
+
+### API Backend
+
 ```bash
 cd apps/api
 bun run start
 ```
-Akses di: http://localhost:3000
 
-### ML Service (apps/ml-service)
+API membaca konfigurasi dari file `.env` di root repository melalui script Bun.
+
+Script lain yang tersedia:
+
+```bash
+bun run db:generate
+bun run db:migrate
+bun run db:seed
+bun run typecheck
+```
+
+### ML Service
+
 ```bash
 cd apps/ml-service
-# Install dependencies Python
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-# Jalankan service
-uvicorn main:app --reload --port 8000
-```
-Akses di: http://localhost:8000
-
-## Endpoint ML Service
-
-### 1. GET /health
-**Deskripsi**: Health check endpoint
-**Response**:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-01T00:00:00Z"
-}
+uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
-### 2. GET /metadata
-**Deskripsi**: Mendapatkan metadata model
-**Response**:
-```json
-{
-  "model_name": "EfficientNetV2B0",
-  "input_size": 224,
-  "classes": ["Bercak Daun", "Hawar Daun", "Karat Daun", "Daun Sehat"],
-  "version": "1.0.0"
-}
+Default path model adalah:
+
+```text
+../../Machine_Learning/best_model/best_model.keras
 ```
 
-### 3. POST /predict
-**Deskripsi**: Prediksi gambar daun jagung
-**Request Body**:
-```json
-{
-  "image": "base64_encoded_image_string"
-}
-```
-**Response**:
-```json
-{
-  "predictions": [
-    {
-      "class": "Bercak Daun",
-      "confidence": 0.95
-    },
-    {
-      "class": "Hawar Daun", 
-      "confidence": 0.03
-    },
-    {
-      "class": "Karat Daun",
-      "confidence": 0.01
-    },
-    {
-      "class": "Daun Sehat",
-      "confidence": 0.01
-    }
-  ],
-  "top_prediction": {
-    "class": "Bercak Daun",
-    "confidence": 0.95
-  }
-}
-```
+Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`.
 
-## Deployment dengan Docker
+## Endpoint Penting
 
-### 1. Build dan Jalankan dengan docker-compose
+### ML Service
+
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| GET | `/health` | Mengecek status service dan status model |
+| GET | `/metadata` | Melihat metadata service, label, input size, dan path model |
+| POST | `/predict` | Mengunggah gambar daun jagung untuk klasifikasi |
+
+Contoh verifikasi lokal:
+
 ```bash
-docker-compose up -d
+curl http://localhost:8001/health
+curl http://localhost:8001/metadata
+curl -X POST http://localhost:8001/predict -F "file=@/path/to/corn-leaf.jpg"
 ```
 
-### 2. Services dalam docker-compose.yml
-- **web**: Frontend React app (port 80 dalam container)
-- **api**: Backend API (port 3000 dalam container)  
-- **ml**: ML service (port 8000 dalam container)
-- **Network**: `app-shared-net` untuk komunikasi antar service
+## Docker Deployment
 
-### 3. Environment Variables untuk Docker
-Pastikan file `.env` berisi:
-```env
-DATABASE_URL=postgresql://user:password@postgres:5432/zeavis
-API_PORT=3000
-WEB_APP_URL=https://zeavisedu.asepharyana.tech
-ML_SERVICE_URL=https://ml.zeavisedu.asepharyana.tech
-MODEL_PATH=/app/model/best_model.keras
-MODEL_INPUT_SIZE=224
+File `docker-compose.yml` di root menyiapkan tiga service produksi:
+
+- `web` untuk frontend
+- `api` untuk backend
+- `ml` untuk layanan inferensi machine learning
+
+Konfigurasi compose menggunakan image dari GitHub Container Registry:
+
+```text
+ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/web:main
+ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/api:main
+ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/ml:main
+```
+
+Compose juga mengasumsikan network eksternal bernama `app-shared-net` dan routing Traefik untuk domain produksi. Service `ml` berjalan pada port `8000` di dalam container.
+
+Contoh menjalankan compose setelah environment dan network siap:
+
+```bash
+docker compose up -d
 ```
 
 ## Workflow Machine Learning
 
-### 1. Preprocessing Data
-```bash
-cd Machine_Learning
-python preprocessing.py
-```
-Membutuhkan file `dataset_1.zip`, `dataset_2.zip`, `dataset_3.zip` di direktori yang sama.
+Detail lengkap tersedia di [`Machine_Learning/README.md`](Machine_Learning/README.md). Ringkasnya:
 
-### 2. Training di Google Colab
-- Buka `notebook.ipynb` di Google Colab dengan GPU enabled
-- Upload `dataset.zip` yang dihasilkan dari preprocessing
-- Jalankan notebook untuk training model EfficientNetV2B0
-- Model terbaik akan disimpan sebagai `best_model.keras`
+1. Unduh `dataset_1.zip`, `dataset_2.zip`, dan `dataset_3.zip` lalu letakkan di `Machine_Learning/`.
+2. Jalankan preprocessing lokal:
 
-### 3. Export Model untuk Produksi
-```bash
-cd Machine_Learning
-python save_model.py
-```
-Menghasilkan:
-- `model/saved_model/` (TensorFlow SavedModel)
-- `model/model.tflite` (TFLite format)
+   ```bash
+   cd Machine_Learning
+   python preprocessing.py
+   ```
 
-### 4. Convert ke TensorFlow.js
-```bash
-export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-tensorflowjs_converter \
-  --input_format=tf_saved_model \
-  --output_format=tfjs_graph_model \
-  --signature_name=serving_default \
-  --saved_model_tags=serve \
-  model/saved_model \
-  model/tfjs_model
-```
+3. Upload `dataset.zip` ke Google Drive.
+4. Jalankan `notebook.ipynb` di Google Colab dengan GPU.
+5. Download model terbaik sebagai `best_model/best_model.keras`.
+6. Ekspor model produksi:
 
-## Artifak yang Dihasilkan
+   ```bash
+   python save_model.py
+   ```
 
-### File/Direktori yang Dihasilkan (tidak termasuk dalam repo)
-- `Machine_Learning/dataset_1.zip`, `dataset_2.zip`, `dataset_3.zip` — dataset sumber
-- `Machine_Learning/dataset/` dan `dataset.zip` — hasil preprocessing
-- `Machine_Learning/best_model/best_model.keras` — model terlatih dari Colab
-- `Machine_Learning/model/saved_model/`, `model/model.tflite`, `model/tfjs_model/` — export produksi
+7. Konversi TensorFlow.js via CLI:
 
-## Environment Variables
+   ```bash
+   export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+   tensorflowjs_converter \
+     --input_format=tf_saved_model \
+     --output_format=tfjs_graph_model \
+     --signature_name=serving_default \
+     --saved_model_tags=serve \
+     model/saved_model \
+     model/tfjs_model
+   ```
 
-### Umum
-```env
-NODE_ENV=development|production
-```
+Output utama pipeline ML:
 
-### Database
-```env
-DATABASE_URL=postgresql://user:password@host:5432/database
-```
+| Path | Kegunaan |
+|---|---|
+| `Machine_Learning/dataset.zip` | Dataset siap upload ke Colab |
+| `Machine_Learning/best_model/best_model.keras` | Model Keras hasil training |
+| `Machine_Learning/model/saved_model/` | TensorFlow SavedModel |
+| `Machine_Learning/model/model.tflite` | Model untuk mobile/TFLite |
+| `Machine_Learning/model/tfjs_model/` | Model untuk TensorFlow.js |
 
-### API
-```env
-API_PORT=3000
-WEB_APP_URL=http://localhost:5173
-ML_SERVICE_URL=http://localhost:8000
-```
+## Artifact Lokal dan Generated Files
 
-### ML Service
-```env
-MODEL_PATH=/path/to/best_model.keras
-MODEL_INPUT_SIZE=224
-```
+Beberapa file tidak tersedia di fresh clone karena berukuran besar, dihasilkan lokal, atau berasal dari sumber eksternal:
+
+- `Machine_Learning/dataset_1.zip`
+- `Machine_Learning/dataset_2.zip`
+- `Machine_Learning/dataset_3.zip`
+- `Machine_Learning/dataset/`
+- `Machine_Learning/dataset.zip`
+- `Machine_Learning/best_model/best_model.keras`
+- `Machine_Learning/model/saved_model/`
+- `Machine_Learning/model/model.tflite`
+- `Machine_Learning/model/tfjs_model/`
+
+## Environment Variable Penting
+
+| Variable | Digunakan oleh | Keterangan |
+|---|---|---|
+| `DATABASE_URL` | API | URL koneksi PostgreSQL untuk Drizzle |
+| `API_PORT` | API | Port backend produksi |
+| `WEB_APP_URL` | API | URL frontend untuk konfigurasi CORS/integrasi |
+| `ML_SERVICE_URL` | API | URL layanan ML |
+| `MODEL_PATH` | ML Service | Lokasi file model Keras |
+| `MODEL_INPUT_SIZE` | ML Service | Ukuran input model, default produksi `224` |
 
 ## Troubleshooting
 
-### 1. Bun Install Error
+### `bun run dev` gagal karena dependency belum tersedia
+
+Jalankan ulang instalasi dari root repository:
+
 ```bash
-# Jika bun tidak terinstall
-curl -fsSL https://bun.sh/install | bash
+bun install
 ```
 
-### 2. Python Dependencies Error
-```bash
-cd apps/ml-service
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+### API membutuhkan database
+
+Pastikan `DATABASE_URL` tersedia di `.env` root dan PostgreSQL dapat diakses oleh aplikasi.
+
+### ML service gagal memuat model
+
+Pastikan file model tersedia di path default:
+
+```text
+Machine_Learning/best_model/best_model.keras
 ```
 
-### 3. Docker Network Error
+Atau set path khusus:
+
 ```bash
-# Buat network jika belum ada
+MODEL_PATH=/path/to/best_model.keras uvicorn main:app --host 0.0.0.0 --port 8001
+```
+
+### Docker Compose gagal karena network tidak ditemukan
+
+`docker-compose.yml` menggunakan network eksternal `app-shared-net`. Buat network tersebut jika belum ada:
+
+```bash
 docker network create app-shared-net
 ```
 
-### 4. ML Model Not Found
-Pastikan file `best_model.keras` ada di:
-- `Machine_Learning/best_model/best_model.keras` (untuk local)
-- `/app/model/best_model.keras` (untuk Docker container)
+### Konversi TensorFlow.js gagal karena konflik protobuf
 
-## Workflow Development
+Jalankan konversi melalui CLI dan set environment variable berikut:
 
-### 1. Setup Development Environment
 ```bash
-git clone <repository>
-cd ZeaVis-Edu
-bun install
-cp .env.example .env
+export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 ```
 
-### 2. Jalankan Layanan Secara Terpisah
-```bash
-# Terminal 1: Web app
-cd apps/web && bun run dev
+## Pengembangan
 
-# Terminal 2: API
-cd apps/api && bun run start
+Alur umum pengembangan:
 
-# Terminal 3: ML service
-cd apps/ml-service && uvicorn main:app --reload --port 8000
-```
-
-### 3. Testing
-```bash
-# Type checking
-bun run typecheck
-
-# Build production
-bun run build
-```
-
-### 4. Docker Testing
-```bash
-# Build dan jalankan
-docker-compose up --build
-
-# Hentikan services
-docker-compose down
-```
+1. Install dependency dengan `bun install`.
+2. Jalankan service yang dibutuhkan secara lokal.
+3. Jalankan `bun run typecheck` sebelum membuat commit.
+4. Jalankan `bun run build` untuk memverifikasi build produksi.
+5. Untuk perubahan ML, ikuti dokumentasi detail di `Machine_Learning/README.md`.
+6. Untuk perubahan ML service, cek juga `apps/ml-service/README.md`.
 
 ## Dokumentasi Terkait
 
-- `Machine_Learning/README.md` — Dokumentasi workflow machine learning
-- `CLAUDE.md` — Panduan untuk Claude Code
-- `docker-compose.yml` — Konfigurasi Docker deployment
-- `apps/web/package.json` — Dependencies frontend
-- `apps/api/package.json` — Dependencies backend
-- `apps/ml-service/requirements.txt` — Dependencies ML service
-
-## Kontribusi
-
-1. Fork repository
-2. Buat branch fitur (`git checkout -b feature/amazing-feature`)
-3. Commit perubahan (`git commit -m 'Add amazing feature'`)
-4. Push ke branch (`git push origin feature/amazing-feature`)
-5. Buat Pull Request
-
-## Lisensi
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-## Kontak
-
-Asep Haryana Saputra - [GitHub](https://github.com/mytheclipse)
-
-Project Link: [https://github.com/mytheclipse/ZeaVis-Edu](https://github.com/mytheclipse/ZeaVis-Edu)
+- [`Machine_Learning/README.md`](Machine_Learning/README.md) — panduan lengkap dataset, training, dan ekspor model.
+- [`apps/ml-service/README.md`](apps/ml-service/README.md) — panduan menjalankan dan memverifikasi layanan inferensi ML.
