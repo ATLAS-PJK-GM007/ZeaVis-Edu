@@ -8,7 +8,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ toLower(github.repository) }}
 
 jobs:
   build:
@@ -29,6 +28,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set image prefix
+        run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -90,6 +92,7 @@ jobs:
           script: |
             set -e
             DEPLOY_PATH="${DEPLOY_PATH:-/opt/ZeaVis-Edu}"
+            REPO_SLUG="$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
 
             if [ ! -d "$DEPLOY_PATH/.git" ]; then
               mkdir -p "$DEPLOY_PATH"
@@ -101,7 +104,7 @@ jobs:
             git pull --ff-only origin main
 
             cat > .env << 'ENVEOF'
-            GITHUB_REPOSITORY=${{ toLower(github.repository) }}
+            GITHUB_REPOSITORY=${REPO_SLUG}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             WEB_APP_URL=https://zeavisedu.asepharyana.tech
