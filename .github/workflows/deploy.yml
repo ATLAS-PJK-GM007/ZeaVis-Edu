@@ -103,13 +103,15 @@ jobs:
             git checkout main
             git pull --ff-only origin main
 
-            cat > .env << 'ENVEOF'
-            GITHUB_REPOSITORY=${REPO_SLUG}
+            {
+              printf 'GITHUB_REPOSITORY=%s\n' "$REPO_SLUG"
+              cat << 'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             WEB_APP_URL=https://zeavisedu.asepharyana.tech
             ML_SERVICE_URL=https://ml.zeavisedu.asepharyana.tech
             ENVEOF
+            } > .env
 
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             docker network create app-shared-net 2>/dev/null || true
