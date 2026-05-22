@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+  IMAGE_PREFIX: ghcr.io/${{ toLower(github.repository) }}
 
 jobs:
   build:
@@ -101,7 +101,7 @@ jobs:
             git pull --ff-only origin main
 
             cat > .env << 'ENVEOF'
-            GITHUB_REPOSITORY=${{ github.repository }}
+            GITHUB_REPOSITORY=${{ toLower(github.repository) }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             WEB_APP_URL=https://zeavisedu.asepharyana.tech
