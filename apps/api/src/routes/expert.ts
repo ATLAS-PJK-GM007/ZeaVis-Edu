@@ -1,14 +1,16 @@
 import { Elysia } from 'elysia';
 import type { ReviewDiagnosisRequest } from '@zeavis/shared';
 import { isDiseaseSlug } from '@zeavis/shared';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { createDbClient } from '../db/client';
 import { diagnoses, expertReviews } from '../db/schema';
 import { badRequest, forbidden, notFound, serviceUnavailable, unauthorized } from '../lib/http-errors';
 import { getCurrentUser } from '../lib/auth';
 import { loadDiagnosisRecord } from './diagnoses';
 
-function isDiagnosisRecordOrNull(record: unknown): record is ReturnType<typeof loadDiagnosisRecord> extends Promise<infer T> ? T : never {
+type DiagnosisRecord = Awaited<ReturnType<typeof loadDiagnosisRecord>>;
+
+function isDiagnosisRecordOrNull(record: unknown): record is DiagnosisRecord {
   return record !== null;
 }
 
@@ -62,6 +64,7 @@ export const expertRoutes = new Elysia({ prefix: '/api/v1/expert' })
 
       const diagnosis = existing[0];
       if (!diagnosis) return notFound('Diagnosis not found');
+      if (diagnosis.status !== 'needs_review') return badRequest('Diagnosis is not pending review');
 
       const correctedSlug = req.verdict === 'corrected' ? req.correctedDiseaseSlug : null;
 
@@ -80,7 +83,7 @@ export const expertRoutes = new Elysia({ prefix: '/api/v1/expert' })
           predictedDiseaseSlug: req.verdict === 'corrected' ? correctedSlug : diagnosis.predictedDiseaseSlug,
           updatedAt: new Date(),
         })
-        .where(eq(diagnoses.id, diagnosis.id));
+        .where(and(eq(diagnoses.id, diagnosis.id), eq(diagnoses.status, 'needs_review')));
 
       return await loadDiagnosisRecord(diagnosis.id, null, true);
     } catch (error) {
