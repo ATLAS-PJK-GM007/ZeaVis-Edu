@@ -1,0 +1,4 @@
+tensorflow>=2.13.0
+tensorflowjs>=4.10.0
+jupyter>=1.0.0
+ipykernel>=6.25.0
