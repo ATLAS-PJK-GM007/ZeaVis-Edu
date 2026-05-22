@@ -7,6 +7,8 @@ tasks:
     local: true
   build:
     command: bun build src/index.ts --outdir dist --target bun
+    deps:
+      - shared:build
     inputs:
       - src/**/*
       - package.json
@@ -16,6 +18,8 @@ tasks:
       - dist
   typecheck:
     command: bun run typecheck
+    deps:
+      - shared:typecheck
     inputs:
       - src/**/*
       - package.json
