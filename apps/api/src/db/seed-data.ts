@@ -22,5 +22,5 @@ export const demoExpertUser = {
   email: 'expert@zeavis.local',
   name: 'ZeaVis Expert',
   role: 'expert' as const,
-  password: 'password123',
+  password: Bun.env.DEMO_EXPERT_PASSWORD ?? 'password123',
 };

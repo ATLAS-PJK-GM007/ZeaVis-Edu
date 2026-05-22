@@ -46,7 +46,7 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/v1' })
       );
 
       const latestManual = manualRows[0];
-      const latestDisease = latestManual
+      const latestDisease = latestManual && isDiseaseSlug(latestManual.diseaseSlug)
         ? diseases.find((disease) => disease.slug === latestManual.diseaseSlug)
         : null;
 
@@ -56,9 +56,9 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/v1' })
         imageClassificationCount: diagnosisCountRows[0]?.value ?? 0,
         needsReviewCount: needsReviewRows[0]?.value ?? 0,
         riskDistribution,
-        latestClassification: latestManual && latestDisease ? {
+        latestClassification: latestManual && isDiseaseSlug(latestManual.diseaseSlug) && latestDisease ? {
           id: latestManual.id,
-          diseaseSlug: latestManual.diseaseSlug as any,
+          diseaseSlug: latestManual.diseaseSlug,
           observation: latestManual.observation,
           location: latestManual.location,
           createdAt: latestManual.createdAt.toISOString(),
