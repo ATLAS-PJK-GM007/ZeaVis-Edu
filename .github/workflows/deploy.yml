@@ -111,7 +111,7 @@ jobs:
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             WEB_APP_URL=https://zeavisedu.asepharyana.tech
-            ML_SERVICE_URL=https://ml.zeavisedu.asepharyana.tech
+            ML_SERVICE_URL=http://zeavis-ml:8000
             ENVEOF
             } > .env
 
