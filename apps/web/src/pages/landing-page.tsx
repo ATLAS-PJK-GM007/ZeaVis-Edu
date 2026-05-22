@@ -6,18 +6,18 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 const features = [
   {
     icon: Leaf,
-    title: 'Deteksi penyakit daun jagung',
-    description: 'Fondasi aplikasi siap untuk integrasi model klasifikasi ZeaVis Edu.',
+    title: 'Katalog Penyakit Lengkap',
+    description: 'Pelajari tentang empat penyakit daun jagung utama dengan gejala dan rekomendasi penanganan.',
   },
   {
     icon: ShieldCheck,
-    title: 'Edukasi berbasis data',
-    description: 'Materi dan hasil analisis dapat dikembangkan di atas dashboard awal.',
+    title: 'Pantau Risiko Penyakit',
+    description: 'Lacak distribusi risiko penyakit dan lihat laporan pengamatan terbaru di dashboard.',
   },
   {
     icon: Sprout,
-    title: 'Siap tumbuh bersama produk',
-    description: 'Monorepo memisahkan frontend, backend, dan shared types dengan jelas.',
+    title: 'Laporkan Pengamatan',
+    description: 'Kirimkan laporan penyakit yang Anda temukan untuk membantu penelitian dan edukasi.',
   },
 ];
 
@@ -44,11 +44,11 @@ export function LandingPage() {
             </div>
             <div className="space-y-5">
               <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-6xl">
-                Belajar mengenali penyakit daun jagung dengan alur digital yang rapi.
+                Belajar mengenali penyakit daun jagung dan pantau pengamatan Anda.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                Scaffold ini menyiapkan fondasi aplikasi ZeaVis Edu untuk antarmuka edukasi,
-                API, dan integrasi model machine learning berikutnya.
+                Jelajahi katalog penyakit daun jagung, pelajari gejala dan cara penanganannya,
+                serta laporkan pengamatan Anda untuk membantu penelitian dan edukasi.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -58,9 +58,9 @@ export function LandingPage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <a href="https://elysiajs.com" target="_blank" rel="noreferrer">
-                  Lihat Stack API
-                </a>
+                <Link to="/catalog">
+                  Lihat Katalog Penyakit
+                </Link>
               </Button>
             </div>
           </div>

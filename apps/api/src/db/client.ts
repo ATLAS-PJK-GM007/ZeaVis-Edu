@@ -3,11 +3,13 @@ import postgres from 'postgres';
 import { env } from '../config/env';
 import * as schema from './schema';
 
+let db: ReturnType<typeof drizzle<typeof schema>> | undefined;
+
 export function createDbClient() {
   if (!env.databaseUrl) {
     throw new Error('DATABASE_URL is required to create a database client');
   }
 
-  const client = postgres(env.databaseUrl);
-  return drizzle(client, { schema });
+  db ??= drizzle(postgres(env.databaseUrl), { schema });
+  return db;
 }
