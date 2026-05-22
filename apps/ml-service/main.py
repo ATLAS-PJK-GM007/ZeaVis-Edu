@@ -44,6 +44,9 @@ async def predict(file: UploadFile = File(...)) -> PredictionResponse:
     except ImageDecodeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
+        import logging
+
+        logging.exception("Prediction failed")
         raise HTTPException(status_code=500, detail="Prediction failed") from exc
 
     return PredictionResponse(

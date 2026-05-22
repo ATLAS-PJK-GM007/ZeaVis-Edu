@@ -1,4 +1,5 @@
 from io import BytesIO
+import logging
 import os
 from pathlib import Path
 
@@ -7,7 +8,7 @@ from PIL import Image, UnidentifiedImageError
 import tensorflow as tf
 
 
-LABELS = ["Bercak Daun", "Hawar Daun", "Karat Daun", "Daun Sehat"]
+LABELS = ["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"]
 SERVICE_NAME = "zeavis-ml-service"
 SERVICE_VERSION = "0.1.0"
 
@@ -40,6 +41,7 @@ class ModelService:
         except Exception as exc:
             self.model = None
             self.load_error = str(exc)
+            logging.exception("Failed to load ML model from %s", self.model_path)
 
     def preprocess(self, image_bytes: bytes) -> np.ndarray:
         try:
