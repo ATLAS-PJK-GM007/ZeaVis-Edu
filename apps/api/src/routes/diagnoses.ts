@@ -10,24 +10,45 @@ import { classifyImage } from '../lib/image-model';
 import { uploadImageToStorage } from '../lib/uploader-client';
 import { env } from '../config/env';
 
-function toReview(row: any): ExpertReviewRecord | null {
+interface ReviewRow {
+  reviewId: string | null;
+  reviewDiagnosisId: string | null;
+  reviewExpertId: string | null;
+  reviewVerdict: string | null;
+  reviewCorrectedDiseaseSlug: string | null;
+  reviewNotes: string | null;
+  reviewCreatedAt: Date | null;
+  expertId: string | null;
+  expertEmail: string | null;
+  expertName: string | null;
+}
+
+function toReview(row: ReviewRow): ExpertReviewRecord | null {
   if (!row.reviewId) return null;
+
+  const verdict = row.reviewVerdict as 'verified' | 'corrected';
+  const correctedDiseaseSlug = row.reviewCorrectedDiseaseSlug && isDiseaseSlug(row.reviewCorrectedDiseaseSlug) ? row.reviewCorrectedDiseaseSlug : null;
+  const notes = row.reviewNotes || '';
 
   return {
     id: row.reviewId,
-    diagnosisId: row.reviewDiagnosisId,
-    expertId: row.reviewExpertId,
-    verdict: row.reviewVerdict,
-    correctedDiseaseSlug: row.reviewCorrectedDiseaseSlug,
-    notes: row.reviewNotes,
-    createdAt: row.reviewCreatedAt.toISOString(),
+    diagnosisId: row.reviewDiagnosisId!,
+    expertId: row.reviewExpertId!,
+    verdict,
+    correctedDiseaseSlug,
+    notes,
+    createdAt: row.reviewCreatedAt!.toISOString(),
     expert: {
-      id: row.expertId,
-      email: row.expertEmail,
-      name: row.expertName,
+      id: row.expertId!,
+      email: row.expertEmail!,
+      name: row.expertName!,
       role: 'expert',
     },
   };
+}
+
+function isDiagnosisRecord(record: DiagnosisRecord | null): record is DiagnosisRecord {
+  return record !== null;
 }
 
 async function loadDiagnosisRecord(id: string, userId: string | null, expertAccess: boolean): Promise<DiagnosisRecord | null> {
@@ -101,7 +122,20 @@ async function loadDiagnosisRecord(id: string, userId: string | null, expertAcce
 
   const predictedDiseaseSlug = row.predictedDiseaseSlug && isDiseaseSlug(row.predictedDiseaseSlug) ? row.predictedDiseaseSlug : null;
   const status = row.status as DiagnosisStatus;
-  const disease = row.disease && row.disease.slug ? (row.disease as DiseaseCatalogItem) : null;
+  const disease = row.disease && row.disease.slug && isDiseaseSlug(row.disease.slug)
+    ? ({
+        slug: row.disease.slug,
+        label: row.disease.label,
+        commonName: row.disease.commonName,
+        summary: row.disease.summary,
+        description: row.disease.description,
+        symptoms: row.disease.symptoms,
+        recommendations: row.disease.recommendations,
+        riskLevel: row.disease.riskLevel,
+        accentColor: row.disease.accentColor,
+        displayOrder: row.disease.displayOrder,
+      } as DiseaseCatalogItem)
+    : null;
 
   return {
     id: row.id,
@@ -223,7 +257,7 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
         .limit(30);
 
       const records = await Promise.all(rows.map((row) => loadDiagnosisRecord(row.id, user.id, false)));
-      return records.filter(Boolean);
+      return records.filter(isDiagnosisRecord);
     } catch (error) {
       return serviceUnavailable('Database unavailable');
     }
