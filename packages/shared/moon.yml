@@ -2,6 +2,15 @@ type: library
 language: typescript
 
 tasks:
+  build:
+    command: bun run build
+    inputs:
+      - src/**/*
+      - tsconfig.json
+      - tsconfig.build.json
+      - package.json
+    outputs:
+      - dist
   typecheck:
     command: bun run typecheck
     inputs:

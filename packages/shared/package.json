@@ -4,10 +4,17 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./app-status": "./src/app-status.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./app-status": {
+      "types": "./dist/app-status.d.ts",
+      "default": "./dist/app-status.js"
+    }
   },
   "scripts": {
+    "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --project tsconfig.json"
   },
   "devDependencies": {
