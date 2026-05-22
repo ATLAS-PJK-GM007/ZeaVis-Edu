@@ -7,6 +7,7 @@ import { classificationRoutes } from './routes/classifications';
 import { diagnosisRoutes } from './routes/diagnoses';
 import { dashboardRoutes } from './routes/dashboard';
 import { authRoutes } from './routes/auth';
+import { expertRoutes } from './routes/expert';
 
 assertRequiredEnv();
 
@@ -17,6 +18,7 @@ const app = new Elysia()
   .use(diseaseRoutes)
   .use(classificationRoutes)
   .use(diagnosisRoutes)
+  .use(expertRoutes)
   .use(dashboardRoutes)
   .listen(env.port);
 
