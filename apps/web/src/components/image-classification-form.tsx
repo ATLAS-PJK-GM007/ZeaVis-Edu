@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useRef, useState, useEffect } from 'react';
 import type { DiagnosisRecord } from '@zeavis/shared';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,10 +21,25 @@ export function ImageClassificationForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Revoke object URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, []);
+
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0] ?? null;
     setError(null);
     setFile(selectedFile);
+
+    // Revoke previous preview URL before replacing it
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
     setPreviewUrl(selectedFile ? URL.createObjectURL(selectedFile) : null);
   }
 
@@ -37,6 +52,12 @@ export function ImageClassificationForm({
 
     try {
       await onSubmit(file);
+
+      // Revoke current preview URL after successful submit before setting null
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
       setFile(null);
       setPreviewUrl(null);
       if (fileInputRef.current) {
@@ -80,7 +101,7 @@ export function ImageClassificationForm({
           </div>
 
           {previewUrl && (
-            <img src={previewUrl} alt="Preview" className="h-48 rounded-lg object-cover" />
+            <img src={previewUrl} alt="Pratinjau gambar daun jagung untuk diagnosis" className="h-48 rounded-lg object-cover" />
           )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}

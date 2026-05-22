@@ -12,6 +12,7 @@ import { apiClient } from '@/lib/api-client';
 
 export function DashboardPage() {
   const { user } = useAuthStore();
+  const setUser = useAuthStore((state) => state.setUser);
   const { dashboardCompact, toggleDashboardCompact } = useUiStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ export function DashboardPage() {
       await apiClient.logout();
     },
     onSuccess: () => {
-      useAuthStore.setState({ user: null });
+      setUser(null);
       queryClient.clear();
       navigate('/login');
     },
