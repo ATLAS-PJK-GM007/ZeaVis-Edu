@@ -15,6 +15,13 @@
       "when": 1779461286348,
       "tag": "0001_cute_lyja",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779470332261,
+      "tag": "0002_lumpy_smasher",
+      "breakpoints": true
     }
   ]
 }
