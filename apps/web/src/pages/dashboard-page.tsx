@@ -1,19 +1,22 @@
 import { useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { BookOpen, History, Leaf, LayoutDashboard, TrendingUp, Image } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { BookOpen, History, LayoutDashboard, TrendingUp, LogOut, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ManualClassificationForm } from '@/components/manual-classification-form';
 import { ImageClassificationForm } from '@/components/image-classification-form';
-import { RiskBadge } from '@/components/risk-badge';
+import { DiagnosisCard } from '@/components/diagnosis-card';
+import { useAuthStore } from '@/store/auth-store';
 import { useUiStore } from '@/store/ui-store';
 import { apiClient } from '@/lib/api-client';
 
 export function DashboardPage() {
+  const { user } = useAuthStore();
   const { dashboardCompact, toggleDashboardCompact } = useUiStore();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  const [diseasesQuery, summaryQuery, classificationsQuery, imageClassificationsQuery] = useQueries({
+  const [diseasesQuery, summaryQuery, diagnosesQuery, classificationsQuery] = useQueries({
     queries: [
       {
         queryKey: ['diseases'],
@@ -24,14 +27,24 @@ export function DashboardPage() {
         queryFn: () => apiClient.getDashboardSummary(),
       },
       {
+        queryKey: ['diagnoses'],
+        queryFn: () => apiClient.getDiagnoses(),
+      },
+      {
         queryKey: ['manual-classifications'],
         queryFn: () => apiClient.getManualClassifications(),
       },
-      {
-        queryKey: ['image-classifications'],
-        queryFn: () => apiClient.getImageClassifications(),
-      },
     ],
+  });
+
+  const createDiagnosisMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return await apiClient.createDiagnosis(file);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diagnoses'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+    },
   });
 
   const createClassificationMutation = useMutation({
@@ -44,20 +57,21 @@ export function DashboardPage() {
     },
   });
 
-  const createImageClassificationMutation = useMutation({
-    mutationFn: async (file: File) => {
-      return await apiClient.createImageClassification(file);
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiClient.logout();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['image-classifications'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      useAuthStore.setState({ user: null });
+      queryClient.clear();
+      navigate('/login');
     },
   });
 
   const diseases = diseasesQuery.data || [];
   const summary = summaryQuery.data;
+  const diagnoses = diagnosesQuery.data || [];
   const classifications = classificationsQuery.data || [];
-  const imageClassifications = imageClassificationsQuery.data || [];
 
   const isLoadingData = diseasesQuery.isLoading || summaryQuery.isLoading;
   const hasError = diseasesQuery.error || summaryQuery.error;
@@ -72,15 +86,28 @@ export function DashboardPage() {
             </div>
             <h1 className="text-3xl font-bold tracking-tight">ZeaVis Edu Workspace</h1>
             <p className="text-muted-foreground">
-              Pantau penyakit daun jagung dan laporkan pengamatan Anda
+              {user?.name ? `Selamat datang, ${user.name}` : 'Pantau penyakit daun jagung dan laporkan pengamatan Anda'}
             </p>
           </div>
           <div className="flex gap-3">
+            {user?.role === 'expert' && (
+              <Button asChild variant="outline">
+                <Link to="/expert/reviews">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Review Pakar
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" onClick={toggleDashboardCompact}>
               {dashboardCompact ? 'Mode Nyaman' : 'Mode Ringkas'}
             </Button>
-            <Button asChild>
-              <Link to="/">Kembali</Link>
+            <Button
+              variant="outline"
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {logoutMutation.isPending ? 'Keluar...' : 'Keluar'}
             </Button>
           </div>
         </header>
@@ -115,11 +142,24 @@ export function DashboardPage() {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Laporan
+                      Total Diagnosis
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{summary.classificationCount}</div>
+                    <div className="text-3xl font-bold">{summary.imageClassificationCount}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Menunggu Review
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-amber-600">
+                      {summary.needsReviewCount}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -132,19 +172,6 @@ export function DashboardPage() {
                   <CardContent>
                     <div className="text-3xl font-bold text-red-600">
                       {summary.riskDistribution.high}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Risiko Sedang
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-yellow-600">
-                      {summary.riskDistribution.medium}
                     </div>
                   </CardContent>
                 </Card>
@@ -200,48 +227,12 @@ export function DashboardPage() {
               </Card>
             </section>
 
-            {summary?.latestClassification && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <History className="h-5 w-5" />
-                    Laporan Terbaru
-                  </CardTitle>
-                  <CardDescription>
-                    Pengamatan penyakit terakhir yang dilaporkan
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="rounded-lg border border-border p-4">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div>
-                        <h4 className="font-semibold">{summary.latestClassification.disease.commonName}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {summary.latestClassification.disease.label}
-                        </p>
-                      </div>
-                      <RiskBadge level={summary.latestClassification.disease.riskLevel} />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {summary.latestClassification.observation}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Lokasi: {summary.latestClassification.location}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(summary.latestClassification.createdAt).toLocaleDateString('id-ID')}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             <ImageClassificationForm
               onSubmit={async (file) => {
-                await createImageClassificationMutation.mutateAsync(file);
+                await createDiagnosisMutation.mutateAsync(file);
               }}
-              isSubmitting={createImageClassificationMutation.isPending}
-              latestResult={imageClassifications[0] ?? null}
+              isSubmitting={createDiagnosisMutation.isPending}
+              latestResult={diagnoses[0] ?? null}
             />
 
             <ManualClassificationForm
@@ -252,46 +243,21 @@ export function DashboardPage() {
               isSubmitting={createClassificationMutation.isPending}
             />
 
-            {imageClassifications.length > 0 && (
+            {diagnoses.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
-                    Riwayat Klasifikasi Gambar
+                    <History className="h-5 w-5" />
+                    Riwayat Diagnosis
                   </CardTitle>
                   <CardDescription>
-                    {imageClassifications.length} gambar yang diklasifikasi
+                    {diagnoses.length} diagnosis yang telah dibuat
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {imageClassifications.slice(0, 6).map((classification) => (
-                      <div key={classification.id} className="rounded-lg border border-border overflow-hidden">
-                        <img
-                          src={classification.imageUrl}
-                          alt="Classified corn leaf"
-                          className="w-full h-32 object-cover"
-                        />
-                        <div className="p-3 space-y-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <h4 className="text-sm font-semibold">
-                                {classification.disease.commonName}
-                              </h4>
-                              <p className="text-xs text-muted-foreground">
-                                {classification.disease.label}
-                              </p>
-                            </div>
-                            <RiskBadge level={classification.disease.riskLevel} className="text-xs" />
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Kepercayaan: {(classification.confidence * 100).toFixed(1)}%
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(classification.createdAt).toLocaleDateString('id-ID')}
-                          </p>
-                        </div>
-                      </div>
+                  <div className="space-y-3">
+                    {diagnoses.slice(0, 6).map((diagnosis) => (
+                      <DiagnosisCard key={diagnosis.id} diagnosis={diagnosis} />
                     ))}
                   </div>
                 </CardContent>
