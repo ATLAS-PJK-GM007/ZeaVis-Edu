@@ -1,8 +1,9 @@
 import { diseaseCatalogSeed } from '@zeavis/shared';
 import type { InferInsertModel } from 'drizzle-orm';
-import { diseaseCatalog } from './schema';
+import { diseaseCatalog, users } from './schema';
 
 export type DiseaseCatalogRow = InferInsertModel<typeof diseaseCatalog>;
+export type UserRow = InferInsertModel<typeof users>;
 
 export const diseaseCatalogRows: DiseaseCatalogRow[] = diseaseCatalogSeed.map((item) => ({
   slug: item.slug,
@@ -16,3 +17,10 @@ export const diseaseCatalogRows: DiseaseCatalogRow[] = diseaseCatalogSeed.map((i
   accentColor: item.accentColor,
   displayOrder: item.displayOrder,
 }));
+
+export const demoExpertUser = {
+  email: 'expert@zeavis.local',
+  name: 'ZeaVis Expert',
+  role: 'expert' as const,
+  password: Bun.env.DEMO_EXPERT_PASSWORD ?? 'password123',
+};

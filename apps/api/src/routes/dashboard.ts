@@ -1,88 +1,74 @@
 import { Elysia } from 'elysia';
-import type { DashboardSummary, RiskLevel } from '@zeavis/shared';
+import type { DashboardSummary } from '@zeavis/shared';
+import { isDiseaseSlug } from '@zeavis/shared';
+import { eq, desc, count } from 'drizzle-orm';
 import { createDbClient } from '../db/client';
-import { diseaseCatalog, imageClassifications, manualClassifications } from '../db/schema';
+import { diseaseCatalog, manualClassifications, diagnoses } from '../db/schema';
 import { serviceUnavailable } from '../lib/http-errors';
-import { desc, eq } from 'drizzle-orm';
+import { toDisease } from '../lib/disease-mappers';
+import { getCurrentUser } from '../lib/auth';
+import { loadDiagnosisRecord } from './diagnoses';
 
-export const dashboardRoutes = new Elysia({ prefix: '/api/v1' }).get('/dashboard/summary', async () => {
-  try {
-    const db = createDbClient();
+export const dashboardRoutes = new Elysia({ prefix: '/api/v1' })
+  .get('/dashboard/summary', async ({ request }) => {
+    try {
+      const db = createDbClient();
+      const user = await getCurrentUser(request.headers.get('cookie'));
 
-    const diseaseCount = await db.select().from(diseaseCatalog);
-    const manualClassificationCount = await db.select().from(manualClassifications);
-    const imageClassificationCount = await db.select().from(imageClassifications);
+      const diseases = await db.select().from(diseaseCatalog).orderBy(diseaseCatalog.displayOrder);
+      const manualRows = await db.select().from(manualClassifications).orderBy(desc(manualClassifications.createdAt)).limit(1);
 
-    const latestClassificationRow = await db
-      .select({
-        id: manualClassifications.id,
-        diseaseSlug: manualClassifications.diseaseSlug,
-        observation: manualClassifications.observation,
-        location: manualClassifications.location,
-        createdAt: manualClassifications.createdAt,
-        disease: {
-          slug: diseaseCatalog.slug,
-          label: diseaseCatalog.label,
-          commonName: diseaseCatalog.commonName,
-          summary: diseaseCatalog.summary,
-          description: diseaseCatalog.description,
-          symptoms: diseaseCatalog.symptoms,
-          recommendations: diseaseCatalog.recommendations,
-          riskLevel: diseaseCatalog.riskLevel,
-          accentColor: diseaseCatalog.accentColor,
-          displayOrder: diseaseCatalog.displayOrder,
+      const diagnosisFilters = user ? eq(diagnoses.userId, user.id) : undefined;
+      const diagnosisRows = diagnosisFilters
+        ? await db.select({ id: diagnoses.id }).from(diagnoses).where(diagnosisFilters).orderBy(desc(diagnoses.createdAt)).limit(1)
+        : [];
+
+      const diagnosisCountRows = user
+        ? await db.select({ value: count() }).from(diagnoses).where(eq(diagnoses.userId, user.id))
+        : [{ value: 0 }];
+
+      const needsReviewRows = user?.role === 'expert'
+        ? await db.select({ value: count() }).from(diagnoses).where(eq(diagnoses.status, 'needs_review'))
+        : [{ value: 0 }];
+
+      const latestDiagnosis = diagnosisRows[0]
+        ? await loadDiagnosisRecord(diagnosisRows[0].id, user?.id ?? null, user?.role === 'expert')
+        : null;
+
+      const riskDistribution = diseases.reduce(
+        (acc, disease) => {
+          if (disease.riskLevel === 'high') acc.high += 1;
+          if (disease.riskLevel === 'medium') acc.medium += 1;
+          if (disease.riskLevel === 'low') acc.low += 1;
+          return acc;
         },
-      })
-      .from(manualClassifications)
-      .innerJoin(diseaseCatalog, eq(manualClassifications.diseaseSlug, diseaseCatalog.slug))
-      .orderBy(desc(manualClassifications.createdAt))
-      .limit(1);
+        { low: 0, medium: 0, high: 0 },
+      );
 
-    const latestClassification = latestClassificationRow[0]
-      ? {
-          id: latestClassificationRow[0].id,
-          diseaseSlug: latestClassificationRow[0].diseaseSlug as any,
-          observation: latestClassificationRow[0].observation,
-          location: latestClassificationRow[0].location,
-          createdAt: latestClassificationRow[0].createdAt.toISOString(),
-          disease: {
-            slug: latestClassificationRow[0].disease.slug as any,
-            label: latestClassificationRow[0].disease.label as any,
-            commonName: latestClassificationRow[0].disease.commonName,
-            summary: latestClassificationRow[0].disease.summary,
-            description: latestClassificationRow[0].disease.description,
-            symptoms: latestClassificationRow[0].disease.symptoms,
-            recommendations: latestClassificationRow[0].disease.recommendations,
-            riskLevel: latestClassificationRow[0].disease.riskLevel as any,
-            accentColor: latestClassificationRow[0].disease.accentColor,
-            displayOrder: latestClassificationRow[0].disease.displayOrder,
-          },
-        }
-      : null;
+      const latestManual = manualRows[0];
+      const latestDisease = latestManual && isDiseaseSlug(latestManual.diseaseSlug)
+        ? diseases.find((disease) => disease.slug === latestManual.diseaseSlug)
+        : null;
 
-    const riskDistributionRows = await db.select().from(diseaseCatalog);
-    const riskDistribution: Record<RiskLevel, number> = {
-      low: 0,
-      medium: 0,
-      high: 0,
-    };
+      const summary: DashboardSummary = {
+        diseaseCount: diseases.length,
+        classificationCount: manualRows.length,
+        imageClassificationCount: diagnosisCountRows[0]?.value ?? 0,
+        needsReviewCount: needsReviewRows[0]?.value ?? 0,
+        riskDistribution,
+        latestClassification: latestManual && isDiseaseSlug(latestManual.diseaseSlug) && latestDisease ? {
+          id: latestManual.id,
+          diseaseSlug: latestManual.diseaseSlug,
+          observation: latestManual.observation,
+          location: latestManual.location,
+          createdAt: latestManual.createdAt.toISOString(),
+          disease: toDisease(latestDisease),
+        } : null,
+        latestDiagnosis,
+      };
 
-    for (const row of riskDistributionRows) {
-      const risk = row.riskLevel as RiskLevel;
-      if (risk in riskDistribution) {
-        riskDistribution[risk]++;
-      }
+      return summary;
+    } catch (error) {
+      return serviceUnavailable('Database unavailable');
     }
-
-    const summary: DashboardSummary = {
-      diseaseCount: diseaseCount.length,
-      classificationCount: manualClassificationCount.length + imageClassificationCount.length,
-      latestClassification,
-      riskDistribution,
-    };
-
-    return summary;
-  } catch (error) {
-    return serviceUnavailable('Database unavailable');
-  }
-});
+  });

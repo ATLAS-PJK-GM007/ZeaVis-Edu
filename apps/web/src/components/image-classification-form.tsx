@@ -1,14 +1,15 @@
-import { useRef, useState } from 'react';
-import type { ImageClassificationRecord } from '@zeavis/shared';
+import { ChangeEvent, FormEvent, useRef, useState, useEffect } from 'react';
+import type { DiagnosisRecord } from '@zeavis/shared';
+import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RiskBadge } from '@/components/risk-badge';
+import { DiagnosisStatusBadge } from '@/components/diagnosis-status-badge';
 
-export interface ImageClassificationFormProps {
+type ImageClassificationFormProps = {
   onSubmit: (file: File) => Promise<void>;
   isSubmitting: boolean;
-  latestResult: ImageClassificationRecord | null;
-}
+  latestResult: DiagnosisRecord | null;
+};
 
 export function ImageClassificationForm({
   onSubmit,
@@ -16,140 +17,122 @@ export function ImageClassificationForm({
   latestResult,
 }: ImageClassificationFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setError('Silakan pilih file gambar');
-        setSelectedFile(null);
-        return;
+  // Revoke object URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
       }
-      setError(null);
-      setSelectedFile(file);
-    }
-  };
+    };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0] ?? null;
     setError(null);
+    setFile(selectedFile);
 
-    if (!selectedFile) {
-      setError('Silakan pilih file gambar');
+    // Revoke previous preview URL before replacing it
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
+    const newUrl = selectedFile ? URL.createObjectURL(selectedFile) : null;
+    previewUrlRef.current = newUrl;
+    setPreviewUrl(newUrl);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!file) {
+      setError('Pilih gambar terlebih dahulu');
       return;
     }
 
     try {
-      await onSubmit(selectedFile);
-      setSelectedFile(null);
+      await onSubmit(file);
+
+      // Revoke current preview URL after successful submit before setting null
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+
+      setFile(null);
+      setPreviewUrl(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat mengunggah gambar');
+      setError(err instanceof Error ? err.message : 'Gagal mengirim gambar');
     }
-  };
-
-  const isFormValid = selectedFile !== null;
+  }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Klasifikasi Gambar</CardTitle>
-          <CardDescription>Unggah foto daun jagung untuk klasifikasi otomatis</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">{error}</div>
-            )}
-
-            <div>
-              <label htmlFor="image-file" className="block text-sm font-medium">
-                Pilih Gambar
-              </label>
-              <input
-                ref={fileInputRef}
-                id="image-file"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                disabled={isSubmitting}
-                className="mt-1 block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
-              />
-              {selectedFile && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  File dipilih: {selectedFile.name}
-                </p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              disabled={!isFormValid || isSubmitting}
-              className="w-full"
-            >
-              {isSubmitting ? 'Mengunggah...' : 'Unggah dan Klasifikasi'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {latestResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Hasil Klasifikasi Terbaru</CardTitle>
-            <CardDescription>Prediksi penyakit dari gambar terakhir</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg border border-border overflow-hidden">
-              <img
-                src={latestResult.imageUrl}
-                alt="Uploaded corn leaf"
-                className="w-full h-48 object-cover"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h4 className="font-semibold">{latestResult.disease.commonName}</h4>
-                  <p className="text-sm text-muted-foreground">{latestResult.disease.label}</p>
-                </div>
-                <RiskBadge level={latestResult.disease.riskLevel} />
-              </div>
-
-              <div className="rounded-md bg-muted p-3">
-                <p className="text-sm font-medium">
-                  Kepercayaan: {(latestResult.confidence * 100).toFixed(1)}%
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Rekomendasi awal:</p>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  {latestResult.disease.recommendations.slice(0, 3).map((recommendation) => (
-                    <li key={recommendation}>• {recommendation}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                {new Date(latestResult.createdAt).toLocaleDateString('id-ID', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" /> Diagnosis Gambar
+        </CardTitle>
+        <CardDescription>
+          Upload gambar daun jagung untuk klasifikasi AI dan review pakar jika confidence rendah.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="image-file" className="block text-sm font-medium">
+              Pilih Gambar
+            </label>
+            <input
+              ref={fileInputRef}
+              id="image-file"
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={handleFileChange}
+              disabled={isSubmitting}
+              className="mt-1 block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+            />
+            {file && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                File dipilih: {file.name}
               </p>
+            )}
+          </div>
+
+          {previewUrl && (
+            <img src={previewUrl} alt="Pratinjau gambar daun jagung untuk diagnosis" className="h-48 rounded-lg object-cover" />
+          )}
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? 'Memproses...' : 'Upload dan Diagnosis'}
+          </Button>
+        </form>
+
+        {latestResult && (
+          <div className="rounded-lg border p-4">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <h3 className="font-semibold">
+                {latestResult.disease?.commonName ?? 'Diagnosis gagal'}
+              </h3>
+              <DiagnosisStatusBadge status={latestResult.status} />
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            <p className="text-sm text-muted-foreground">
+              {latestResult.confidence === null
+                ? 'Tidak ada confidence'
+                : `Confidence ${(latestResult.confidence * 100).toFixed(1)}%`}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
