@@ -17,6 +17,7 @@ export function ImageClassificationForm({
   latestResult,
 }: ImageClassificationFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +25,9 @@ export function ImageClassificationForm({
   // Revoke object URL on component unmount
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
       }
     };
   }, []);
@@ -36,11 +38,14 @@ export function ImageClassificationForm({
     setFile(selectedFile);
 
     // Revoke previous preview URL before replacing it
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
     }
 
-    setPreviewUrl(selectedFile ? URL.createObjectURL(selectedFile) : null);
+    const newUrl = selectedFile ? URL.createObjectURL(selectedFile) : null;
+    previewUrlRef.current = newUrl;
+    setPreviewUrl(newUrl);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -54,8 +59,9 @@ export function ImageClassificationForm({
       await onSubmit(file);
 
       // Revoke current preview URL after successful submit before setting null
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
       }
 
       setFile(null);
