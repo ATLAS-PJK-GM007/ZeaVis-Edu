@@ -11,6 +11,7 @@
       "name": "@zeavis/api",
       "version": "0.1.0",
       "dependencies": {
+        "@elysiajs/cors": "1.4.2",
         "@tensorflow/tfjs": "4.22.0",
         "@zeavis/shared": "packages/shared",
         "bcryptjs": "^2.4.3",
@@ -106,6 +107,8 @@
     "@borewit/text-codec": ["@borewit/text-codec@0.2.2", "", {}, "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
+
+    "@elysiajs/cors": ["@elysiajs/cors@1.4.2", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-FTCcbH35brTLigF1W7BYySRZomgI/dBEMK9BgK9RP9Nez7zmpGh4koL/Yr1BFv8nYz7CfhRvcM8d/c+XnwMaVQ=="],
 
     "@esbuild-kit/core-utils": ["@esbuild-kit/core-utils@3.3.2", "", { "dependencies": { "esbuild": "~0.18.20", "source-map-support": "^0.5.21" } }, "sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ=="],
 
@@ -311,7 +314,7 @@
 
     "@webgpu/types": ["@webgpu/types@0.1.38", "", {}, "sha512-7LrhVKz2PRh+DD7+S+PVaFd5HxaWQvoMqBbsV9fNJO1pjUs1P8bM2vQVNfk+3URTqbuTI7gkXi0rfsN0IadoBA=="],
 
-    "@zeavis/api": ["@zeavis/api@workspace:apps/api", { "dependencies": { "@tensorflow/tfjs": "4.22.0", "@zeavis/shared": "packages/shared", "bcryptjs": "^2.4.3", "drizzle-orm": "^0.36.4", "elysia": "^1.1.25", "jpeg-js": "0.4.4", "pngjs": "7.0.0", "postgres": "^3.4.5" }, "devDependencies": { "@types/bcryptjs": "^2.4.6", "@types/bun": "latest", "drizzle-kit": "^0.27.1", "typescript": "^5.6.3" } }],
+    "@zeavis/api": ["@zeavis/api@workspace:apps/api", { "dependencies": { "@elysiajs/cors": "1.4.2", "@tensorflow/tfjs": "4.22.0", "@zeavis/shared": "packages/shared", "bcryptjs": "^2.4.3", "drizzle-orm": "^0.36.4", "elysia": "^1.1.25", "jpeg-js": "0.4.4", "pngjs": "7.0.0", "postgres": "^3.4.5" }, "devDependencies": { "@types/bcryptjs": "^2.4.6", "@types/bun": "latest", "drizzle-kit": "^0.27.1", "typescript": "^5.6.3" } }],
 
     "@zeavis/shared": ["@zeavis/shared@workspace:packages/shared", { "devDependencies": { "typescript": "^5.6.3" } }],
 

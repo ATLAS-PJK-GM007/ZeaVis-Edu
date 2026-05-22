@@ -30,11 +30,13 @@ function hashToken(token: string) {
 
 export function createSessionCookie(token: string) {
   const maxAge = 60 * 60 * 24 * 30;
-  return `${sessionCookieName}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${maxAge}`;
+  const sameSite = env.secureCookies ? 'SameSite=None; Secure' : 'SameSite=Lax';
+  return `${sessionCookieName}=${token}; HttpOnly; Path=/; ${sameSite}; Max-Age=${maxAge}`;
 }
 
 export function clearSessionCookie() {
-  return `${sessionCookieName}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`;
+  const sameSite = env.secureCookies ? 'SameSite=None; Secure' : 'SameSite=Lax';
+  return `${sessionCookieName}=; HttpOnly; Path=/; ${sameSite}; Max-Age=0`;
 }
 
 export function readSessionToken(cookieHeader: string | null | undefined) {

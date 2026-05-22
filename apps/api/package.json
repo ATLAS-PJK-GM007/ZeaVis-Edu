@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@elysiajs/cors": "1.4.2",
     "@tensorflow/tfjs": "4.22.0",
     "@zeavis/shared": "workspace:*",
     "bcryptjs": "^2.4.3",

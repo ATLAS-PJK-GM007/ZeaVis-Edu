@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import cors from '@elysiajs/cors';
 import { env, assertRequiredEnv } from './config/env';
 import { healthRoutes } from './routes/health';
 import { statusRoutes } from './routes/status';
@@ -12,6 +13,10 @@ import { expertRoutes } from './routes/expert';
 assertRequiredEnv();
 
 const app = new Elysia()
+  .use(cors({
+    origin: env.webAppUrl,
+    credentials: true,
+  }))
   .use(healthRoutes)
   .use(statusRoutes)
   .use(authRoutes)

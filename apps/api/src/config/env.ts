@@ -7,6 +7,9 @@ const googleOAuthEnabled = Boolean(
   Bun.env.GOOGLE_CLIENT_ID && Bun.env.GOOGLE_CLIENT_SECRET && Bun.env.GOOGLE_REDIRECT_URI,
 );
 
+const webAppUrl = Bun.env.WEB_APP_URL ?? 'http://localhost:5173';
+const secureCookies = Bun.env.SECURE_COOKIES === 'true' || webAppUrl.startsWith('https://');
+
 export const env = {
   port: Number(Bun.env.API_PORT ?? 3000),
   databaseUrl: Bun.env.DATABASE_URL,
@@ -18,7 +21,8 @@ export const env = {
   googleClientId: Bun.env.GOOGLE_CLIENT_ID,
   googleClientSecret: Bun.env.GOOGLE_CLIENT_SECRET,
   googleRedirectUri: Bun.env.GOOGLE_REDIRECT_URI,
-  webAppUrl: Bun.env.WEB_APP_URL ?? 'http://localhost:5173',
+  webAppUrl,
+  secureCookies,
 };
 
 export function assertRequiredEnv() {
