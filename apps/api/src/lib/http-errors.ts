@@ -5,6 +5,20 @@ export function badRequest(message: string): Response {
   });
 }
 
+export function unauthorized(message: string): Response {
+  return new Response(JSON.stringify({ error: message }), {
+    status: 401,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export function forbidden(message: string): Response {
+  return new Response(JSON.stringify({ error: message }), {
+    status: 403,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export function notFound(message: string): Response {
   return new Response(JSON.stringify({ error: message }), {
     status: 404,

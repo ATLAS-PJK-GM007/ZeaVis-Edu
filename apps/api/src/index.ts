@@ -4,6 +4,7 @@ import { healthRoutes } from './routes/health';
 import { statusRoutes } from './routes/status';
 import { diseaseRoutes } from './routes/diseases';
 import { classificationRoutes } from './routes/classifications';
+import { diagnosisRoutes } from './routes/diagnoses';
 import { dashboardRoutes } from './routes/dashboard';
 import { authRoutes } from './routes/auth';
 
@@ -15,6 +16,7 @@ const app = new Elysia()
   .use(authRoutes)
   .use(diseaseRoutes)
   .use(classificationRoutes)
+  .use(diagnosisRoutes)
   .use(dashboardRoutes)
   .listen(env.port);
 
