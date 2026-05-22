@@ -38,6 +38,36 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   return response.json();
 }
 
+function toImageClassificationRecord(diagnosis: DiagnosisRecord): ImageClassificationRecord {
+  if (!diagnosis.disease) {
+    throw new Error('Diagnosis does not include disease details');
+  }
+
+  return {
+    id: diagnosis.id,
+    predictedDiseaseSlug: diagnosis.predictedDiseaseSlug || 'daun-sehat',
+    confidence: diagnosis.confidence || 0,
+    probabilities: diagnosis.predictions.map((p) => ({
+      diseaseSlug: p.diseaseSlug || 'daun-sehat',
+      label: p.modelLabel,
+      confidence: p.confidence,
+    })),
+    imageUrl: diagnosis.imageUrl,
+    originalFileName: diagnosis.imageFileName,
+    uploaderPublicId: diagnosis.uploaderPublicId,
+    uploader: {
+      public_id: diagnosis.uploaderPublicId,
+      file_name: diagnosis.imageFileName,
+      mime_type: diagnosis.imageMimeType,
+      size_bytes: diagnosis.imageSizeBytes,
+      file_type: diagnosis.imageMimeType.split('/')[1] || 'unknown',
+      download_url: diagnosis.imageUrl,
+    },
+    createdAt: diagnosis.createdAt,
+    disease: diagnosis.disease,
+  };
+}
+
 export const apiClient = {
   // Auth methods
   async getMe(): Promise<AuthMeResponse> {
@@ -130,71 +160,11 @@ export const apiClient = {
   // Backwards-compatible aliases for old image classification methods
   async getImageClassifications(): Promise<ImageClassificationRecord[]> {
     const diagnoses = await this.getDiagnoses();
-    return diagnoses.map((d) => ({
-      id: d.id,
-      predictedDiseaseSlug: d.predictedDiseaseSlug || 'daun-sehat',
-      confidence: d.confidence || 0,
-      probabilities: d.predictions.map((p) => ({
-        diseaseSlug: p.diseaseSlug || 'daun-sehat',
-        label: p.modelLabel,
-        confidence: p.confidence,
-      })),
-      imageUrl: d.imageUrl,
-      originalFileName: d.imageFileName,
-      uploaderPublicId: d.uploaderPublicId,
-      uploader: {
-        public_id: d.uploaderPublicId,
-        file_name: d.imageFileName,
-        mime_type: d.imageMimeType,
-        size_bytes: d.imageSizeBytes,
-        file_type: d.imageMimeType.split('/')[1] || 'unknown',
-        download_url: d.imageUrl,
-      },
-      createdAt: d.createdAt,
-      disease: d.disease || {
-        slug: 'daun-sehat',
-        label: 'Daun Sehat',
-        commonName: 'Healthy Leaf',
-        description: '',
-        symptoms: [],
-        treatment: [],
-        riskLevel: 'low',
-      },
-    })) as ImageClassificationRecord[];
+    return diagnoses.map(toImageClassificationRecord);
   },
 
   async createImageClassification(file: File): Promise<ImageClassificationRecord> {
     const diagnosis = await this.createDiagnosis(file);
-    return {
-      id: diagnosis.id,
-      predictedDiseaseSlug: diagnosis.predictedDiseaseSlug || 'daun-sehat',
-      confidence: diagnosis.confidence || 0,
-      probabilities: diagnosis.predictions.map((p) => ({
-        diseaseSlug: p.diseaseSlug || 'daun-sehat',
-        label: p.modelLabel,
-        confidence: p.confidence,
-      })),
-      imageUrl: diagnosis.imageUrl,
-      originalFileName: diagnosis.imageFileName,
-      uploaderPublicId: diagnosis.uploaderPublicId,
-      uploader: {
-        public_id: diagnosis.uploaderPublicId,
-        file_name: diagnosis.imageFileName,
-        mime_type: diagnosis.imageMimeType,
-        size_bytes: diagnosis.imageSizeBytes,
-        file_type: diagnosis.imageMimeType.split('/')[1] || 'unknown',
-        download_url: diagnosis.imageUrl,
-      },
-      createdAt: diagnosis.createdAt,
-      disease: diagnosis.disease || {
-        slug: 'daun-sehat',
-        label: 'Daun Sehat',
-        commonName: 'Healthy Leaf',
-        description: '',
-        symptoms: [],
-        treatment: [],
-        riskLevel: 'low',
-      },
-    } as ImageClassificationRecord;
+    return toImageClassificationRecord(diagnosis);
   },
 };
