@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import type { DashboardSummary, RiskLevel } from '@zeavis/shared';
 import { createDbClient } from '../db/client';
-import { diseaseCatalog, manualClassifications } from '../db/schema';
+import { diseaseCatalog, imageClassifications, manualClassifications } from '../db/schema';
 import { serviceUnavailable } from '../lib/http-errors';
 import { desc, eq } from 'drizzle-orm';
 
@@ -10,7 +10,8 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/v1' }).get('/dashboard
     const db = createDbClient();
 
     const diseaseCount = await db.select().from(diseaseCatalog);
-    const classificationCount = await db.select().from(manualClassifications);
+    const manualClassificationCount = await db.select().from(manualClassifications);
+    const imageClassificationCount = await db.select().from(imageClassifications);
 
     const latestClassificationRow = await db
       .select({
@@ -75,7 +76,7 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/v1' }).get('/dashboard
 
     const summary: DashboardSummary = {
       diseaseCount: diseaseCount.length,
-      classificationCount: classificationCount.length,
+      classificationCount: manualClassificationCount.length + imageClassificationCount.length,
       latestClassification,
       riskDistribution,
     };

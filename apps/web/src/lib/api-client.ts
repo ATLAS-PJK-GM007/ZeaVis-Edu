@@ -3,6 +3,7 @@ import type {
   DiseaseCatalogItem,
   ManualClassificationRequest,
   ManualClassificationRecord,
+  ImageClassificationRecord,
   DashboardSummary,
 } from '@zeavis/shared';
 
@@ -20,7 +21,6 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
         errorMessage = errorData.error;
       }
     } catch {
-      // Response is not JSON, use default error message
     }
     throw new Error(errorMessage);
   }
@@ -50,6 +50,20 @@ export const apiClient = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+    });
+  },
+
+  async getImageClassifications(): Promise<ImageClassificationRecord[]> {
+    return fetchApi('/api/v1/classifications/image');
+  },
+
+  async createImageClassification(file: File): Promise<ImageClassificationRecord> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return fetchApi('/api/v1/classifications/image', {
+      method: 'POST',
+      body: formData,
     });
   },
 

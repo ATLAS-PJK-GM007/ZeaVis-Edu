@@ -20,4 +20,7 @@ export type {
   ManualClassificationRequest,
   ManualClassificationRecord,
   DashboardSummary,
+  PredictionProbability,
+  UploaderMetadata,
+  ImageClassificationRecord,
 } from './classifications';

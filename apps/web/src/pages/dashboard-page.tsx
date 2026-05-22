@@ -1,9 +1,10 @@
 import { useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { BookOpen, History, Leaf, LayoutDashboard, TrendingUp } from 'lucide-react';
+import { BookOpen, History, Leaf, LayoutDashboard, TrendingUp, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ManualClassificationForm } from '@/components/manual-classification-form';
+import { ImageClassificationForm } from '@/components/image-classification-form';
 import { RiskBadge } from '@/components/risk-badge';
 import { useUiStore } from '@/store/ui-store';
 import { apiClient } from '@/lib/api-client';
@@ -12,7 +13,7 @@ export function DashboardPage() {
   const { dashboardCompact, toggleDashboardCompact } = useUiStore();
   const queryClient = useQueryClient();
 
-  const [diseasesQuery, summaryQuery, classificationsQuery] = useQueries({
+  const [diseasesQuery, summaryQuery, classificationsQuery, imageClassificationsQuery] = useQueries({
     queries: [
       {
         queryKey: ['diseases'],
@@ -25,6 +26,10 @@ export function DashboardPage() {
       {
         queryKey: ['manual-classifications'],
         queryFn: () => apiClient.getManualClassifications(),
+      },
+      {
+        queryKey: ['image-classifications'],
+        queryFn: () => apiClient.getImageClassifications(),
       },
     ],
   });
@@ -39,9 +44,20 @@ export function DashboardPage() {
     },
   });
 
+  const createImageClassificationMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return await apiClient.createImageClassification(file);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['image-classifications'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+    },
+  });
+
   const diseases = diseasesQuery.data || [];
   const summary = summaryQuery.data;
   const classifications = classificationsQuery.data || [];
+  const imageClassifications = imageClassificationsQuery.data || [];
 
   const isLoadingData = diseasesQuery.isLoading || summaryQuery.isLoading;
   const hasError = diseasesQuery.error || summaryQuery.error;
@@ -220,6 +236,14 @@ export function DashboardPage() {
               </Card>
             )}
 
+            <ImageClassificationForm
+              onSubmit={async (file) => {
+                await createImageClassificationMutation.mutateAsync(file);
+              }}
+              isSubmitting={createImageClassificationMutation.isPending}
+              latestResult={imageClassifications[0] ?? null}
+            />
+
             <ManualClassificationForm
               diseases={diseases}
               onSubmit={async (payload) => {
@@ -228,38 +252,45 @@ export function DashboardPage() {
               isSubmitting={createClassificationMutation.isPending}
             />
 
-            {classifications.length > 0 && (
+            {imageClassifications.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Leaf className="h-5 w-5" />
-                    Riwayat Laporan
+                    <Image className="h-5 w-5" />
+                    Riwayat Klasifikasi Gambar
                   </CardTitle>
                   <CardDescription>
-                    {classifications.length} laporan pengamatan penyakit
+                    {imageClassifications.length} gambar yang diklasifikasi
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {classifications.slice(0, 5).map((classification) => (
-                      <div key={classification.id} className="rounded-lg border border-border p-3">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div>
-                            <h4 className="text-sm font-semibold">
-                              {classification.disease.commonName}
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                              {classification.disease.label}
-                            </p>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {imageClassifications.slice(0, 6).map((classification) => (
+                      <div key={classification.id} className="rounded-lg border border-border overflow-hidden">
+                        <img
+                          src={classification.imageUrl}
+                          alt="Classified corn leaf"
+                          className="w-full h-32 object-cover"
+                        />
+                        <div className="p-3 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <h4 className="text-sm font-semibold">
+                                {classification.disease.commonName}
+                              </h4>
+                              <p className="text-xs text-muted-foreground">
+                                {classification.disease.label}
+                              </p>
+                            </div>
+                            <RiskBadge level={classification.disease.riskLevel} className="text-xs" />
                           </div>
-                          <RiskBadge level={classification.disease.riskLevel} />
+                          <div className="text-xs text-muted-foreground">
+                            Kepercayaan: {(classification.confidence * 100).toFixed(1)}%
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(classification.createdAt).toLocaleDateString('id-ID')}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {classification.observation}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {classification.location} • {new Date(classification.createdAt).toLocaleDateString('id-ID')}
-                        </p>
                       </div>
                     ))}
                   </div>

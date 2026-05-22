@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uuid, varchar, text, integer } from 'drizzle-orm/pg-core';
+import { pgTable, timestamp, uuid, varchar, text, integer, jsonb, real } from 'drizzle-orm/pg-core';
 
 export const appEvents = pgTable('app_events', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -28,5 +28,19 @@ export const manualClassifications = pgTable('manual_classifications', {
     .references(() => diseaseCatalog.slug),
   observation: text('observation').notNull(),
   location: varchar('location', { length: 160 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const imageClassifications = pgTable('image_classifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  predictedDiseaseSlug: varchar('predicted_disease_slug', { length: 80 })
+    .notNull()
+    .references(() => diseaseCatalog.slug),
+  confidence: real('confidence').notNull(),
+  probabilities: jsonb('probabilities').notNull(),
+  imageUrl: text('image_url').notNull(),
+  originalFileName: varchar('original_file_name', { length: 240 }).notNull(),
+  uploaderPublicId: varchar('uploader_public_id', { length: 160 }).notNull(),
+  uploaderPayload: jsonb('uploader_payload').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
