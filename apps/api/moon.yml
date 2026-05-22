@@ -14,7 +14,6 @@ tasks:
       - package.json
       - tsconfig.json
       - drizzle.config.ts
-      - ../../packages/shared/dist/**/*
     outputs:
       - dist
   typecheck:
@@ -26,4 +25,3 @@ tasks:
       - package.json
       - tsconfig.json
       - drizzle.config.ts
-      - ../../packages/shared/dist/**/*

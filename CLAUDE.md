@@ -55,12 +55,62 @@ jupyter notebook notebook.ipynb
 
 There is no project test suite, lint command, or build system configured in the current repository.
 
+## Fullstack app commands
+
+The TypeScript application scaffold lives at the repository root and uses Bun workspaces with Moon tasks.
+
+Install dependencies:
+
+```bash
+bun install
+```
+
+Run all development tasks through Moon:
+
+```bash
+bun run dev
+```
+
+Run type checks:
+
+```bash
+bun run typecheck
+```
+
+Run production builds:
+
+```bash
+bun run build
+```
+
+Run the API directly:
+
+```bash
+cd apps/api && bun run start
+```
+
+Run the web app directly:
+
+```bash
+cd apps/web && bun run dev
+```
+
 ## High-level architecture
 
 - `Machine_Learning/preprocessing.py` prepares the training dataset locally. It extracts three source ZIP files, merges selected class folders into `dataset/`, maps selected Mandarin labels from Dataset 3 via `desc.json`, removes known problematic image files, then creates `dataset.zip` for upload to Google Drive/Colab.
 - `Machine_Learning/notebook.ipynb` is the training workflow intended for Google Colab with GPU enabled. It trains an EfficientNetV2B0-based classifier and saves the best model to Google Drive as `best_model.keras`.
 - `Machine_Learning/save_model.py` is the production export step. It loads `best_model/best_model.keras`, rebuilds a clean EfficientNetV2B0 architecture without training-time augmentation layers, copies weights into that model, exports `model/saved_model/`, and writes `model/model.tflite`.
 - TensorFlow.js export is intentionally done with the `tensorflowjs_converter` CLI rather than from Python to avoid protobuf/runtime conflicts documented in the README.
+
+## Fullstack application architecture
+
+The root TypeScript workspace is a Bun + Moon monorepo:
+
+- `apps/web/` contains the React + Vite + TypeScript frontend with React Router, TanStack Query, Zustand, Tailwind, and shadcn/ui-style components.
+- `apps/api/` contains the Elysia backend with health/status routes and Drizzle/PostgreSQL configuration.
+- `packages/shared/` contains shared TypeScript types and utilities consumed by both apps.
+
+The backend reads `DATABASE_URL` for Drizzle/PostgreSQL, but the initial health/status endpoints do not require a live database connection.
 
 ## Model labels and dataset mapping
 
