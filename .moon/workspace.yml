@@ -1,0 +1,4 @@
+projects:
+  web: apps/web
+  api: apps/api
+  shared: packages/shared
