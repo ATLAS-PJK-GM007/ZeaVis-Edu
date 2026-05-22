@@ -1,0 +1,23 @@
+type: application
+language: typescript
+
+tasks:
+  dev:
+    command: bun run dev
+    local: true
+  build:
+    command: bun build src/index.ts --outdir dist --target bun
+    inputs:
+      - src/**/*
+      - package.json
+      - tsconfig.json
+      - drizzle.config.ts
+    outputs:
+      - dist
+  typecheck:
+    command: bun run typecheck
+    inputs:
+      - src/**/*
+      - package.json
+      - tsconfig.json
+      - drizzle.config.ts
