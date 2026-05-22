@@ -5,6 +5,7 @@ import { DashboardPage } from '@/pages/dashboard-page';
 import { LandingPage } from '@/pages/landing-page';
 import { CatalogPage } from '@/pages/catalog-page';
 import { DiseaseDetailPage } from '@/pages/disease-detail-page';
+import { DiagnosisDetailPage } from '@/pages/diagnosis-detail-page';
 import { LoginPage } from '@/pages/login-page';
 import { RegisterPage } from '@/pages/register-page';
 
@@ -19,6 +20,14 @@ const router = createBrowserRouter([
     element: (
       <AuthGuard>
         <DashboardPage />
+      </AuthGuard>
+    ),
+  },
+  {
+    path: '/diagnoses/:id',
+    element: (
+      <AuthGuard>
+        <DiagnosisDetailPage />
       </AuthGuard>
     ),
   },
