@@ -74,6 +74,14 @@ async function parseErrorResponse(response: Response): Promise<string> {
   return response.statusText || 'Unknown error';
 }
 
+async function parsePredictionResponse(response: Response): Promise<MlPredictionResponse> {
+  try {
+    return await response.json() as MlPredictionResponse;
+  } catch (error) {
+    throw new Error('Invalid ML service JSON response');
+  }
+}
+
 export async function classifyImage(file: File): Promise<ClassificationResult> {
   if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
     throw new Error('File must be JPEG or PNG');
@@ -97,7 +105,7 @@ export async function classifyImage(file: File): Promise<ClassificationResult> {
     throw new Error(`ML service returned ${response.status}: ${message}`);
   }
 
-  const prediction = await response.json() as MlPredictionResponse;
+  const prediction = await parsePredictionResponse(response);
   const predictedLabel = assertKnownLabel(prediction.label);
   const predictedDisease = DISEASE_BY_LABEL.get(predictedLabel)!;
 

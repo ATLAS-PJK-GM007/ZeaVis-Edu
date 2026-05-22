@@ -66,6 +66,12 @@ describe('classifyImage', () => {
     await expect(classifyImage(makeImageFile())).rejects.toThrow('ML service returned 503: Model is not loaded');
   });
 
+  test('throws when ML service returns malformed JSON', async () => {
+    mockFetch(async () => new Response('not-json', { status: 200, headers: { 'content-type': 'application/json' } }));
+
+    await expect(classifyImage(makeImageFile())).rejects.toThrow('Invalid ML service JSON response');
+  });
+
   test('throws when ML service returns an unknown label', async () => {
     mockFetch(async () => new Response(
       JSON.stringify({
