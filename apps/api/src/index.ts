@@ -1,14 +1,18 @@
 import { Elysia } from 'elysia';
-import { env } from './config/env';
+import { env, assertRequiredEnv } from './config/env';
 import { healthRoutes } from './routes/health';
 import { statusRoutes } from './routes/status';
 import { diseaseRoutes } from './routes/diseases';
 import { classificationRoutes } from './routes/classifications';
 import { dashboardRoutes } from './routes/dashboard';
+import { authRoutes } from './routes/auth';
+
+assertRequiredEnv();
 
 const app = new Elysia()
   .use(healthRoutes)
   .use(statusRoutes)
+  .use(authRoutes)
   .use(diseaseRoutes)
   .use(classificationRoutes)
   .use(dashboardRoutes)
