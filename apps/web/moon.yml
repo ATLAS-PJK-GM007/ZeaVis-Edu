@@ -1,0 +1,35 @@
+type: application
+language: typescript
+
+tasks:
+  dev:
+    command: bun run dev
+    local: true
+  build:
+    command: bun run build
+    deps:
+      - shared:build
+    inputs:
+      - src/**/*
+      - index.html
+      - package.json
+      - tsconfig.json
+      - tsconfig.node.json
+      - vite.config.ts
+      - tailwind.config.ts
+      - postcss.config.js
+      - ../../packages/shared/dist/**/*
+    outputs:
+      - dist
+  typecheck:
+    command: bun run typecheck
+    deps:
+      - shared:typecheck
+    inputs:
+      - src/**/*
+      - package.json
+      - tsconfig.json
+      - tsconfig.node.json
+      - vite.config.ts
+      - tailwind.config.ts
+      - ../../packages/shared/dist/**/*
