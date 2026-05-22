@@ -1,10 +1,6 @@
-type: application
-language: typescript
-
 tasks:
   dev:
     command: bun run dev
-    local: true
   build:
     command: bun build src/index.ts --outdir dist --target bun
     deps:

@@ -10,26 +10,25 @@
     "typecheck": "tsc --project tsconfig.json"
   },
   "dependencies": {
-    "@radix-ui/react-slot": "^1.1.0",
-    "@tanstack/react-query": "^5.59.16",
-    "@vitejs/plugin-react": "^4.3.3",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-query": "^5.100.11",
+    "@vitejs/plugin-react": "^6.0.2",
     "@zeavis/shared": "workspace:*",
-    "class-variance-authority": "^0.7.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
-    "tailwind-merge": "^2.5.4",
-    "zustand": "^5.0.1"
+    "lucide-react": "^1.16.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.1",
+    "tailwind-merge": "^3.6.0",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.15",
-    "typescript": "^5.6.3",
-    "vite": "^6.0.1"
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.15",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14"
   }
 }

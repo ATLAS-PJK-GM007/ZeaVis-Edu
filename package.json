@@ -3,12 +3,12 @@
   "private": true,
   "scripts": {
     "dev": "moon run :dev",
-    "build": "moon run :build",
+    "build": "moon run shared:build api:build web:build",
     "typecheck": "moon run :typecheck"
   },
   "devDependencies": {
-    "@moonrepo/cli": "^1.32.4",
-    "typescript": "^5.6.3"
+    "@moonrepo/cli": "^2.2.5",
+    "typescript": "^6.0.3"
   },
   "workspaces": [
     "apps/*",
