@@ -13,13 +13,10 @@
   },
   "dependencies": {
     "@elysiajs/cors": "1.4.2",
-    "@tensorflow/tfjs": "4.22.0",
     "@zeavis/shared": "workspace:*",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.4.28",
-    "jpeg-js": "0.4.4",
-    "pngjs": "7.0.0",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
