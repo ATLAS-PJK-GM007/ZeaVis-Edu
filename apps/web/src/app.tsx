@@ -6,6 +6,7 @@ import { LandingPage } from '@/pages/landing-page';
 import { CatalogPage } from '@/pages/catalog-page';
 import { DiseaseDetailPage } from '@/pages/disease-detail-page';
 import { DiagnosisDetailPage } from '@/pages/diagnosis-detail-page';
+import { ExpertReviewsPage } from '@/pages/expert-reviews-page';
 import { LoginPage } from '@/pages/login-page';
 import { RegisterPage } from '@/pages/register-page';
 
@@ -28,6 +29,14 @@ const router = createBrowserRouter([
     element: (
       <AuthGuard>
         <DiagnosisDetailPage />
+      </AuthGuard>
+    ),
+  },
+  {
+    path: '/expert/reviews',
+    element: (
+      <AuthGuard requireExpert>
+        <ExpertReviewsPage />
       </AuthGuard>
     ),
   },
