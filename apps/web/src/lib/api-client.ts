@@ -1,9 +1,15 @@
 import type {
-  DiseaseSlug,
+  AuthMeResponse,
+  AuthRequest,
+  AuthResponse,
+  DiagnosisRecord,
   DiseaseCatalogItem,
+  DiseaseSlug,
+  ImageClassificationRecord,
   ManualClassificationRequest,
   ManualClassificationRecord,
-  ImageClassificationRecord,
+  RegisterRequest,
+  ReviewDiagnosisRequest,
   DashboardSummary,
 } from '@zeavis/shared';
 
@@ -11,7 +17,11 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${apiBaseUrl}${endpoint}`;
-  const response = await fetch(url, options);
+  const response = await fetch(url, {
+    credentials: 'include',
+    ...options,
+    headers: options?.headers,
+  });
 
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}`;
@@ -29,6 +39,32 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 }
 
 export const apiClient = {
+  // Auth methods
+  async getMe(): Promise<AuthMeResponse> {
+    return fetchApi('/api/v1/auth/me');
+  },
+
+  async register(payload: RegisterRequest): Promise<AuthResponse> {
+    return fetchApi('/api/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async login(payload: AuthRequest): Promise<AuthResponse> {
+    return fetchApi('/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async logout(): Promise<{ ok: boolean }> {
+    return fetchApi('/api/v1/auth/logout', { method: 'POST' });
+  },
+
+  // Disease catalog methods
   async getDiseases(): Promise<DiseaseCatalogItem[]> {
     return fetchApi('/api/v1/diseases');
   },
@@ -37,6 +73,7 @@ export const apiClient = {
     return fetchApi(`/api/v1/diseases/${slug}`);
   },
 
+  // Manual classification methods
   async getManualClassifications(): Promise<ManualClassificationRecord[]> {
     return fetchApi('/api/v1/classifications/manual');
   },
@@ -53,21 +90,111 @@ export const apiClient = {
     });
   },
 
-  async getImageClassifications(): Promise<ImageClassificationRecord[]> {
-    return fetchApi('/api/v1/classifications/image');
+  // Diagnosis methods
+  async getDiagnoses(): Promise<DiagnosisRecord[]> {
+    return fetchApi('/api/v1/diagnoses');
   },
 
-  async createImageClassification(file: File): Promise<ImageClassificationRecord> {
+  async getDiagnosis(id: string): Promise<DiagnosisRecord> {
+    return fetchApi(`/api/v1/diagnoses/${id}`);
+  },
+
+  async createDiagnosis(file: File): Promise<DiagnosisRecord> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return fetchApi('/api/v1/classifications/image', {
+    return fetchApi('/api/v1/diagnoses', {
       method: 'POST',
       body: formData,
     });
   },
 
+  // Expert review methods
+  async getExpertReviews(): Promise<DiagnosisRecord[]> {
+    return fetchApi('/api/v1/expert/reviews');
+  },
+
+  async reviewDiagnosis(id: string, payload: ReviewDiagnosisRequest): Promise<DiagnosisRecord> {
+    return fetchApi(`/api/v1/expert/reviews/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // Dashboard methods
   async getDashboardSummary(): Promise<DashboardSummary> {
     return fetchApi('/api/v1/dashboard/summary');
+  },
+
+  // Backwards-compatible aliases for old image classification methods
+  async getImageClassifications(): Promise<ImageClassificationRecord[]> {
+    const diagnoses = await this.getDiagnoses();
+    return diagnoses.map((d) => ({
+      id: d.id,
+      predictedDiseaseSlug: d.predictedDiseaseSlug || 'daun-sehat',
+      confidence: d.confidence || 0,
+      probabilities: d.predictions.map((p) => ({
+        diseaseSlug: p.diseaseSlug || 'daun-sehat',
+        label: p.modelLabel,
+        confidence: p.confidence,
+      })),
+      imageUrl: d.imageUrl,
+      originalFileName: d.imageFileName,
+      uploaderPublicId: d.uploaderPublicId,
+      uploader: {
+        public_id: d.uploaderPublicId,
+        file_name: d.imageFileName,
+        mime_type: d.imageMimeType,
+        size_bytes: d.imageSizeBytes,
+        file_type: d.imageMimeType.split('/')[1] || 'unknown',
+        download_url: d.imageUrl,
+      },
+      createdAt: d.createdAt,
+      disease: d.disease || {
+        slug: 'daun-sehat',
+        label: 'Daun Sehat',
+        commonName: 'Healthy Leaf',
+        description: '',
+        symptoms: [],
+        treatment: [],
+        riskLevel: 'low',
+      },
+    })) as ImageClassificationRecord[];
+  },
+
+  async createImageClassification(file: File): Promise<ImageClassificationRecord> {
+    const diagnosis = await this.createDiagnosis(file);
+    return {
+      id: diagnosis.id,
+      predictedDiseaseSlug: diagnosis.predictedDiseaseSlug || 'daun-sehat',
+      confidence: diagnosis.confidence || 0,
+      probabilities: diagnosis.predictions.map((p) => ({
+        diseaseSlug: p.diseaseSlug || 'daun-sehat',
+        label: p.modelLabel,
+        confidence: p.confidence,
+      })),
+      imageUrl: diagnosis.imageUrl,
+      originalFileName: diagnosis.imageFileName,
+      uploaderPublicId: diagnosis.uploaderPublicId,
+      uploader: {
+        public_id: diagnosis.uploaderPublicId,
+        file_name: diagnosis.imageFileName,
+        mime_type: diagnosis.imageMimeType,
+        size_bytes: diagnosis.imageSizeBytes,
+        file_type: diagnosis.imageMimeType.split('/')[1] || 'unknown',
+        download_url: diagnosis.imageUrl,
+      },
+      createdAt: diagnosis.createdAt,
+      disease: diagnosis.disease || {
+        slug: 'daun-sehat',
+        label: 'Daun Sehat',
+        commonName: 'Healthy Leaf',
+        description: '',
+        symptoms: [],
+        treatment: [],
+        riskLevel: 'low',
+      },
+    } as ImageClassificationRecord;
   },
 };
