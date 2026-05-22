@@ -1,0 +1,10 @@
+tasks:
+  dev:
+    command: .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001
+  typecheck:
+    command: python -m py_compile main.py model.py schemas.py
+    inputs:
+      - main.py
+      - model.py
+      - schemas.py
+      - requirements.txt
