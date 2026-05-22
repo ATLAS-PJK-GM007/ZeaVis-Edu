@@ -1,4 +1,5 @@
 projects:
   web: apps/web
   api: apps/api
+  ml-service: apps/ml-service
   shared: packages/shared
