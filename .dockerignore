@@ -12,7 +12,7 @@ docker-compose.yml
 Machine_Learning/dataset
 Machine_Learning/dataset.zip
 Machine_Learning/dataset_*.zip
-Machine_Learning/model
+Machine_Learning/model/*
 !Machine_Learning/model/model.onnx
 Machine_Learning/best_model/*
 !Machine_Learning/best_model/best_model.keras
