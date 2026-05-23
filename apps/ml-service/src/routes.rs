@@ -17,17 +17,6 @@ pub struct MetadataResponse {
     pub labels: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PredictionResponse {
-    pub predictions: Vec<PredictionResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PredictionResult {
-    pub label: String,
-    pub confidence: f32,
-}
-
 pub fn health_response(model_loaded: bool) -> HealthResponse {
     HealthResponse {
         status: "ok".to_string(),
@@ -84,25 +73,5 @@ mod tests {
             response.labels,
             vec!["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"]
         );
-    }
-
-    #[test]
-    fn prediction_response_serializes() {
-        let response = PredictionResponse {
-            predictions: vec![
-                PredictionResult {
-                    label: "Bercak Daun".to_string(),
-                    confidence: 0.95,
-                },
-                PredictionResult {
-                    label: "Daun Sehat".to_string(),
-                    confidence: 0.05,
-                },
-            ],
-        };
-
-        let json = serde_json::to_string(&response).expect("failed to serialize");
-        assert!(json.contains("Bercak Daun"));
-        assert!(json.contains("0.95"));
     }
 }

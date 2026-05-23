@@ -3,7 +3,12 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use serde_json::json;
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
+pub struct ErrorResponse {
+    pub detail: String,
+}
 
 #[derive(Debug)]
 pub enum ServiceError {
@@ -20,7 +25,7 @@ impl IntoResponse for ServiceError {
             ServiceError::PredictionFailed(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
         };
 
-        let body = Json(json!({ "detail": detail }));
+        let body = Json(ErrorResponse { detail });
         (status, body).into_response()
     }
 }
