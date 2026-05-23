@@ -25,6 +25,8 @@ Dependensi Rust sudah terdaftar di `Cargo.toml`. Cargo akan mengunduh dan mengko
 cargo build
 ```
 
+Output build lokal berada di `target/` dan direktori tersebut diabaikan oleh Git.
+
 ## Menjalankan Service Lokal
 
 Semua perintah di bawah dijalankan dari direktori `apps/ml-service`.
@@ -273,15 +275,14 @@ cargo build
 
 ### Docker
 
-Service dapat di-deploy via Docker. Dockerfile sudah tersedia di direktori ini.
+Service dapat di-deploy via Docker. Jalankan build dari root repository karena Dockerfile menyalin source service dan artifact ONNX dari beberapa direktori repo.
 
 ```bash
-docker build -t zeavis-ml-service .
-docker run -p 8000:8000 \
-  -v /path/to/model.onnx:/app/model.onnx \
-  -e MODEL_PATH=/app/model.onnx \
-  zeavis-ml-service
+docker build -f apps/ml-service/Dockerfile -t zeavis-ml-service .
+docker run -p 8000:8000 zeavis-ml-service
 ```
+
+Pastikan `Machine_Learning/model/model.onnx` sudah dibuat sebelum build image.
 
 ### Docker Compose
 
