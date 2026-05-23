@@ -27,9 +27,12 @@ cargo build
 
 ## Menjalankan Service Lokal
 
+Semua perintah di bawah dijalankan dari direktori `apps/ml-service`.
+
 ### Opsi 1: Default (Port 8000, Model dari Machine_Learning/)
 
 ```bash
+cd apps/ml-service
 cargo run
 ```
 
@@ -43,6 +46,7 @@ Service akan mencari model di path default dan mendengarkan di `http://localhost
 Untuk development lokal dengan port 8001 (sesuai `.env.example`):
 
 ```bash
+cd apps/ml-service
 source .env.example
 cargo run
 ```
@@ -54,12 +58,14 @@ Service akan mendengarkan di `http://localhost:8001` karena `ML_SERVICE_PORT=800
 Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
 
 ```bash
+cd apps/ml-service
 MODEL_PATH=/path/to/model.onnx cargo run
 ```
 
 Atau kombinasikan dengan port custom:
 
 ```bash
+cd apps/ml-service
 ML_SERVICE_PORT=9000 MODEL_PATH=/path/to/model.onnx cargo run
 ```
 

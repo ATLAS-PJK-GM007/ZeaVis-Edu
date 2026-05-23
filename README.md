@@ -171,6 +171,7 @@ MODEL_PATH=/path/to/model.onnx cargo run
 - **Default (tanpa .env):** Service mendengarkan di `http://localhost:8000`
 - **Local development (dengan .env.example):** Service mendengarkan di `http://localhost:8001`
   ```bash
+  cd apps/ml-service
   source .env.example
   cargo run
   ```
