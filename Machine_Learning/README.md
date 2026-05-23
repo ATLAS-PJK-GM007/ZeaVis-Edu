@@ -14,7 +14,7 @@ Pipeline lengkap untuk klasifikasi penyakit daun jagung menggunakan **EfficientN
 6. [Tahap 2 — Upload ke Google Drive & Training di Colab](#6-tahap-2--upload-ke-google-drive--training-di-colab)
 7. [Tahap 3 — Download Model dari Colab](#7-tahap-3--download-model-dari-colab)
 8. [Tahap 4 — Ekspor Model untuk Produksi](#8-tahap-4--ekspor-model-untuk-produksi)
-9. [Tahap 5 — Konversi ke ONNX](#9-tahap-5--konversi-ke-onnx)
+9. [Validasi Parity ONNX (Opsional)](#9-validasi-parity-onnx-opsional)
 10. [Output Akhir](#10-output-akhir)
 11. [Troubleshooting](#11-troubleshooting)
 
@@ -330,7 +330,9 @@ Skrip ini akan:
 
 Model ONNX ini digunakan oleh layanan inferensi Rust di `apps/ml-service/` untuk performa dan kompatibilitas lintas platform yang lebih baik.
 
-#### Validasi Parity ONNX
+---
+
+## 9. Validasi Parity ONNX (Opsional)
 
 Untuk memverifikasi bahwa model ONNX menghasilkan prediksi yang sama dengan SavedModel asli, jalankan:
 
@@ -338,7 +340,7 @@ Untuk memverifikasi bahwa model ONNX menghasilkan prediksi yang sama dengan Save
 python validate_onnx_parity.py /path/to/corn-leaf.jpg
 ```
 
-Skrip ini akan membandingkan output prediksi antara SavedModel dan ONNX untuk memastikan keakuratan konversi.
+Skrip ini akan membandingkan output prediksi antara SavedModel dan ONNX untuk memastikan keakuratan konversi. **Validasi ini bersifat manual dan direkomendasikan, bukan wajib untuk deployment.**
 
 ---
 

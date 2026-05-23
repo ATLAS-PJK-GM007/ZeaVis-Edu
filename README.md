@@ -166,23 +166,7 @@ Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
 MODEL_PATH=/path/to/model.onnx cargo run
 ```
 
-## Endpoint Penting
-
-### ML Service
-
-| Method | Endpoint | Fungsi |
-|---|---|---|
-| GET | `/health` | Mengecek status service dan status model |
-| GET | `/metadata` | Melihat metadata service, label, input size, dan path model |
-| POST | `/predict` | Mengunggah gambar daun jagung untuk klasifikasi |
-
-Contoh verifikasi lokal:
-
-```bash
-curl http://localhost:8001/health
-curl http://localhost:8001/metadata
-curl -X POST http://localhost:8001/predict -F "file=@/path/to/corn-leaf.jpg"
-```
+Service mendengarkan di `http://localhost:8001` secara default untuk development lokal (lihat `apps/ml-service/.env.example`). Dalam Docker container, service mendengarkan di port `8000`.
 
 ## Docker Deployment
 

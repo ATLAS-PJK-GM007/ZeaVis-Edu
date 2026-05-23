@@ -50,7 +50,7 @@ services:
     env_file:
       - .env
     environment:
-      MODEL_PATH: /app/model/best_model.keras
+      MODEL_PATH: /app/model/model.onnx
       MODEL_INPUT_SIZE: "224"
     labels:
       traefik.enable: "true"
