@@ -7,11 +7,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-
 
 def main():
     """Convert a TensorFlow SavedModel to ONNX format using tf2onnx."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
     parser = argparse.ArgumentParser(
         description="Convert TensorFlow SavedModel to ONNX format"
     )
@@ -37,7 +37,9 @@ def main():
     args = parser.parse_args()
 
     if not args.saved_model.exists():
-        raise FileNotFoundError(f"SavedModel not found at {args.saved_model}")
+        msg = f"SavedModel not found at {args.saved_model}"
+        logging.error(msg)
+        raise FileNotFoundError(msg)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -54,9 +56,11 @@ def main():
     ]
 
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         logging.error(f"tf2onnx conversion failed with exit code {e.returncode}")
+        if e.stderr:
+            logging.error(f"stderr: {e.stderr}")
         raise
 
     logging.info(f"ONNX model saved to {args.output}")
