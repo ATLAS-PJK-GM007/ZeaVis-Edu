@@ -1,7 +1,7 @@
 use crate::config::LABELS;
 use crate::error::ServiceError;
 use ndarray::Array4;
-use ort::Session;
+use ort::{session::Session, value::TensorRef};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -35,7 +35,7 @@ impl ModelService {
     pub fn new(model_path: &Path, input_size: u32) -> Self {
         let session = Session::builder()
             .ok()
-            .and_then(|builder| builder.commit_from_file(model_path).ok())
+            .and_then(|mut builder| builder.commit_from_file(model_path).ok())
             .map(Mutex::new);
 
         Self {
@@ -71,21 +71,21 @@ impl ModelService {
             .ok_or_else(|| ServiceError::ModelUnavailable("Model is not loaded".to_string()))?;
 
         // Lock the session for thread-safe access
-        let session_guard = session
+        let mut session_guard = session
             .lock()
             .map_err(|_| ServiceError::PredictionFailed("Prediction failed".to_string()))?;
 
-        // Run inference
+        let input = TensorRef::from_array_view(&input)
+            .map_err(|_| ServiceError::PredictionFailed("Prediction failed".to_string()))?;
         let outputs = session_guard
-            .run(ort::inputs![input]?)
+            .run(ort::inputs![input])
             .map_err(|_| ServiceError::PredictionFailed("Prediction failed".to_string()))?;
 
-        // Extract output as f32 vector
         let output_tensor = outputs[0]
             .try_extract_tensor::<f32>()
             .map_err(|_| ServiceError::PredictionFailed("Prediction failed".to_string()))?;
 
-        let probabilities: Vec<f32> = output_tensor.iter().copied().collect();
+        let probabilities: Vec<f32> = output_tensor.1.iter().copied().collect();
 
         Self::prediction_from_probabilities(&probabilities)
     }

@@ -15,10 +15,9 @@ use std::io::Cursor;
 pub fn preprocess_image(bytes: &[u8], input_size: u32) -> Result<Array4<f32>, ServiceError> {
     // Decode image from bytes
     let cursor = Cursor::new(bytes);
-    let reader = ImageReader::new(cursor)
-        .map_err(|_| ServiceError::BadRequest("Uploaded file is not a valid image".to_string()))?;
-
-    let image = reader
+    let image = ImageReader::new(cursor)
+        .with_guessed_format()
+        .map_err(|_| ServiceError::BadRequest("Uploaded file is not a valid image".to_string()))?
         .decode()
         .map_err(|_| ServiceError::BadRequest("Uploaded file is not a valid image".to_string()))?;
 
@@ -91,18 +90,9 @@ mod tests {
         // After resizing 2x1 to 2x2, we expect interpolation
         // Check that first pixel channel values are present (at least the first row)
         // The exact values depend on interpolation, but we can verify the structure
-        let first_batch = &array.slice(ndarray::s![0, .., .., ..]);
-        assert_eq!(first_batch.shape(), &[2, 2, 3]);
-
-        // Verify first pixel (0, 0) has 3 channels
-        let pixel_0_0 = &first_batch.slice(ndarray::s![0, 0, ..]);
-        assert_eq!(pixel_0_0.len(), 3);
-
-        // The first pixel should be close to [10, 20, 30] (may be interpolated)
-        // We'll just verify it's in a reasonable range
-        assert!(pixel_0_0[0] >= 5.0 && pixel_0_0[0] <= 25.0);
-        assert!(pixel_0_0[1] >= 15.0 && pixel_0_0[1] <= 35.0);
-        assert!(pixel_0_0[2] >= 25.0 && pixel_0_0[2] <= 45.0);
+        assert_eq!(array[[0, 0, 0, 0]], 10.0);
+        assert_eq!(array[[0, 0, 0, 1]], 20.0);
+        assert_eq!(array[[0, 0, 0, 2]], 30.0);
     }
 
     #[test]

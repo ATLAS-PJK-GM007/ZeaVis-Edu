@@ -5,7 +5,6 @@ use crate::error::ServiceError;
 use crate::image::preprocess_image;
 use axum::{
     extract::{State, Multipart},
-    http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
