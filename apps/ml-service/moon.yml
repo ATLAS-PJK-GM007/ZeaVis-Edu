@@ -1,10 +1,18 @@
 tasks:
   dev:
-    command: .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001
+    command: cargo run
   typecheck:
-    command: python -m py_compile main.py model.py schemas.py
+    command: cargo check
     inputs:
-      - main.py
-      - model.py
-      - schemas.py
-      - requirements.txt
+      - Cargo.toml
+      - src/**/*.rs
+  test:
+    command: cargo test
+    inputs:
+      - Cargo.toml
+      - src/**/*.rs
+  build:
+    command: cargo build --release
+    inputs:
+      - Cargo.toml
+      - src/**/*.rs
