@@ -166,7 +166,17 @@ Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
 MODEL_PATH=/path/to/model.onnx cargo run
 ```
 
-Service mendengarkan di `http://localhost:8001` secara default untuk development lokal (lihat `apps/ml-service/.env.example`). Dalam Docker container, service mendengarkan di port `8000`.
+**Port Configuration:**
+
+- **Default (tanpa .env):** Service mendengarkan di `http://localhost:8000`
+- **Local development (dengan .env.example):** Service mendengarkan di `http://localhost:8001`
+  ```bash
+  source .env.example
+  cargo run
+  ```
+- **Docker container:** Service mendengarkan di port `8000`
+
+Lihat `apps/ml-service/README.md` untuk detail lengkap tentang konfigurasi port dan contoh curl.
 
 ## Docker Deployment
 

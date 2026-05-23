@@ -27,18 +27,29 @@ cargo build
 
 ## Menjalankan Service Lokal
 
-### Opsi 1: Default (Model dari Machine_Learning/)
+### Opsi 1: Default (Port 8000, Model dari Machine_Learning/)
 
 ```bash
 cargo run
 ```
 
-Service akan mencari model di path default:
+Service akan mencari model di path default dan mendengarkan di `http://localhost:8000`:
 ```
 ../../Machine_Learning/model/model.onnx
 ```
 
-### Opsi 2: Custom Model Path
+### Opsi 2: Local Development dengan .env.example (Port 8001)
+
+Untuk development lokal dengan port 8001 (sesuai `.env.example`):
+
+```bash
+source .env.example
+cargo run
+```
+
+Service akan mendengarkan di `http://localhost:8001` karena `ML_SERVICE_PORT=8001` di `.env.example`.
+
+### Opsi 3: Custom Model Path
 
 Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
 
@@ -46,12 +57,18 @@ Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
 MODEL_PATH=/path/to/model.onnx cargo run
 ```
 
-Service akan mendengarkan di `http://localhost:8000` secara default.
+Atau kombinasikan dengan port custom:
+
+```bash
+ML_SERVICE_PORT=9000 MODEL_PATH=/path/to/model.onnx cargo run
+```
 
 ## Environment Variables
 
 | Variable | Default | Keterangan |
 |---|---|---|
+| `ML_SERVICE_HOST` | `0.0.0.0` | Bind address |
+| `ML_SERVICE_PORT` | `8000` | Bind port (override untuk local dev dengan `.env.example`) |
 | `MODEL_PATH` | `../../Machine_Learning/model/model.onnx` | Path ke file model ONNX |
 | `MODEL_INPUT_SIZE` | `224` | Ukuran input gambar (224x224 untuk EfficientNetV2B0) |
 | `RUST_LOG` | `info` | Level logging (debug, info, warn, error) |
@@ -60,8 +77,14 @@ Service akan mendengarkan di `http://localhost:8000` secara default.
 
 ### 1. Health Check
 
+**Default (port 8000):**
 ```bash
 curl http://localhost:8000/health
+```
+
+**Local dev dengan .env.example (port 8001):**
+```bash
+curl http://localhost:8001/health
 ```
 
 **Response:**
@@ -75,8 +98,14 @@ curl http://localhost:8000/health
 
 ### 2. Metadata
 
+**Default (port 8000):**
 ```bash
 curl http://localhost:8000/metadata
+```
+
+**Local dev dengan .env.example (port 8001):**
+```bash
+curl http://localhost:8001/metadata
 ```
 
 **Response:**
@@ -99,8 +128,15 @@ curl http://localhost:8000/metadata
 
 Upload gambar daun jagung untuk klasifikasi:
 
+**Default (port 8000):**
 ```bash
 curl -X POST http://localhost:8000/predict \
+  -F "file=@/path/to/corn-leaf.jpg"
+```
+
+**Local dev dengan .env.example (port 8001):**
+```bash
+curl -X POST http://localhost:8001/predict \
   -F "file=@/path/to/corn-leaf.jpg"
 ```
 
@@ -152,6 +188,8 @@ Tests mencakup validasi loading model, preprocessing gambar, dan output prediksi
 
 ### Verifikasi Manual
 
+#### Dengan default port 8000:
+
 1. Jalankan service:
    ```bash
    cargo run
@@ -170,6 +208,30 @@ Tests mencakup validasi loading model, preprocessing gambar, dan output prediksi
 4. Test prediksi dengan gambar sample:
    ```bash
    curl -X POST http://localhost:8000/predict \
+     -F "file=@../../Machine_Learning/dataset/Daun\ Sehat/sample.jpg"
+   ```
+
+#### Dengan local dev port 8001 (.env.example):
+
+1. Jalankan service dengan .env.example:
+   ```bash
+   source .env.example
+   cargo run
+   ```
+
+2. Di terminal lain, test health endpoint:
+   ```bash
+   curl http://localhost:8001/health
+   ```
+
+3. Test metadata:
+   ```bash
+   curl http://localhost:8001/metadata
+   ```
+
+4. Test prediksi dengan gambar sample:
+   ```bash
+   curl -X POST http://localhost:8001/predict \
      -F "file=@../../Machine_Learning/dataset/Daun\ Sehat/sample.jpg"
    ```
 
@@ -193,7 +255,17 @@ MODEL_PATH=/absolute/path/to/model.onnx cargo run
 
 **Error:** `Address already in use`
 
-**Solusi:** Service menggunakan port 8000. Jika port sudah digunakan, ubah di source code atau gunakan port forwarding.
+**Solusi:** Service menggunakan port 8000 secara default. Jika port sudah digunakan, ubah dengan environment variable:
+
+```bash
+ML_SERVICE_PORT=9000 cargo run
+```
+
+Atau jika menggunakan `.env.example` (port 8001), pastikan tidak ada service lain di port tersebut:
+
+```bash
+lsof -i :8001
+```
 
 ### ONNX Runtime tidak kompatibel
 
