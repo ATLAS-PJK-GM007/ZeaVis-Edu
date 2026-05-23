@@ -97,8 +97,7 @@ curl http://localhost:8001/health
 ```json
 {
   "status": "ok",
-  "model_loaded": true,
-  "model_path": "../../Machine_Learning/model/model.onnx"
+  "model_loaded": true
 }
 ```
 
@@ -117,15 +116,16 @@ curl http://localhost:8001/metadata
 **Response:**
 ```json
 {
-  "service": "ZeaVis ML Service",
-  "version": "0.1.0",
+  "service_name": "zeavis-ml-service",
+  "service_version": "0.1.0",
   "model_path": "../../Machine_Learning/model/model.onnx",
+  "model_loaded": true,
   "input_size": 224,
   "labels": [
     "Bercak Daun",
-    "Hawar Daun",
+    "Daun Sehat",
     "Karat Daun",
-    "Daun Sehat"
+    "Hawar Daun"
   ]
 }
 ```
@@ -149,27 +149,13 @@ curl -X POST http://localhost:8001/predict \
 **Response:**
 ```json
 {
-  "predictions": [
-    {
-      "label": "Daun Sehat",
-      "confidence": 0.95
-    },
-    {
-      "label": "Bercak Daun",
-      "confidence": 0.03
-    },
-    {
-      "label": "Hawar Daun",
-      "confidence": 0.01
-    },
-    {
-      "label": "Karat Daun",
-      "confidence": 0.01
-    }
-  ],
-  "top_prediction": {
-    "label": "Daun Sehat",
-    "confidence": 0.95
+  "label": "Daun Sehat",
+  "confidence": 0.95,
+  "probabilities": {
+    "Bercak Daun": 0.02,
+    "Daun Sehat": 0.95,
+    "Karat Daun": 0.01,
+    "Hawar Daun": 0.02
   }
 }
 ```
