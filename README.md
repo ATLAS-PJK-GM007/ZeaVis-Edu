@@ -6,7 +6,7 @@ ZeaVis Edu adalah aplikasi edukasi untuk membantu mengenali penyakit daun jagung
 
 - Aplikasi web untuk pengalaman pengguna dan interaksi edukatif.
 - API backend untuk status layanan, integrasi data, dan komunikasi dengan layanan ML.
-- ML service berbasis FastAPI untuk inferensi penyakit daun jagung dari gambar.
+- ML service berbasis Rust/Axum dengan ONNX Runtime untuk inferensi penyakit daun jagung dari gambar.
 - Pipeline machine learning untuk preprocessing dataset, training di Google Colab, dan ekspor model produksi.
 - Dukungan Docker untuk deployment web, API, dan ML service.
 - Workspace monorepo berbasis Bun dan Moon untuk menjalankan task development, typecheck, dan build secara terpusat.
@@ -28,7 +28,7 @@ Model klasifikasi menargetkan empat label berbahasa Indonesia:
 .
 ├── apps/
 │   ├── api/              # Backend Elysia/Bun
-│   ├── ml-service/       # Layanan inferensi FastAPI + TensorFlow
+│   ├── ml-service/       # Layanan inferensi Rust/Axum + ONNX Runtime
 │   └── web/              # Frontend React + Vite
 ├── Machine_Learning/     # Pipeline dataset, training, dan ekspor model
 ├── packages/
@@ -59,11 +59,12 @@ Model klasifikasi menargetkan empat label berbahasa Indonesia:
 
 ### Machine Learning
 
-- Python
+- Python (preprocessing, training, export)
 - TensorFlow/Keras
 - EfficientNetV2B0
-- FastAPI
-- Uvicorn
+- Rust
+- Axum
+- ONNX Runtime
 - TFLite
 - TensorFlow.js
 
@@ -82,10 +83,10 @@ Untuk menjalankan seluruh project secara lokal, siapkan:
 
 - Bun
 - Python 3.9–3.11 untuk pipeline ML
-- Python 3.10+ untuk `apps/ml-service`
+- Rust dan Cargo untuk `apps/ml-service`
 - Docker dan Docker Compose jika ingin menjalankan/deploy via container
 - PostgreSQL jika fitur backend yang membutuhkan database digunakan
-- File model `Machine_Learning/best_model/best_model.keras` untuk inferensi ML lokal
+- File model `Machine_Learning/model/model.onnx` untuk inferensi ML lokal
 
 ## Instalasi Root Workspace
 
@@ -150,19 +151,20 @@ bun run typecheck
 
 ```bash
 cd apps/ml-service
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8001
+cargo run
 ```
 
 Default path model adalah:
 
 ```text
-../../Machine_Learning/best_model/best_model.keras
+../../Machine_Learning/model/model.onnx
 ```
 
-Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`.
+Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
+
+```bash
+MODEL_PATH=/path/to/model.onnx cargo run
+```
 
 ## Endpoint Penting
 
@@ -248,6 +250,7 @@ Output utama pipeline ML:
 | `Machine_Learning/best_model/best_model.keras` | Model Keras hasil training |
 | `Machine_Learning/model/saved_model/` | TensorFlow SavedModel |
 | `Machine_Learning/model/model.tflite` | Model untuk mobile/TFLite |
+| `Machine_Learning/model/model.onnx` | Model untuk Rust ONNX Runtime |
 | `Machine_Learning/model/tfjs_model/` | Model untuk TensorFlow.js |
 
 ## Artifact Lokal dan Generated Files
@@ -262,6 +265,7 @@ Beberapa file tidak tersedia di fresh clone karena berukuran besar, dihasilkan l
 - `Machine_Learning/best_model/best_model.keras`
 - `Machine_Learning/model/saved_model/`
 - `Machine_Learning/model/model.tflite`
+- `Machine_Learning/model/model.onnx`
 - `Machine_Learning/model/tfjs_model/`
 
 ## Environment Variable Penting
@@ -272,7 +276,7 @@ Beberapa file tidak tersedia di fresh clone karena berukuran besar, dihasilkan l
 | `API_PORT` | API | Port backend produksi |
 | `WEB_APP_URL` | API | URL frontend untuk konfigurasi CORS/integrasi |
 | `ML_SERVICE_URL` | API | URL layanan ML |
-| `MODEL_PATH` | ML Service | Lokasi file model Keras |
+| `MODEL_PATH` | ML Service | Lokasi file model ONNX, default `../../Machine_Learning/model/model.onnx` |
 | `MODEL_INPUT_SIZE` | ML Service | Ukuran input model, default produksi `224` |
 
 ## Troubleshooting
@@ -294,13 +298,13 @@ Pastikan `DATABASE_URL` tersedia di `.env` root dan PostgreSQL dapat diakses ole
 Pastikan file model tersedia di path default:
 
 ```text
-Machine_Learning/best_model/best_model.keras
+Machine_Learning/model/model.onnx
 ```
 
 Atau set path khusus:
 
 ```bash
-MODEL_PATH=/path/to/best_model.keras uvicorn main:app --host 0.0.0.0 --port 8001
+MODEL_PATH=/path/to/model.onnx cargo run
 ```
 
 ### Docker Compose gagal karena network tidak ditemukan

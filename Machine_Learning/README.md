@@ -14,8 +14,9 @@ Pipeline lengkap untuk klasifikasi penyakit daun jagung menggunakan **EfficientN
 6. [Tahap 2 — Upload ke Google Drive & Training di Colab](#6-tahap-2--upload-ke-google-drive--training-di-colab)
 7. [Tahap 3 — Download Model dari Colab](#7-tahap-3--download-model-dari-colab)
 8. [Tahap 4 — Ekspor Model untuk Produksi](#8-tahap-4--ekspor-model-untuk-produksi)
-9. [Output Akhir](#9-output-akhir)
-10. [Troubleshooting](#10-troubleshooting)
+9. [Tahap 5 — Konversi ke ONNX](#9-tahap-5--konversi-ke-onnx)
+10. [Output Akhir](#10-output-akhir)
+11. [Troubleshooting](#11-troubleshooting)
 
 ---
 
@@ -314,9 +315,34 @@ tensorflowjs_converter \
     model/tfjs_model
 ```
 
+### Langkah 3: Konversi ke ONNX (untuk Rust ONNX Runtime)
+
+Konversi SavedModel ke format ONNX untuk digunakan oleh layanan inferensi Rust:
+
+```bash
+python convert_onnx.py
+```
+
+Skrip ini akan:
+1. Memuat model dari `model/saved_model/`.
+2. Mengonversi ke format ONNX.
+3. Menyimpan ke `model/model.onnx`.
+
+Model ONNX ini digunakan oleh layanan inferensi Rust di `apps/ml-service/` untuk performa dan kompatibilitas lintas platform yang lebih baik.
+
+#### Validasi Parity ONNX
+
+Untuk memverifikasi bahwa model ONNX menghasilkan prediksi yang sama dengan SavedModel asli, jalankan:
+
+```bash
+python validate_onnx_parity.py /path/to/corn-leaf.jpg
+```
+
+Skrip ini akan membandingkan output prediksi antara SavedModel dan ONNX untuk memastikan keakuratan konversi.
+
 ---
 
-## 9. Output Akhir
+## 10. Output Akhir
 
 Setelah seluruh pipeline selesai dijalankan, berikut file output yang tersedia:
 
@@ -325,13 +351,14 @@ Setelah seluruh pipeline selesai dijalankan, berikut file output yang tersedia:
 | `dataset/` | Folder gambar terstruktur | Dataset akhir hasil preprocessing |
 | `dataset.zip` | ZIP | Dataset untuk diupload ke Google Drive / Colab |
 | `best_model/best_model.keras` | Keras | Model terlatih lengkap (dengan optimizer) |
-| `model/saved_model/` | SavedModel (PB) | Inferensi server-side & jembatan konversi TFJS |
+| `model/saved_model/` | SavedModel (PB) | Inferensi server-side & jembatan konversi TFJS/ONNX |
 | `model/model.tflite` | TFLite | Inferensi di perangkat **Android / iOS** |
+| `model/model.onnx` | ONNX | Inferensi server-side via **Rust ONNX Runtime** |
 | `model/tfjs_model/` | TensorFlow.js | Inferensi di **browser / Node.js** |
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### `FileNotFoundError: dataset_1.zip tidak ditemukan`
 **Solusi:** Pastikan ketiga file ZIP sudah diunduh dan diletakkan di direktori yang sama dengan `preprocessing.py`.
