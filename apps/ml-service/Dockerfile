@@ -1,19 +1,25 @@
-FROM python:3.11-slim AS runner
+FROM rust:1.82-bookworm AS builder
 
 WORKDIR /app
-ENV PYTHONUNBUFFERED=1
-ENV MODEL_PATH=/app/model/best_model.keras
+COPY apps/ml-service/Cargo.toml ./Cargo.toml
+COPY apps/ml-service/src ./src
+RUN cargo build --release
+
+FROM debian:bookworm-slim AS runner
+
+WORKDIR /app
+ENV MODEL_PATH=/app/model/model.onnx
 ENV MODEL_INPUT_SIZE=224
+ENV ML_SERVICE_HOST=0.0.0.0
+ENV ML_SERVICE_PORT=8000
+ENV RUST_LOG=info
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libgomp1 \
+  && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-COPY apps/ml-service/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY apps/ml-service ./
-COPY Machine_Learning/best_model/best_model.keras /app/model/best_model.keras
+COPY --from=builder /app/target/release/zeavis-ml-service /usr/local/bin/zeavis-ml-service
+COPY Machine_Learning/model/model.onnx /app/model/model.onnx
 
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["zeavis-ml-service"]
