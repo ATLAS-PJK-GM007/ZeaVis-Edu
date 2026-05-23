@@ -1,11 +1,11 @@
-FROM rust:1.95-bookworm AS builder
+FROM rust:1.95-trixie AS builder
 
 WORKDIR /app
 COPY apps/ml-service/Cargo.toml apps/ml-service/Cargo.lock ./
 COPY apps/ml-service/src ./src
 RUN cargo build --locked --release
 
-FROM debian:bookworm-slim AS runner
+FROM debian:trixie-slim AS runner
 
 WORKDIR /app
 ENV MODEL_PATH=/app/model/model.onnx
