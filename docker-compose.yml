@@ -14,7 +14,7 @@ services:
       - .env
     labels:
       traefik.enable: "true"
-      traefik.http.routers.zeavis-web.rule: Host(`zeavisedu.asepharyana.tech`)
+      traefik.http.routers.zeavis-web.rule: Host(`zeavisedu.asepharyana.my.id`)
       traefik.http.routers.zeavis-web.entrypoints: websecure
       traefik.http.routers.zeavis-web.tls: "true"
       traefik.http.routers.zeavis-web.tls.certresolver: letsencrypt
@@ -31,11 +31,11 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: "3000"
-      WEB_APP_URL: https://zeavisedu.asepharyana.tech
+      WEB_APP_URL: https://zeavisedu.asepharyana.my.id
       ML_SERVICE_URL: ${ML_SERVICE_URL:-http://zeavis-ml:8000}
     labels:
       traefik.enable: "true"
-      traefik.http.routers.zeavis-api.rule: Host(`api.zeavisedu.asepharyana.tech`)
+      traefik.http.routers.zeavis-api.rule: Host(`api.zeavisedu.asepharyana.my.id`)
       traefik.http.routers.zeavis-api.entrypoints: websecure
       traefik.http.routers.zeavis-api.tls: "true"
       traefik.http.routers.zeavis-api.tls.certresolver: letsencrypt
@@ -54,7 +54,7 @@ services:
       MODEL_INPUT_SIZE: "224"
     labels:
       traefik.enable: "true"
-      traefik.http.routers.zeavis-ml.rule: Host(`ml.zeavisedu.asepharyana.tech`)
+      traefik.http.routers.zeavis-ml.rule: Host(`ml.zeavisedu.asepharyana.my.id`)
       traefik.http.routers.zeavis-ml.entrypoints: websecure
       traefik.http.routers.zeavis-ml.tls: "true"
       traefik.http.routers.zeavis-ml.tls.certresolver: letsencrypt
