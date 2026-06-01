@@ -156,8 +156,11 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold">
                       {summary.diseaseCount}
                     </div>
-                  </CardContent>
-                </Card>
+                      <Link to="/diagnoses" className="text-emerald-600 ml-auto hover:underline">
+                        Lihat daftar
+                      </Link>
+                    </CardContent>
+                  </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
@@ -169,8 +172,11 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold">
                       {summary.imageClassificationCount}
                     </div>
-                  </CardContent>
-                </Card>
+                      <Link to="/diagnoses" className="text-emerald-600 ml-auto hover:underline">
+                        Lihat daftar
+                      </Link>
+                    </CardContent>
+                  </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
@@ -182,6 +188,9 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold text-amber-600">
                       {summary.needsReviewCount}
                     </div>
+                    <Link to="/diagnoses?status=needs_review" className="text-amber-600 ml-auto hover:underline">
+                      Lihat daftar
+                    </Link>
                   </CardContent>
                 </Card>
 
@@ -195,6 +204,9 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold text-red-600">
                       {summary.riskDistribution.high}
                     </div>
+                    <Link to="/diagnoses?risk=high" className="text-red-600 ml-auto hover:underline">
+                      Lihat daftar
+                    </Link>
                   </CardContent>
                 </Card>
               </section>

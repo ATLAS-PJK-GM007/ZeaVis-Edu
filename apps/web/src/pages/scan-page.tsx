@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, Link } from "react-router-dom";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Modal } from "@/components/ui/modal";
 import type { DiagnosisRecord } from "@zeavis/shared";
@@ -16,7 +16,7 @@ export function ScanPage() {
     onSuccess: (diagnosis) => {
       queryClient.invalidateQueries({ queryKey: ["diagnoses"] });
       // show preview modal instead of immediate navigation
-      setDiagnosisPreview(diagnosis as DiagnosisRecord);
+      setDiagnosisPreview(diagnosis);
       setPreviewOpen(true);
     },
   });
@@ -30,6 +30,12 @@ export function ScanPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [diagnosisPreview, setDiagnosisPreview] =
     useState<DiagnosisRecord | null>(null);
+
+  const diagnosesQuery = useQuery({
+    queryKey: ["diagnoses"],
+    queryFn: () => apiClient.getDiagnoses(),
+    enabled: previewOpen,
+  });
 
   return (
     <main className="p-6">
@@ -134,6 +140,53 @@ export function ScanPage() {
                   {Math.round((diagnosisPreview.confidence ?? 0) * 100)}%
                 </strong>
               </p>
+            </div>
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-medium mb-2">
+                Daftar Diagnosis Terbaru
+              </h4>
+              {diagnosesQuery.isLoading && (
+                <div className="text-sm text-muted-foreground">
+                  Memuat daftar...
+                </div>
+              )}
+              {diagnosesQuery.isError && (
+                <div className="text-sm text-red-600">
+                  Gagal memuat daftar diagnosis
+                </div>
+              )}
+              {!diagnosesQuery.isLoading && !diagnosesQuery.isError && (
+                <div className="space-y-2">
+                  {(diagnosesQuery.data ?? []).slice(0, 5).map((d) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center justify-between rounded-md p-2 hover:bg-muted"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={d.imageUrl}
+                          alt="thumb"
+                          className="h-10 w-10 rounded object-cover"
+                        />
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {d.disease?.commonName ?? d.predictedDiseaseSlug}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(d.createdAt).toLocaleString("id-ID")}
+                          </div>
+                        </div>
+                      </div>
+                      <Link
+                        to={`/diagnoses/${d.id}`}
+                        className="text-emerald-600 text-sm font-semibold"
+                      >
+                        Lihat
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : null}
