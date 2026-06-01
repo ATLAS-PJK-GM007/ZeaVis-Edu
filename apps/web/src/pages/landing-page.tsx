@@ -1,23 +1,31 @@
-import { ArrowRight, Leaf, ShieldCheck, Sprout } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowRight, Leaf, ShieldCheck, Sprout } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const features = [
   {
     icon: Leaf,
-    title: 'Katalog Penyakit Lengkap',
-    description: 'Pelajari tentang empat penyakit daun jagung utama dengan gejala dan rekomendasi penanganan.',
+    title: "Katalog Penyakit Lengkap",
+    description:
+      "Pelajari tentang empat penyakit daun jagung utama dengan gejala dan rekomendasi penanganan.",
   },
   {
     icon: ShieldCheck,
-    title: 'Pantau Risiko Penyakit',
-    description: 'Lacak distribusi risiko penyakit dan lihat laporan pengamatan terbaru di dashboard.',
+    title: "Pantau Risiko Penyakit",
+    description:
+      "Lacak distribusi risiko penyakit dan lihat laporan pengamatan terbaru di dashboard.",
   },
   {
     icon: Sprout,
-    title: 'Laporkan Pengamatan',
-    description: 'Kirimkan laporan penyakit yang Anda temukan untuk membantu penelitian dan edukasi.',
+    title: "Laporkan Pengamatan",
+    description:
+      "Kirimkan laporan penyakit yang Anda temukan untuk membantu penelitian dan edukasi.",
   },
 ];
 
@@ -44,23 +52,26 @@ export function LandingPage() {
             </div>
             <div className="space-y-5">
               <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-6xl">
-                Belajar mengenali penyakit daun jagung dan pantau pengamatan Anda.
+                Belajar mengenali penyakit daun jagung dan pantau pengamatan
+                Anda.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                Jelajahi katalog penyakit daun jagung, pelajari gejala dan cara penanganannya,
-                serta laporkan pengamatan Anda untuk membantu penelitian dan edukasi.
+                Jelajahi katalog penyakit daun jagung, pelajari gejala dan cara
+                penanganannya, serta laporkan pengamatan Anda untuk membantu
+                penelitian dan edukasi.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link to="/dashboard">
-                  Buka Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                <Link to="/scan">
+                  Mulai Scan Sekarang <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/catalog">
-                  Lihat Katalog Penyakit
-                </Link>
+                <Link to="/library">Pustaka Penyakit</Link>
+              </Button>
+              <Button asChild size="lg" variant="ghost">
+                <Link to="/dashboard">Dashboard</Link>
               </Button>
             </div>
           </div>
@@ -74,7 +85,9 @@ export function LandingPage() {
                   </div>
                   <div>
                     <CardTitle className="text-xl">{feature.title}</CardTitle>
-                    <CardDescription className="mt-2 leading-6">{feature.description}</CardDescription>
+                    <CardDescription className="mt-2 leading-6">
+                      {feature.description}
+                    </CardDescription>
                   </div>
                 </CardHeader>
               </Card>
