@@ -121,8 +121,8 @@ export function CatalogPage() {
               >
                 <Card className="h-full rounded-2xl bg-white shadow-sm hover:shadow-md">
                   <CardContent className="p-5 space-y-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
                         <h3 className="text-lg font-bold text-[#214B11]">
                           {disease.commonName}
                         </h3>
