@@ -10,14 +10,14 @@ export function Navbar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
-  const isDashboard = location.pathname === "/dashboard";
-  const isScan = location.pathname === "/scan";
-  const isLibrary = location.pathname === "/library";
+  const user = useAuthStore((state) => state.user);
 
-  const navLinkClassName = (isActive: boolean) =>
+  const isActive = (path: string) => location.pathname === path;
+
+  const navLinkClassName = (active: boolean) =>
     [
-      "inline-flex items-center rounded-full px-4 py-2 text-[18px] font-medium transition-colors",
-      isActive
+      "inline-flex items-center rounded-full px-4 py-2 text-[16px] font-medium transition-colors",
+      active
         ? "bg-[#48A111] text-white shadow-sm"
         : "text-white/85 hover:bg-white/10 hover:text-white",
     ].join(" ");
@@ -29,11 +29,9 @@ export function Navbar() {
     onSuccess: () => {
       setUser(null);
       queryClient.clear();
-      navigate("/");
+      navigate("/login");
     },
   });
-
-  const user = useAuthStore((state) => state.user);
 
   return (
     <header className="sticky top-0 z-40 bg-[#306D29] text-white shadow-sm backdrop-blur">
@@ -52,27 +50,33 @@ export function Navbar() {
           </div>
         </div>
 
-        <nav className="flex items-center gap-3">
-          <Button asChild variant="ghost" className="rounded-full">
-            <Link to="/dashboard" className={navLinkClassName(isDashboard)}>
-              Dashboard
+        <nav className="flex items-center gap-2">
+          <Link to="/dashboard" className={navLinkClassName(isActive("/dashboard"))}>
+            Dashboard
+          </Link>
+          <Link to="/scan" className={navLinkClassName(isActive("/scan"))}>
+            Scan
+          </Link>
+          <Link to="/diagnoses" className={navLinkClassName(isActive("/diagnoses"))}>
+            Diagnosa
+          </Link>
+          <Link to="/catalog" className={navLinkClassName(isActive("/catalog") || isActive("/library"))}>
+            Pustaka
+          </Link>
+          {user?.role === "expert" && (
+            <Link
+              to="/expert/reviews"
+              className={navLinkClassName(isActive("/expert/reviews"))}
+            >
+              Review
             </Link>
-          </Button>
-          <Button asChild variant="ghost" className="rounded-full">
-            <Link to="/scan" className={navLinkClassName(isScan)}>
-              Scan Tanaman
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className="rounded-full">
-            <Link to="/library" className={navLinkClassName(isLibrary)}>
-              Pustaka Penyakit
-            </Link>
-          </Button>
+          )}
           {user && (
             <Button
               variant="outline"
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
+              className="ml-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
             >
               {logoutMutation.isPending ? "Keluar..." : "Keluar"}
             </Button>

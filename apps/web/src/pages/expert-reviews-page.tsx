@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import type { DiseaseSlug } from '@zeavis/shared';
+import type { DiseaseSlug, DiagnosisStatus } from '@zeavis/shared';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DiagnosisStatusBadge } from '@/components/diagnosis-status-badge';
@@ -47,11 +47,24 @@ export function ExpertReviewsPage() {
     await mutation.mutateAsync();
   }
 
+  const statusLabel = (status: DiagnosisStatus) => {
+    switch (status) {
+      case 'ai_verified': return 'Terverifikasi AI';
+      case 'needs_review': return 'Menunggu Review';
+      case 'expert_verified': return 'Diverifikasi Pakar';
+      case 'expert_corrected': return 'Dikoreksi Pakar';
+      case 'failed': return 'Gagal';
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between p-6">
-          <h1 className="text-2xl font-bold">Expert Reviews</h1>
+          <div>
+            <p className="text-sm font-medium text-primary">Review Pakar</p>
+            <h1 className="text-2xl font-bold">Diagnosis Menunggu Review</h1>
+          </div>
           <Link to="/dashboard">
             <Button variant="outline">Dashboard</Button>
           </Link>
@@ -63,15 +76,15 @@ export function ExpertReviewsPage() {
           {/* Left: List of reviews */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Diagnoses to Review</h2>
+              <h2 className="font-semibold">Daftar Diagnosis</h2>
               <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">{reviews.length}</span>
             </div>
 
             <div className="space-y-2">
               {reviewsQuery.isPending || diseasesQuery.isPending ? (
-                <p className="text-sm text-muted-foreground">Loading reviews and diseases...</p>
+                <p className="text-sm text-muted-foreground">Memuat diagnosis...</p>
               ) : reviews.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No diagnoses pending review</p>
+                <p className="text-sm text-muted-foreground">Tidak ada diagnosis yang menunggu review</p>
               ) : (
                 reviews.map((review) => (
                   <button
@@ -114,7 +127,7 @@ export function ExpertReviewsPage() {
             {reviewsQuery.isPending || diseasesQuery.isPending ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
-                  Loading reviews and diseases...
+                  Memuat diagnosis...
                 </CardContent>
               </Card>
             ) : selected ? (
@@ -150,7 +163,7 @@ export function ExpertReviewsPage() {
                     {/* Top predictions */}
                     {selected.predictions.length > 0 && (
                       <div className="space-y-2">
-                        <h4 className="text-sm font-medium">Top Predictions</h4>
+                        <h4 className="text-sm font-medium">Prediksi Teratas</h4>
                         <div className="space-y-1">
                           {selected.predictions.map((pred) => (
                             <div key={pred.id} className="flex items-center justify-between text-sm">
@@ -167,13 +180,13 @@ export function ExpertReviewsPage() {
                 {/* Review form */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Expert Review</CardTitle>
+                    <CardTitle className="text-lg">Review Pakar</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       {/* Verdict selection */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Verdict</label>
+                        <label className="text-sm font-medium">Keputusan</label>
                         <div className="flex gap-3">
                           <label htmlFor="verdict-verified" className="flex items-center gap-2">
                             <input
@@ -188,7 +201,7 @@ export function ExpertReviewsPage() {
                               }}
                               className="h-4 w-4"
                             />
-                            <span className="text-sm">Verified</span>
+                            <span className="text-sm">Terverifikasi</span>
                           </label>
                           <label htmlFor="verdict-corrected" className="flex items-center gap-2">
                             <input
@@ -200,7 +213,7 @@ export function ExpertReviewsPage() {
                               onChange={(e) => setVerdict(e.target.value as 'verified' | 'corrected')}
                               className="h-4 w-4"
                             />
-                            <span className="text-sm">Corrected</span>
+                            <span className="text-sm">Dikoreksi</span>
                           </label>
                         </div>
                       </div>
@@ -209,7 +222,7 @@ export function ExpertReviewsPage() {
                       {verdict === 'corrected' && (
                         <div className="space-y-2">
                           <label htmlFor="disease" className="text-sm font-medium">
-                            Correct Disease
+                            Penyakit yang Benar
                           </label>
                           <select
                             id="disease"
@@ -218,7 +231,7 @@ export function ExpertReviewsPage() {
                             required={verdict === 'corrected'}
                             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                           >
-                            <option value="">Select a disease...</option>
+                            <option value="">Pilih penyakit...</option>
                             {diseases.map((disease) => (
                               <option key={disease.slug} value={disease.slug}>
                                 {disease.commonName}
@@ -231,13 +244,13 @@ export function ExpertReviewsPage() {
                       {/* Notes */}
                       <div className="space-y-2">
                         <label htmlFor="notes" className="text-sm font-medium">
-                          Notes <span className="text-red-500">*</span>
+                          Catatan <span className="text-red-500">*</span>
                         </label>
                         <textarea
                           id="notes"
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Enter your review notes..."
+                          placeholder="Tulis catatan review Anda..."
                           required
                           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           rows={4}
@@ -250,12 +263,12 @@ export function ExpertReviewsPage() {
                         disabled={mutation.isPending || (verdict === 'corrected' && !correctedDiseaseSlug) || !notes.trim()}
                         className="w-full"
                       >
-                        {mutation.isPending ? 'Submitting...' : 'Submit Review'}
+                        {mutation.isPending ? 'Mengirim...' : 'Kirim Review'}
                       </Button>
 
                       {mutation.isError && (
                         <p className="text-sm text-red-500">
-                          Error: {mutation.error instanceof Error ? mutation.error.message : 'Unknown error'}
+                          Error: {mutation.error instanceof Error ? mutation.error.message : 'Terjadi kesalahan'}
                         </p>
                       )}
                     </form>
@@ -265,7 +278,7 @@ export function ExpertReviewsPage() {
             ) : (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
-                  No diagnoses available for review
+                  Tidak ada diagnosis yang tersedia untuk review
                 </CardContent>
               </Card>
             )}
