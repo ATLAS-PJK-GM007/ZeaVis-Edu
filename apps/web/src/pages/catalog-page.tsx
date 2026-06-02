@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Shield, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import type { RiskLevel } from '@zeavis/shared';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -42,25 +42,15 @@ export function CatalogPage() {
     });
 
   return (
-    <main className="min-h-screen px-6 py-8 bg-[#ECF4E8]">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <header className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button asChild variant="ghost" className="p-2">
-                <Link to="/dashboard">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
-              <div>
-                <p className="text-sm font-medium text-primary">Edukasi Penyakit</p>
-                <h1 className="text-3xl font-bold tracking-tight">Katalog Penyakit</h1>
-              </div>
-            </div>
-          </div>
-        </header>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-primary">Edukasi Penyakit</p>
+          <h1 className="text-3xl font-bold tracking-tight">Katalog Penyakit</h1>
+        </div>
+      </div>
 
-        {/* Filters */}
+      {/* Filters */}
         <div className="flex flex-col gap-4 md:flex-row md:items-end">
           <div className="flex-1">
             <label htmlFor="search" className="block text-sm font-medium mb-2">
@@ -178,7 +168,6 @@ export function CatalogPage() {
             ))}
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 }

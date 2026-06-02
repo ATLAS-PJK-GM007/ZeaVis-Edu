@@ -78,12 +78,28 @@ const router = createBrowserRouter([
     path: "/expert/reviews",
     element: (
       <AuthGuard requireExpert>
-        <ExpertReviewsPage />
+        <MainLayout>
+          <ExpertReviewsPage />
+        </MainLayout>
       </AuthGuard>
     ),
   },
-  { path: "/catalog", element: <CatalogPage /> },
-  { path: "/catalog/:slug", element: <DiseaseDetailPage /> },
+  {
+    path: "/catalog",
+    element: (
+      <MainLayout>
+        <CatalogPage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/catalog/:slug",
+    element: (
+      <MainLayout>
+        <DiseaseDetailPage />
+      </MainLayout>
+    ),
+  },
 ]);
 
 export function App() {
