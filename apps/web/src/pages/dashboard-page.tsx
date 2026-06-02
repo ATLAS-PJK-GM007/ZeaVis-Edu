@@ -156,7 +156,7 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold">
                       {summary.diseaseCount}
                     </div>
-                      <Link to="/diagnoses" className="text-emerald-600 ml-auto hover:underline">
+                      <Link to="/diagnoses" className="text-emerald-600 text-sm ml-auto hover:underline">
                         Lihat daftar
                       </Link>
                     </CardContent>
@@ -172,7 +172,7 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold">
                       {summary.imageClassificationCount}
                     </div>
-                      <Link to="/diagnoses" className="text-emerald-600 ml-auto hover:underline">
+                      <Link to="/diagnoses" className="text-emerald-600 text-sm ml-auto hover:underline">
                         Lihat daftar
                       </Link>
                     </CardContent>
@@ -188,7 +188,7 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold text-amber-600">
                       {summary.needsReviewCount}
                     </div>
-                    <Link to="/diagnoses?status=needs_review" className="text-amber-600 ml-auto hover:underline">
+                    <Link to="/diagnoses?status=needs_review" className="text-amber-600 text-sm ml-auto hover:underline">
                       Lihat daftar
                     </Link>
                   </CardContent>
@@ -204,7 +204,7 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold text-red-600">
                       {summary.riskDistribution.high}
                     </div>
-                    <Link to="/diagnoses?risk=high" className="text-red-600 ml-auto hover:underline">
+                    <Link to="/diagnoses?risk=high" className="text-red-600 text-sm ml-auto hover:underline">
                       Lihat daftar
                     </Link>
                   </CardContent>
@@ -284,10 +284,10 @@ export function DashboardPage() {
                           style={{ backgroundColor: d.color }}
                         />
                         <div>
-                          <div className="text-sm font-bold text-[#214B11]">
+                          <div className="font-bold text-[#214B11]">
                             {d.name}
                           </div>
-                          <div className="text-xs text-slate-400 italic mt-1">
+                          <div className="text-sm text-slate-400 italic mt-1">
                             {d.sci}
                           </div>
                         </div>
