@@ -156,11 +156,14 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold">
                       {summary.diseaseCount}
                     </div>
-                      <Link to="/diagnoses" className="text-emerald-600 text-sm ml-auto hover:underline">
-                        Lihat daftar
-                      </Link>
-                    </CardContent>
-                  </Card>
+                    <Link
+                      to="/diagnoses"
+                      className="text-emerald-600 text-sm ml-auto hover:underline"
+                    >
+                      Lihat daftar
+                    </Link>
+                  </CardContent>
+                </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
@@ -172,11 +175,14 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold">
                       {summary.imageClassificationCount}
                     </div>
-                      <Link to="/diagnoses" className="text-emerald-600 text-sm ml-auto hover:underline">
-                        Lihat daftar
-                      </Link>
-                    </CardContent>
-                  </Card>
+                    <Link
+                      to="/diagnoses"
+                      className="text-emerald-600 text-sm ml-auto hover:underline"
+                    >
+                      Lihat daftar
+                    </Link>
+                  </CardContent>
+                </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
@@ -188,7 +194,10 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold text-amber-600">
                       {summary.needsReviewCount}
                     </div>
-                    <Link to="/diagnoses?status=needs_review" className="text-amber-600 text-sm ml-auto hover:underline">
+                    <Link
+                      to="/diagnoses?status=needs_review"
+                      className="text-amber-600 text-sm ml-auto hover:underline"
+                    >
                       Lihat daftar
                     </Link>
                   </CardContent>
@@ -204,7 +213,10 @@ export function DashboardPage() {
                     <div className="text-3xl font-bold text-red-600">
                       {summary.riskDistribution.high}
                     </div>
-                    <Link to="/diagnoses?risk=high" className="text-red-600 text-sm ml-auto hover:underline">
+                    <Link
+                      to="/diagnoses?risk=high"
+                      className="text-red-600 text-sm ml-auto hover:underline"
+                    >
                       Lihat daftar
                     </Link>
                   </CardContent>
@@ -265,7 +277,7 @@ export function DashboardPage() {
                 </div>
                 <Link
                   to="/library"
-                  className="text-emerald-600 font-semibold inline-flex items-center gap-1"
+                  className="text-emerald-600 font-semibold inline-flex items-center gap-1 hover:underline"
                 >
                   Lihat Pustaka <ChevronRight className="w-4 h-4" />
                 </Link>
