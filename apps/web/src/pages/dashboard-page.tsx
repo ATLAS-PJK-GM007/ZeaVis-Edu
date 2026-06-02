@@ -30,6 +30,7 @@ export function DashboardPage() {
         name: d.commonName,
         sci: d.label,
         color: d.accentColor,
+        slug: d.slug,
       })),
     [diseases]
   );
@@ -156,26 +157,12 @@ export function DashboardPage() {
                   perkembangan dan hasil deteksi penyakit daun jagung
                 </p>
               </div>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Penyakit
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-full flex flex-col justify-start pt-2">
-                  <div className="text-3xl font-bold">
-                    {summary.diseaseCount}
-                  </div>
-                  <Link to="/diagnoses" className="text-emerald-600 ml-auto hover:underline">
-                    Lihat daftar
-                  </Link>
-                </CardContent>
-              </Card>
 
+              {/* Total Diagnoses — the actual count from diagnoses table */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Diagnosis
+                    Total Diagnosa
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="h-full flex flex-col justify-start pt-2">
@@ -188,6 +175,7 @@ export function DashboardPage() {
                 </CardContent>
               </Card>
 
+              {/* Menunggu Review */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -204,18 +192,36 @@ export function DashboardPage() {
                 </CardContent>
               </Card>
 
+              {/* Diagnosa Gagal */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Risiko Tinggi
+                    Gagal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-full flex flex-col justify-start pt-2">
+                  <div className="text-3xl font-bold text-red-600">
+                    —
+                  </div>
+                  <Link to="/diagnoses?status=failed" className="text-red-600 ml-auto hover:underline">
+                    Lihat daftar
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Risiko Tinggi — catalog count, link to catalog filtered */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Kategori Risiko Tinggi
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="h-full flex flex-col justify-start pt-2">
                   <div className="text-3xl font-bold text-red-600">
                     {summary.riskDistribution.high}
                   </div>
-                  <Link to="/diagnoses?risk=high" className="text-red-600 ml-auto hover:underline">
-                    Lihat daftar
+                  <Link to="/catalog?risk=high" className="text-red-600 ml-auto hover:underline">
+                    Lihat pustaka
                   </Link>
                 </CardContent>
               </Card>
@@ -262,7 +268,7 @@ export function DashboardPage() {
             </div>
           </section>
 
-          {/* Diseases quick access - now API-driven */}
+          {/* Diseases quick access - now clickable, link to catalog/:slug */}
           <section className="space-y-4">
             <div className="mb-2 flex items-start justify-between">
               <div>
@@ -288,27 +294,28 @@ export function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {diseasesQuick.map((d) => (
-                  <Card
-                    key={d.name}
-                    className="rounded-2xl bg-white p-4 shadow-sm h-full"
-                  >
-                    <CardContent className="h-full p-4 flex flex-col justify-between">
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="mt-1 h-3 w-3 rounded-full"
-                          style={{ backgroundColor: d.color }}
-                        />
-                        <div>
-                          <div className="text-sm font-bold text-[#214B11]">
-                            {d.name}
-                          </div>
-                          <div className="text-xs text-slate-400 italic mt-1">
-                            {d.sci}
+                  <Link key={d.slug} to={`/catalog/${d.slug}`}>
+                    <Card
+                      className="rounded-2xl bg-white p-4 shadow-sm h-full transition-transform hover:scale-[1.03] hover:shadow-md cursor-pointer"
+                    >
+                      <CardContent className="h-full p-4 flex flex-col justify-between">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="mt-1 h-3 w-3 rounded-full shrink-0"
+                            style={{ backgroundColor: d.color }}
+                          />
+                          <div>
+                            <div className="text-sm font-bold text-[#214B11]">
+                              {d.name}
+                            </div>
+                            <div className="text-xs text-slate-400 italic mt-1">
+                              {d.sci}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             )}
