@@ -1,9 +1,12 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
+import { DiagnosisStatusBadge } from "@/components/diagnosis-status-badge";
 import type { DiagnosisRecord } from "@zeavis/shared";
+import { apiClient } from "@/lib/api-client";
 import {
   AlignCenter,
   Camera,
@@ -16,6 +19,7 @@ import {
 
 export function ScanPage() {
   const [fileName, setFileName] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -24,16 +28,28 @@ export function ScanPage() {
     mutationFn: (file: File) => apiClient.createDiagnosis(file),
     onSuccess: (diagnosis) => {
       queryClient.invalidateQueries({ queryKey: ["diagnoses"] });
-      // show preview modal instead of immediate navigation
       setDiagnosisPreview(diagnosis);
       setPreviewOpen(true);
+      setFileName(null);
+      setPreviewUrl(null);
+      if (inputRef.current) inputRef.current.value = "";
     },
   });
 
   const handleFile = (f?: File) => {
     if (!f) return;
+    if (f.size > 5 * 1024 * 1024) {
+      alert("Ukuran file melebihi batas 5MB");
+      return;
+    }
     setFileName(f.name);
-    mutation.mutate(f);
+    setPreviewUrl(URL.createObjectURL(f));
+  };
+
+  const handleUpload = () => {
+    const file = inputRef.current?.files?.[0];
+    if (!file) return;
+    mutation.mutate(file);
   };
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -290,95 +306,120 @@ export function ScanPage() {
           setPreviewOpen(false);
           setDiagnosisPreview(null);
         }}
-        title={diagnosisPreview?.predictedDiseaseSlug ?? "Hasil Diagnosis"}
-        size="sm"
+        title={diagnosisPreview?.disease?.commonName ?? "Hasil Diagnosis"}
+        size="md"
         footer={
           diagnosisPreview && (
             <div className="flex items-center justify-end gap-3">
-              <button
-                className="px-3 py-2 rounded bg-green-600 text-white text-sm"
-                onClick={() => navigate(`/diagnoses/${diagnosisPreview.id}`)}
-              >
-                Lihat detail
-              </button>
-              <button
-                className="px-3 py-2 rounded bg-gray-200 text-sm"
+              <Button
+                variant="outline"
                 onClick={() => {
                   setPreviewOpen(false);
                   setDiagnosisPreview(null);
                 }}
               >
                 Tutup
-              </button>
+              </Button>
+              <Button
+                onClick={() => navigate(`/diagnoses/${diagnosisPreview.id}`)}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Lihat Detail Lengkap
+              </Button>
             </div>
           )
         }
       >
         {diagnosisPreview ? (
-          <div className="grid grid-cols-1 gap-4">
-            {diagnosisPreview.imageUrl && (
-              <img
-                src={diagnosisPreview.imageUrl}
-                alt="hasil"
-                className="w-full rounded-md object-cover"
-              />
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Prediksi:{" "}
-                <strong>{diagnosisPreview.predictedDiseaseSlug}</strong>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Confidence:{" "}
-                <strong>
-                  {Math.round((diagnosisPreview.confidence ?? 0) * 100)}%
-                </strong>
-              </p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <DiagnosisStatusBadge status={diagnosisPreview.status} />
+              {diagnosisPreview.confidence !== null && (
+                <span className="text-sm font-medium">
+                  Confidence: {(diagnosisPreview.confidence * 100).toFixed(1)}%
+                </span>
+              )}
             </div>
+
+            {diagnosisPreview.disease && (
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {diagnosisPreview.disease.commonName}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {diagnosisPreview.disease.summary}
+                </p>
+              </div>
+            )}
+
+            {diagnosisPreview.failureReason && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                {diagnosisPreview.failureReason}
+              </div>
+            )}
+
+            {diagnosisPreview.predictions.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Semua Prediksi</h4>
+                <div className="space-y-2">
+                  {diagnosisPreview.predictions
+                    .sort((a, b) => a.rank - b.rank)
+                    .map((pred) => (
+                      <div
+                        key={pred.id}
+                        className="flex items-center justify-between rounded-lg border p-2 text-sm"
+                      >
+                        <span>{pred.modelLabel}</span>
+                        <span className="font-semibold">
+                          {(pred.confidence * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t">
-              <h4 className="text-sm font-medium mb-2">
-                Daftar Diagnosis Terbaru
+              <h4 className="text-sm font-medium mb-3">
+                Riwayat Diagnosis Terbaru
               </h4>
               {diagnosesQuery.isLoading && (
                 <div className="text-sm text-muted-foreground">
-                  Memuat daftar...
-                </div>
-              )}
-              {diagnosesQuery.isError && (
-                <div className="text-sm text-red-600">
-                  Gagal memuat daftar diagnosis
+                  Memuat riwayat...
                 </div>
               )}
               {!diagnosesQuery.isLoading && !diagnosesQuery.isError && (
                 <div className="space-y-2">
-                  {(diagnosesQuery.data ?? []).slice(0, 5).map((d) => (
-                    <div
-                      key={d.id}
-                      className="flex items-center justify-between rounded-md p-2 hover:bg-muted"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={d.imageUrl}
-                          alt="thumb"
-                          className="h-10 w-10 rounded object-cover"
-                        />
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {d.disease?.commonName ?? d.predictedDiseaseSlug}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(d.createdAt).toLocaleString("id-ID")}
+                  {(diagnosesQuery.data ?? [])
+                    .slice(0, 5)
+                    .map((d) => (
+                      <div
+                        key={d.id}
+                        className="flex items-center justify-between rounded-md p-2 hover:bg-muted"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={d.imageUrl}
+                            alt="thumb"
+                            className="h-10 w-10 rounded object-cover bg-muted"
+                          />
+                          <div className="text-sm">
+                            <div className="font-medium">
+                              {d.disease?.commonName ?? "Unknown"}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(d.createdAt).toLocaleString("id-ID")}
+                            </div>
                           </div>
                         </div>
+                        <Link
+                          to={`/diagnoses/${d.id}`}
+                          className="text-emerald-600 text-sm font-semibold"
+                        >
+                          Lihat
+                        </Link>
                       </div>
-                      <Link
-                        to={`/diagnoses/${d.id}`}
-                        className="text-emerald-600 text-sm font-semibold"
-                      >
-                        Lihat
-                      </Link>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>

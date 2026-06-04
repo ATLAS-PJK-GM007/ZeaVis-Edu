@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthForm } from "@/components/auth-form";
@@ -7,9 +7,6 @@ import { useAuthStore } from "@/store/auth-store";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  useEffect(() => {
-    navigate("/dashboard");
-  }, [navigate]);
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState<string | null>(null);

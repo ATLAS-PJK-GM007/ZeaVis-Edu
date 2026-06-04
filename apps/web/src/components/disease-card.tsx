@@ -14,8 +14,8 @@ export function DiseaseCard({ disease }: DiseaseCardProps) {
     <Link to={`/catalog/${disease.slug}`} className="block transition-transform hover:scale-105">
       <Card className="h-full">
         <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <CardTitle className="text-xl">{disease.commonName}</CardTitle>
               <CardDescription className="mt-1">{disease.label}</CardDescription>
             </div>
