@@ -15,6 +15,11 @@ import type {
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
 
+export interface ApiError extends Error {
+  status: number;
+  source?: 'uploader' | 'model-service' | 'unknown';
+}
+
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${apiBaseUrl}${endpoint}`;
   const response = await fetch(url, {
@@ -25,14 +30,21 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}`;
+    let source: 'uploader' | 'model-service' | 'unknown' | undefined;
     try {
       const errorData = await response.json();
       if (errorData.error) {
         errorMessage = errorData.error;
       }
+      if (errorData.source) {
+        source = errorData.source;
+      }
     } catch {
     }
-    throw new Error(errorMessage);
+    const error = new Error(errorMessage) as ApiError;
+    error.status = response.status;
+    error.source = source;
+    throw error;
   }
 
   return response.json();

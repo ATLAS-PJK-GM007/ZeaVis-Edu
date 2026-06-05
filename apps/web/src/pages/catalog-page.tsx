@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import type { RiskLevel } from '@zeavis/shared';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RiskBadge } from '@/components/risk-badge';
 import { apiClient } from '@/lib/api-client';
@@ -43,10 +42,12 @@ export function CatalogPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-primary">Edukasi Penyakit</p>
-          <h1 className="text-3xl font-bold tracking-tight">Katalog Penyakit</h1>
+          <h1 className="text-2xl font-bold text-emerald-800">Pustaka Penyakit</h1>
+          <p className="text-gray-500 mt-1 text-md">
+            Referensi lengkap penyakit dan kondisi daun jagung yang dapat dideteksi oleh sistem AI ZeaVis Edu
+          </p>
         </div>
       </div>
 

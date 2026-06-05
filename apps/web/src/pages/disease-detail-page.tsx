@@ -78,7 +78,7 @@ export function DiseaseDetailPage() {
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight">{disease.commonName}</h1>
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight">{disease.commonName}</h1>
             <p className="mt-2 text-lg text-muted-foreground">{disease.label}</p>
           </div>
           <RiskBadge level={disease.riskLevel} />
@@ -131,7 +131,7 @@ export function DiseaseDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="flex gap-3 pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
         <Button asChild className="flex-1">
           <Link to="/catalog">Lihat Katalog Lengkap</Link>
         </Button>

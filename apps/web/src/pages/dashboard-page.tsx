@@ -77,13 +77,13 @@ export function DashboardPage() {
         style={{ backgroundImage: `url(${bg})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#2F6E1A]/60 to-black/30" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 p-10">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 p-6 md:p-10">
           <div className="space-y-3 w-full md:w-2/3 text-white">
             <span className="inline-block rounded-full bg-[#1E8A2A]/80 px-4 py-2 text-xs font-semibold">
               AI FOR SMART EDUCATION
             </span>
-            <h1 className="text-4xl font-extrabold">Selamat Datang di</h1>
-            <h2 className="text-4xl font-extrabold tracking-tight text-[#9AD872]">
+            <h1 className="text-2xl md:text-4xl font-extrabold">Selamat Datang di</h1>
+            <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-[#9AD872]">
               ZeaVis Edu
             </h2>
             <p className="mt-3 max-w-xl text-white/90">
@@ -91,11 +91,11 @@ export function DashboardPage() {
               Indonesia mendeteksi penyakit daun secara mandiri, cepat, dan
               akurat.
             </p>
-            <div className="mt-6 flex items-center gap-4">
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               <Button
                 asChild
                 variant="outline"
-                className="bg-[#306D29] hover:bg-[#1E8A2A]/90 px-6 py-6 text-lg font-semibold text-white"
+                className="bg-[#306D29] hover:bg-[#1E8A2A]/90 px-4 md:px-6 py-3 md:py-6 text-sm md:text-lg font-semibold text-white"
               >
                 <Link to="/scan" className="inline-flex items-center gap-2">
                   <Scan className="h-5 w-6" />
@@ -105,7 +105,7 @@ export function DashboardPage() {
               <Button
                 asChild
                 variant="outline"
-                className="px-6 py-6 text-lg font-semibold text-white hover:bg-[#1E8A2A]"
+                className="px-4 md:px-6 py-3 md:py-6 text-sm md:text-lg font-semibold text-white hover:bg-[#1E8A2A]"
               >
                 <Link
                   to="/catalog"
@@ -149,7 +149,7 @@ export function DashboardPage() {
               }
             >
               <div className="md:col-span-4 text-xl font-bold">
-                <h3 className="text-[24px] font-extrabold text-[#214B11]">
+                <h3 className="text-lg md:text-[24px] font-extrabold text-[#214B11]">
                   Proyek Urgensi
                 </h3>
                 <p className="text-[15px] font-normal text-muted-foreground">
@@ -231,7 +231,7 @@ export function DashboardPage() {
           {/* Mission section */}
           <section className="space-y-5 rounded-4xl bg-[#EEF4E8] py-6 md:py-8">
             <div className="space-y-1">
-              <h3 className="text-[24px] font-extrabold text-[#214B11]">
+              <h3 className="text-lg md:text-[24px] font-extrabold text-[#214B11]">
                 Misi Platform
               </h3>
               <p className="text-[15px] font-normal text-muted-foreground">
@@ -272,7 +272,7 @@ export function DashboardPage() {
           <section className="space-y-4">
             <div className="mb-2 flex items-start justify-between">
               <div>
-                <h3 className="text-[24px] font-extrabold text-[#214B11]">
+                <h3 className="text-lg md:text-[24px] font-extrabold text-[#214B11]">
                   Penyakit yang Dapat Dideteksi
                 </h3>
                 <p className="text-[15px] font-normal text-muted-foreground">
@@ -322,7 +322,7 @@ export function DashboardPage() {
           </section>
 
           {/* Scan quick access */}
-          <div className="mt-12 flex items-center gap-6 bg-[#1E8A2A] rounded-3xl p-6">
+          <div className="mt-12 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 bg-[#1E8A2A] rounded-3xl p-5 sm:p-6">
             <div className="flex-1 text-white">
               <h3 className="text-2xl font-bold">Siap Mendeteksi Penyakit Daun?</h3>
               <p className="text-sm text-[#9AD872] font-normal mt-2">
