@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { DiagnosisStatusBadge } from "@/components/diagnosis-status-badge";
 import type { DiagnosisRecord } from "@zeavis/shared";
@@ -117,7 +116,7 @@ export function ScanPage() {
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-emerald-800">Scan Tanaman</h1>
-        <p className="text-gray-500 mt-1" text-sm>
+        <p className="text-gray-500 mt-1 text-md">
           Unggah foto daun jagung untuk dianalisis oleh sistem AI kami secara
           real-time.
         </p>
@@ -132,6 +131,7 @@ export function ScanPage() {
             Area Unggah Gambar
           </div>
 
+          {/* Upload Area */}
           <button
             type="button"
             className="w-full border-2 border-dashed border-green-300 rounded-md p-6 h-80 text-center cursor-pointer"
@@ -175,16 +175,21 @@ export function ScanPage() {
           />
 
           <div className="mt-3 flex flex-col gap-2">
-            <button
-              className="w-full bg-green-600 text-white px-4 py-2.5 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 cursor-pointer text-sm font-medium"
-              onClick={() => inputRef.current?.click()}
-            >
-              Pilih Berkas
-            </button>
-            {mutation.isPending && (
-              <div className="text-xs text-muted-foreground text-center">
-                Mengunggah...
-              </div>
+            {!previewUrl ? (
+              <button
+                className="w-full bg-green-600 text-white px-4 py-2.5 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 cursor-pointer text-sm font-medium"
+                onClick={() => inputRef.current?.click()}
+              >
+                Pilih Berkas
+              </button>
+            ) : (
+              <button
+                className="w-full bg-green-600 text-white px-4 py-2.5 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 cursor-pointer text-sm font-medium disabled:bg-gray-400"
+                onClick={handleUpload}
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? "Mengunggah..." : "Pilih Berkas"}
+              </button>
             )}
             {mutation.isError && (
               <div className="text-xs text-red-600 text-center">
@@ -390,36 +395,34 @@ export function ScanPage() {
               )}
               {!diagnosesQuery.isLoading && !diagnosesQuery.isError && (
                 <div className="space-y-2">
-                  {(diagnosesQuery.data ?? [])
-                    .slice(0, 5)
-                    .map((d) => (
-                      <div
-                        key={d.id}
-                        className="flex items-center justify-between rounded-md p-2 hover:bg-muted"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={d.imageUrl}
-                            alt="thumb"
-                            className="h-10 w-10 rounded object-cover bg-muted"
-                          />
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {d.disease?.commonName ?? "Unknown"}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(d.createdAt).toLocaleString("id-ID")}
-                            </div>
+                  {(diagnosesQuery.data ?? []).slice(0, 5).map((d) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center justify-between rounded-md p-2 hover:bg-muted"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={d.imageUrl}
+                          alt="thumb"
+                          className="h-10 w-10 rounded object-cover bg-muted"
+                        />
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {d.disease?.commonName ?? "Unknown"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(d.createdAt).toLocaleString("id-ID")}
                           </div>
                         </div>
-                        <Link
-                          to={`/diagnoses/${d.id}`}
-                          className="text-emerald-600 text-sm font-semibold"
-                        >
-                          Lihat
-                        </Link>
                       </div>
-                    ))}
+                      <Link
+                        to={`/diagnoses/${d.id}`}
+                        className="text-emerald-600 text-sm font-semibold"
+                      >
+                        Lihat
+                      </Link>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

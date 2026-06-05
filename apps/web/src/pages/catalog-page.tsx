@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import type { RiskLevel } from '@zeavis/shared';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RiskBadge } from '@/components/risk-badge';
 import { apiClient } from '@/lib/api-client';

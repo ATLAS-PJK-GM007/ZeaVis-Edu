@@ -21,57 +21,47 @@ import { MainLayout } from "@/components/layout/main-layout";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
-  { path: "/", element: <Navigate to="/login" replace /> },
+  { path: "/", element: <Navigate to="/dashboard" replace /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
   {
     path: "/dashboard",
     element: (
-      <AuthGuard>
-        <MainLayout>
-          <DashboardPage />
-        </MainLayout>
-      </AuthGuard>
+      <MainLayout>
+        <DashboardPage />
+      </MainLayout>
     ),
   },
   {
     path: "/scan",
     element: (
-      <AuthGuard>
-        <MainLayout>
-          <ScanPage />
-        </MainLayout>
-      </AuthGuard>
+      <MainLayout>
+        <ScanPage />
+      </MainLayout>
     ),
   },
   {
     path: "/library",
     element: (
-      <AuthGuard>
-        <MainLayout>
-          <LibraryPage />
-        </MainLayout>
-      </AuthGuard>
+      <MainLayout>
+        <LibraryPage />
+      </MainLayout>
     ),
   },
   {
     path: "/diagnoses",
     element: (
-      <AuthGuard>
-        <MainLayout>
-          <DiagnosesPage />
-        </MainLayout>
-      </AuthGuard>
+      <MainLayout>
+        <DiagnosesPage />
+      </MainLayout>
     ),
   },
   {
     path: "/diagnoses/:id",
     element: (
-      <AuthGuard>
-        <MainLayout>
-          <DiagnosisDetailPage />
-        </MainLayout>
-      </AuthGuard>
+      <MainLayout>
+        <DiagnosisDetailPage />
+      </MainLayout>
     ),
   },
   {
