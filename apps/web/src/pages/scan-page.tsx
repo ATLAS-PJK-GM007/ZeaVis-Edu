@@ -103,7 +103,7 @@ export function ScanPage() {
               {!previewUrl ? (
                 <div className="space-y-3">
                   <div
-                    className="w-full border-2 border-dashed border-green-300 rounded-md p-12 h-60 text-center cursor-pointer"
+                    className="w-full border-2 border-dashed border-green-300 rounded-md p-10 h-60 text-center cursor-pointer"
                     onClick={() => inputRef.current?.click()}
                   >
                     <Upload className="mx-auto text-green-500 mb-3" size={48} />
