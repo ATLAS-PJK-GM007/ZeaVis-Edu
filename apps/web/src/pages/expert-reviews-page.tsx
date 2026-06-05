@@ -1,24 +1,35 @@
-import { FormEvent, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import type { DiseaseSlug } from '@zeavis/shared';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DiagnosisStatusBadge } from '@/components/diagnosis-status-badge';
-import { apiClient } from '@/lib/api-client';
+import { FormEvent, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import type { DiseaseSlug } from "@zeavis/shared";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { DiagnosisStatusBadge } from "@/components/diagnosis-status-badge";
+import { apiClient } from "@/lib/api-client";
 
 export function ExpertReviewsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedId = searchParams.get('diagnosis');
-  const [verdict, setVerdict] = useState<'verified' | 'corrected'>('verified');
-  const [correctedDiseaseSlug, setCorrectedDiseaseSlug] = useState<DiseaseSlug | ''>('');
-  const [notes, setNotes] = useState('');
+  const selectedId = searchParams.get("diagnosis");
+  const [verdict, setVerdict] = useState<"verified" | "corrected">("verified");
+  const [correctedDiseaseSlug, setCorrectedDiseaseSlug] = useState<
+    DiseaseSlug | ""
+  >("");
+  const [notes, setNotes] = useState("");
   const queryClient = useQueryClient();
 
   const [reviewsQuery, diseasesQuery] = useQueries({
     queries: [
-      { queryKey: ['expert-reviews'], queryFn: () => apiClient.getExpertReviews() },
-      { queryKey: ['diseases'], queryFn: () => apiClient.getDiseases() },
+      {
+        queryKey: ["expert-reviews"],
+        queryFn: () => apiClient.getExpertReviews(),
+      },
+      { queryKey: ["diseases"], queryFn: () => apiClient.getDiseases() },
     ],
   });
 
@@ -33,15 +44,18 @@ export function ExpertReviewsPage() {
     mutationFn: () =>
       apiClient.reviewDiagnosis(selected!.id, {
         verdict,
-        correctedDiseaseSlug: verdict === 'corrected' ? correctedDiseaseSlug || undefined : undefined,
+        correctedDiseaseSlug:
+          verdict === "corrected"
+            ? correctedDiseaseSlug || undefined
+            : undefined,
         notes,
       }),
     onSuccess: () => {
-      setNotes('');
-      setVerdict('verified');
-      setCorrectedDiseaseSlug('');
-      queryClient.invalidateQueries({ queryKey: ['expert-reviews'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      setNotes("");
+      setVerdict("verified");
+      setCorrectedDiseaseSlug("");
+      queryClient.invalidateQueries({ queryKey: ["expert-reviews"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
     },
   });
 
@@ -57,8 +71,11 @@ export function ExpertReviewsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-primary">Review Pakar</p>
-          <h1 className="text-3xl font-bold">Diagnosis Menunggu Review</h1>
+          <h1 className="text-2xl font-bold text-emerald-800">Review Pakar</h1>
+          <p className="text-gray-500 mt-1 text-md">
+            Tinjau hasil diagnosa dari scan yang telah dilakukan dan berikan
+            feedback untuk meningkatkan akurasi sistem AI ZeaVis Edu
+          </p>
         </div>
       </div>
 
@@ -67,14 +84,20 @@ export function ExpertReviewsPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Daftar Diagnosis</h2>
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">{reviews.length}</span>
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
+              {reviews.length}
+            </span>
           </div>
 
           <div className="space-y-2">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Memuat diagnosis...</p>
+              <p className="text-sm text-muted-foreground">
+                Memuat diagnosis...
+              </p>
             ) : reviews.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Tidak ada diagnosis yang menunggu review</p>
+              <p className="text-sm text-muted-foreground">
+                Tidak ada diagnosis yang menunggu review
+              </p>
             ) : (
               reviews.map((review) => (
                 <button
@@ -83,8 +106,8 @@ export function ExpertReviewsPage() {
                   onClick={() => setSearchParams({ diagnosis: review.id })}
                   className={`w-full text-left transition ${
                     selected?.id === review.id
-                      ? 'ring-2 ring-primary'
-                      : 'hover:border-primary'
+                      ? "ring-2 ring-primary"
+                      : "hover:border-primary"
                   }`}
                 >
                   <Card className="transition hover:border-primary">
@@ -96,13 +119,22 @@ export function ExpertReviewsPage() {
                       />
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center justify-between gap-1">
-                          <h3 className="text-sm font-semibold">{review.disease?.commonName ?? 'Diagnosis gagal'}</h3>
-                          <DiagnosisStatusBadge status={review.status} className="text-xs" />
+                          <h3 className="text-sm font-semibold">
+                            {review.disease?.commonName ?? "Diagnosis gagal"}
+                          </h3>
+                          <DiagnosisStatusBadge
+                            status={review.status}
+                            className="text-xs"
+                          />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {review.confidence === null ? 'Tidak ada confidence' : `${(review.confidence * 100).toFixed(1)}%`}
+                          {review.confidence === null
+                            ? "Tidak ada confidence"
+                            : `${(review.confidence * 100).toFixed(1)}%`}
                         </p>
-                        <p className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleString('id-ID')}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleString("id-ID")}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -125,15 +157,17 @@ export function ExpertReviewsPage() {
               {/* Detail card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>{selected.disease?.commonName ?? 'Diagnosis gagal'}</CardTitle>
+                  <CardTitle>
+                    {selected.disease?.commonName ?? "Diagnosis gagal"}
+                  </CardTitle>
                   <CardDescription>
-                    {new Date(selected.createdAt).toLocaleString('id-ID')}
+                    {new Date(selected.createdAt).toLocaleString("id-ID")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <img
                     src={selected.imageUrl}
-                    alt={`Gambar daun jagung untuk ${selected.disease?.commonName ?? 'diagnosis'}`}
+                    alt={`Gambar daun jagung untuk ${selected.disease?.commonName ?? "diagnosis"}`}
                     className="h-64 w-full rounded-lg object-cover"
                   />
 
@@ -145,7 +179,9 @@ export function ExpertReviewsPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Confidence</span>
                       <span className="text-sm">
-                        {selected.confidence === null ? 'N/A' : `${(selected.confidence * 100).toFixed(1)}%`}
+                        {selected.confidence === null
+                          ? "N/A"
+                          : `${(selected.confidence * 100).toFixed(1)}%`}
                       </span>
                     </div>
                   </div>
@@ -155,9 +191,16 @@ export function ExpertReviewsPage() {
                       <h4 className="text-sm font-medium">Prediksi Teratas</h4>
                       <div className="space-y-1">
                         {selected.predictions.map((pred) => (
-                          <div key={pred.id} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{pred.modelLabel}</span>
-                            <span className="font-medium">{(pred.confidence * 100).toFixed(1)}%</span>
+                          <div
+                            key={pred.id}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span className="text-muted-foreground">
+                              {pred.modelLabel}
+                            </span>
+                            <span className="font-medium">
+                              {(pred.confidence * 100).toFixed(1)}%
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -176,29 +219,41 @@ export function ExpertReviewsPage() {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Keputusan</label>
                       <div className="flex gap-3">
-                        <label htmlFor="verdict-verified" className="flex items-center gap-2">
+                        <label
+                          htmlFor="verdict-verified"
+                          className="flex items-center gap-2"
+                        >
                           <input
                             id="verdict-verified"
                             type="radio"
                             name="verdict"
                             value="verified"
-                            checked={verdict === 'verified'}
+                            checked={verdict === "verified"}
                             onChange={(e) => {
-                              setVerdict(e.target.value as 'verified' | 'corrected');
-                              setCorrectedDiseaseSlug('');
+                              setVerdict(
+                                e.target.value as "verified" | "corrected",
+                              );
+                              setCorrectedDiseaseSlug("");
                             }}
                             className="h-4 w-4"
                           />
                           <span className="text-sm">Terverifikasi</span>
                         </label>
-                        <label htmlFor="verdict-corrected" className="flex items-center gap-2">
+                        <label
+                          htmlFor="verdict-corrected"
+                          className="flex items-center gap-2"
+                        >
                           <input
                             id="verdict-corrected"
                             type="radio"
                             name="verdict"
                             value="corrected"
-                            checked={verdict === 'corrected'}
-                            onChange={(e) => setVerdict(e.target.value as 'verified' | 'corrected')}
+                            checked={verdict === "corrected"}
+                            onChange={(e) =>
+                              setVerdict(
+                                e.target.value as "verified" | "corrected",
+                              )
+                            }
                             className="h-4 w-4"
                           />
                           <span className="text-sm">Dikoreksi</span>
@@ -206,16 +261,23 @@ export function ExpertReviewsPage() {
                       </div>
                     </div>
 
-                    {verdict === 'corrected' && (
+                    {verdict === "corrected" && (
                       <div className="space-y-2">
-                        <label htmlFor="disease" className="text-sm font-medium">
+                        <label
+                          htmlFor="disease"
+                          className="text-sm font-medium"
+                        >
                           Penyakit yang Benar
                         </label>
                         <select
                           id="disease"
                           value={correctedDiseaseSlug}
-                          onChange={(e) => setCorrectedDiseaseSlug(e.target.value as DiseaseSlug | '')}
-                          required={verdict === 'corrected'}
+                          onChange={(e) =>
+                            setCorrectedDiseaseSlug(
+                              e.target.value as DiseaseSlug | "",
+                            )
+                          }
+                          required={verdict === "corrected"}
                           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                         >
                           <option value="">Pilih penyakit...</option>
@@ -245,15 +307,22 @@ export function ExpertReviewsPage() {
 
                     <Button
                       type="submit"
-                      disabled={mutation.isPending || (verdict === 'corrected' && !correctedDiseaseSlug) || !notes.trim()}
+                      disabled={
+                        mutation.isPending ||
+                        (verdict === "corrected" && !correctedDiseaseSlug) ||
+                        !notes.trim()
+                      }
                       className="w-full"
                     >
-                      {mutation.isPending ? 'Mengirim...' : 'Kirim Review'}
+                      {mutation.isPending ? "Mengirim..." : "Kirim Review"}
                     </Button>
 
                     {mutation.isError && (
                       <p className="text-sm text-red-500">
-                        Error: {mutation.error instanceof Error ? mutation.error.message : 'Terjadi kesalahan'}
+                        Error:{" "}
+                        {mutation.error instanceof Error
+                          ? mutation.error.message
+                          : "Terjadi kesalahan"}
                       </p>
                     )}
                   </form>

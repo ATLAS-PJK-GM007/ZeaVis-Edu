@@ -75,10 +75,10 @@ export function DiagnosesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">
-            Manajemen Diagnosis
+          <h1 className="text-2xl font-bold text-emerald-800">Diagnosa Tanaman</h1>
+          <p className="text-gray-500 mt-1 text-md">
+            Lihat hasil diagnosa dari scan yang telah dilakukan
           </p>
-          <h1 className="text-3xl font-bold">Daftar Diagnosis</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button asChild variant="outline">
@@ -87,68 +87,66 @@ export function DiagnosesPage() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-4 p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm font-medium">Status</label>
+        <select
+          value={statusFilter}
+          onChange={(e) => handleStatusChange(e.target.value)}
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
 
-            <label className="text-sm font-medium">Risiko</label>
-            <select
-              value={riskFilter}
-              onChange={(e) => handleRiskChange(e.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              {RISK_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+        <label className="text-sm font-medium">Risiko</label>
+        <select
+          value={riskFilter}
+          onChange={(e) => handleRiskChange(e.target.value)}
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+        >
+          {RISK_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
 
-            <div className="ml-auto text-sm text-muted-foreground">
-              Total: {filtered.length}
-            </div>
-          </div>
+        <div className="ml-auto text-sm text-muted-foreground">
+          Total: {filtered.length}
+        </div>
+      </div>
 
-          {query.isLoading ? (
-            <div className="py-12 text-center text-muted-foreground">
-              Memuat diagnosis...
-            </div>
-          ) : query.isError ? (
-            <div className="py-12 text-center text-red-600">
-              Gagal memuat diagnosis
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">
-                Tidak ada diagnosis sesuai filter
-              </p>
-              {diagnoses.length === 0 && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Mulai dengan{" "}
-                  <Link to="/scan" className="text-primary underline">
-                    melakukan scan daun
-                  </Link>
-                  .
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {filtered.map((d) => (
-                <Card key={d.id} className="h-full">
-                  <CardContent className="flex gap-4 p-4 items-start">
+      {query.isLoading ? (
+        <div className="py-12 text-center text-muted-foreground">
+          Memuat diagnosis...
+        </div>
+      ) : query.isError ? (
+        <div className="py-12 text-center text-red-600">
+          Gagal memuat diagnosis
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">
+            Tidak ada diagnosis sesuai filter
+          </p>
+          {diagnoses.length === 0 && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Mulai dengan{" "}
+              <Link to="/scan" className="text-primary underline">
+                melakukan scan daun
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {filtered.map((d) => (
+            <Card key={d.id} className="h-full">
+              <CardContent className="flex gap-4 p-4 items-start">
                     <img
                       src={d.imageUrl}
                       alt="Daun"
@@ -192,8 +190,6 @@ export function DiagnosesPage() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

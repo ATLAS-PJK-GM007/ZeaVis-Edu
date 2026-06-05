@@ -26,10 +26,12 @@ export function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">Edukasi Penyakit</p>
-          <h1 className="text-3xl font-bold">Pustaka Penyakit</h1>
+          <h1 className="text-2xl font-bold text-emerald-800">Pustaka Penyakit</h1>
+          <p className="text-gray-500 mt-1 text-md">
+            Referensi lengkap penyakit daun jagung yang dapat dideteksi oleh sistem AI
+          </p>
         </div>
       </div>
 
