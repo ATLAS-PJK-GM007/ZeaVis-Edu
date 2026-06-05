@@ -76,7 +76,7 @@ export function ScanPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-bold text-emerald-800">Scan Tanaman</h1>
           <p className="text-gray-500 mt-1 text-md">
@@ -91,7 +91,7 @@ export function ScanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <Card className="w-full h-117 py-3">
+          <Card className="w-full lg:h-117 py-3">
             <CardContent className="px-6 py-4 h-full flex flex-col">
               {/* Left Sidebar */}
               <div className="text-black flex items-center gap-2 mb-3 text-lg font-semibold">
@@ -198,7 +198,7 @@ export function ScanPage() {
                     <p className="text-sm text-muted-foreground">
                       File: <span className="font-medium">{fileName}</span>
                     </p>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -248,7 +248,7 @@ export function ScanPage() {
         </div>
 
         {/* Right Sidebar */}
-        <aside className="md:col-span-1 flex flex-col gap-5">
+        <aside className="lg:col-span-1 flex flex-col gap-5">
           {/* Card 1: Panduan Pengambilan Foto */}
           <Card className="w-full h-max">
             <CardContent className="px-6 py-4">

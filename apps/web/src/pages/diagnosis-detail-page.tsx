@@ -14,23 +14,22 @@ export function DiagnosisDetailPage() {
     enabled: Boolean(id),
   });
 
-  if (query.isLoading) return <main className="p-8 text-center text-muted-foreground">Memuat diagnosis...</main>;
-  if (query.error || !query.data) return <main className="p-8 text-center text-red-600">Diagnosis tidak ditemukan</main>;
+  if (query.isLoading) return <div className="p-8 text-center text-muted-foreground">Memuat diagnosis...</div>;
+  if (query.error || !query.data) return <div className="p-8 text-center text-red-600">Diagnosis tidak ditemukan</div>;
 
   const diagnosis = query.data;
 
   return (
-    <main className="min-h-screen px-6 py-8">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-primary">Detail Diagnosis</p>
-            <h1 className="text-3xl font-bold">{diagnosis.disease?.commonName ?? 'Diagnosis gagal'}</h1>
+            <h1 className="text-xl md:text-3xl font-bold">{diagnosis.disease?.commonName ?? 'Diagnosis gagal'}</h1>
           </div>
           <Button asChild variant="outline"><Link to="/dashboard">Kembali</Link></Button>
         </div>
 
-        <section className="grid gap-6 lg:grid-cols-[360px_1fr]">
+        <section className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardContent className="p-4">
               <img src={diagnosis.imageUrl} alt="Daun jagung" className="w-full rounded-xl object-cover" />
@@ -99,6 +98,5 @@ export function DiagnosisDetailPage() {
           </Card>
         )}
       </div>
-    </main>
-  );
-}
+    );
+  }

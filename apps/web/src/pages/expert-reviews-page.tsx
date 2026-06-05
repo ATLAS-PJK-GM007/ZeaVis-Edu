@@ -69,7 +69,7 @@ export function ExpertReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-emerald-800">Review Pakar</h1>
           <p className="text-gray-500 mt-1 text-md">
@@ -111,11 +111,11 @@ export function ExpertReviewsPage() {
                   }`}
                 >
                   <Card className="transition hover:border-primary">
-                    <CardContent className="flex gap-3 p-3">
+                    <CardContent className="flex gap-3 p-3 items-start">
                       <img
                         src={review.imageUrl}
                         alt="Daun jagung"
-                        className="h-20 w-20 rounded-lg object-cover"
+                        className="h-14 md:h-20 w-14 md:w-20 rounded-lg object-cover shrink-0"
                       />
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center justify-between gap-1">
@@ -168,7 +168,7 @@ export function ExpertReviewsPage() {
                   <img
                     src={selected.imageUrl}
                     alt={`Gambar daun jagung untuk ${selected.disease?.commonName ?? "diagnosis"}`}
-                    className="h-64 w-full rounded-lg object-cover"
+                    className="h-48 md:h-64 w-full rounded-lg object-cover"
                   />
 
                   <div className="space-y-2">
@@ -218,7 +218,7 @@ export function ExpertReviewsPage() {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Keputusan</label>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <label
                           htmlFor="verdict-verified"
                           className="flex items-center gap-2"

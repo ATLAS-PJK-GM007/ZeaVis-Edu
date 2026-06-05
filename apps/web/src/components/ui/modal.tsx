@@ -63,7 +63,7 @@ export function Modal({
         aria-modal="true"
         tabIndex={-1}
         ref={containerRef}
-        className={`relative z-10 w-full ${sizeClass[size]} rounded-lg bg-white p-6 shadow-lg ${className ?? ""}`}
+        className={`relative z-10 w-full ${sizeClass[size]} mx-4 max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg ${className ?? ""}`}
       >
         <ModalHeader right={headerRight}>
           {title ? <h2 className="text-lg font-semibold">{title}</h2> : null}

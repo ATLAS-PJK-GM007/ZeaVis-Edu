@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Leaf } from "lucide-react";
+import { Leaf, Menu } from "lucide-react";
+import { MobileNav } from "./mobile-nav";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/auth-store";
 import { apiClient } from "@/lib/api-client";
 
 export function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -50,7 +53,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <nav className="flex items-center gap-2">
+        <nav className="hidden lg:flex items-center gap-2">
           <Link to="/dashboard" className={navLinkClassName(isActive("/dashboard"))}>
             Dashboard
           </Link>
@@ -72,6 +75,19 @@ export function Navbar() {
             </Link>
           )}
         </nav>
+
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="lg:hidden rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          aria-label="Buka menu navigasi"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+
+        <MobileNav
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+        />
       </div>
     </header>
   );

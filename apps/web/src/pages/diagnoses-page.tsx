@@ -114,7 +114,7 @@ export function DiagnosesPage() {
           ))}
         </select>
 
-        <div className="ml-auto text-sm text-muted-foreground">
+        <div className="w-full sm:w-auto sm:ml-auto text-sm text-muted-foreground">
           Total: {filtered.length}
         </div>
       </div>
@@ -150,7 +150,7 @@ export function DiagnosesPage() {
                     <img
                       src={d.imageUrl}
                       alt="Daun"
-                      className="h-24 w-24 rounded-md object-cover bg-muted"
+                      className="h-16 md:h-24 w-16 md:w-24 rounded-md object-cover bg-muted shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
