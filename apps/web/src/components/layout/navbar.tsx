@@ -55,7 +55,7 @@ export function Navbar() {
             Dashboard
           </Link>
           <Link to="/scan" className={navLinkClassName(isActive("/scan"))}>
-            Scan
+            Scan Tanaman
           </Link>
           <Link to="/diagnoses" className={navLinkClassName(isActive("/diagnoses"))}>
             Diagnosa
@@ -70,16 +70,6 @@ export function Navbar() {
             >
               Review
             </Link>
-          )}
-          {user && (
-            <Button
-              variant="outline"
-              onClick={() => logoutMutation.mutate()}
-              disabled={logoutMutation.isPending}
-              className="ml-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              {logoutMutation.isPending ? "Keluar..." : "Keluar"}
-            </Button>
           )}
         </nav>
       </div>
