@@ -1,0 +1,30 @@
+# =============================================================================
+# ZeaVis Edu — Telemetry Stack Integration
+#
+# Extends the Telemetry submodule docker-compose to share the app network so
+# Prometheus can scrape the ZeaVis Edu services (web, api, ml).
+#
+# Usage (from project root):
+#   docker compose -f telemetry/deploy/docker-compose.yml \
+#                  -f docker-compose.telemetry.yml up -d
+# =============================================================================
+
+networks:
+  app-shared-net:
+    external: true
+    name: app-shared-net
+  telemetry-net:
+    external: true
+    name: telemetry-net
+
+services:
+  # ── Telemetry services join the app network for scraping ─────────────
+  prometheus:
+    networks:
+      - default
+      - app-shared-net
+
+  # ── ZeaVis Edu app services join the telemetry network ───────────────
+  # These are defined here so Prometheus can reach them without scope
+  # conflicts. When deployed via the root docker-compose.yml, they already
+  # share both networks — this override ensures local dev works too.
