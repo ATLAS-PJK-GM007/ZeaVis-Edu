@@ -16,7 +16,7 @@ import { ExpertReviewsPage } from "@/pages/expert-reviews-page";
 import { DiagnosesPage } from "@/pages/diagnoses-page";
 import { TelemetryPage } from "@/pages/telemetry-page";
 import { MainLayout } from "@/components/layout/main-layout";
-import { trackPageView } from "./lib/telemetry";
+import { trackPageView, trackError } from "./lib/telemetry";
 
 const queryClient = new QueryClient();
 
@@ -104,11 +104,23 @@ function PageViewTracker() {
   return null;
 }
 
+function GlobalErrorTracker() {
+  useEffect(() => {
+    const handler = (event: ErrorEvent) => {
+      trackError(event.filename || "global");
+    };
+    window.addEventListener("error", handler);
+    return () => window.removeEventListener("error", handler);
+  }, []);
+  return null;
+}
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthInitializer />
       <PageViewTracker />
+      <GlobalErrorTracker />
       <RouterProvider router={router} />
     </QueryClientProvider>
   );

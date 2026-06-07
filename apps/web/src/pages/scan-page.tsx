@@ -18,6 +18,7 @@ import { Modal } from "@/components/ui/modal";
 import { DiagnosisStatusBadge } from "@/components/diagnosis-status-badge";
 import type { DiagnosisRecord } from "@zeavis/shared";
 import { apiClient } from "@/lib/api-client";
+import { trackScan, trackDiagnosisResult } from "@/lib/telemetry";
 
 export function ScanPage() {
   const [fileName, setFileName] = useState<string | null>(null);
@@ -31,12 +32,16 @@ export function ScanPage() {
   const mutation = useMutation({
     mutationFn: (file: File) => apiClient.createDiagnosis(file),
     onSuccess: (diagnosis) => {
+      trackDiagnosisResult(diagnosis.status !== "failed");
       queryClient.invalidateQueries({ queryKey: ["diagnoses"] });
       setDiagnosisPreview(diagnosis);
       setPreviewOpen(true);
       setFileName(null);
       setPreviewUrl(null);
       if (inputRef.current) inputRef.current.value = "";
+    },
+    onError: () => {
+      trackDiagnosisResult(false);
     },
   });
 
@@ -61,6 +66,7 @@ export function ScanPage() {
   const handleUpload = () => {
     const file = inputRef.current?.files?.[0];
     if (!file) return;
+    trackScan();
     mutation.mutate(file);
   };
 

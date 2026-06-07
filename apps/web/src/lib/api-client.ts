@@ -12,6 +12,7 @@ import type {
   ReviewDiagnosisRequest,
   DashboardSummary,
 } from '@zeavis/shared';
+import { recordApiCall } from './telemetry';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -21,12 +22,17 @@ export interface ApiError extends Error {
 }
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const start = performance.now();
   const url = `${apiBaseUrl}${endpoint}`;
   const response = await fetch(url, {
     credentials: 'include',
     ...options,
     headers: options?.headers,
   });
+
+  const duration = performance.now() - start;
+  const method = options?.method ?? 'GET';
+  recordApiCall(method, endpoint, duration, response.status);
 
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}`;
