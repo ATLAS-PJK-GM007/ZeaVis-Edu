@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { path: "/scan", label: "Scan Tanaman" },
   { path: "/diagnoses", label: "Diagnosa" },
   { path: "/catalog", label: "Pustaka", altPath: "/library" },
+  { path: "/expert/reviews", label: "Review" },
 ];
 
 export function MobileNav({ open, onClose }: Props) {
