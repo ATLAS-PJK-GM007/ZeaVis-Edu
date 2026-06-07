@@ -149,7 +149,6 @@ jobs:
           VPS_PORT: ${{ secrets.TELEMETRY_VPS_PORT || '22' }}
           VPS_USER: ${{ secrets.TELEMETRY_VPS_USER }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
-          CF_DNS_API_TOKEN: ${{ secrets.CF_DNS_API_TOKEN }}
           SHA: ${{ steps.sha.outputs.sha }}
         run: |
           # Setup SSH key
@@ -205,8 +204,6 @@ jobs:
             cat > .env << ENVEOF
             CLICKHOUSE_USER=${CLICKHOUSE_USER:-telemetry}
             CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-telemetry}
-            CF_DNS_API_TOKEN=${{ secrets.CF_DNS_API_TOKEN }}
-            LETS_ENCRYPT_EMAIL=${{ secrets.LETS_ENCRYPT_EMAIL || 'admin@asepharyana.my.id' }}
             ENVEOF
 
             # Login to GHCR
