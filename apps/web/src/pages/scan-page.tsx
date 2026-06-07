@@ -263,7 +263,7 @@ export function ScanPage() {
 
               <ul className="space-y-3">
                 <li className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded bg-[#ECF4E8] flex items-center justify-center shrink-0">
                     <ZoomIn className="text-emerald-600" size={20} />
                   </div>
                   <div className="text-sm text-slate-700">
@@ -271,7 +271,7 @@ export function ScanPage() {
                   </div>
                 </li>
                 <li className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded bg-[#ECF4E8] flex items-center justify-center shrink-0">
                     <Sun className="text-emerald-600" size={20} />
                   </div>
                   <div className="text-sm text-slate-700">
@@ -279,7 +279,7 @@ export function ScanPage() {
                   </div>
                 </li>
                 <li className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded bg-[#ECF4E8] flex items-center justify-center shrink-0">
                     <AlignCenter className="text-emerald-600" size={20} />
                   </div>
                   <div className="text-sm text-slate-700">
@@ -287,7 +287,7 @@ export function ScanPage() {
                   </div>
                 </li>
                 <li className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded bg-[#ECF4E8] flex items-center justify-center shrink-0">
                     <Camera className="text-emerald-600" size={20} />
                   </div>
                   <div className="text-sm text-slate-700">
