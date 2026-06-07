@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import { X, Leaf } from "lucide-react";
+import { X, Leaf, LogOut } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -22,7 +22,6 @@ export function MobileNav({ open, onClose }: Props) {
 
   const navContent = (
     <div
-      // 2. Ubah z-50 menjadi z-[999] agar levelnya mentok paling atas
       className={`fixed inset-0 z-[999] lg:hidden transition-opacity duration-300 ease-in-out ${
         open ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
@@ -84,6 +83,14 @@ export function MobileNav({ open, onClose }: Props) {
               </Link>
             );
           })}
+          <Link
+            to="/logout"
+            onClick={onClose}
+            className="inline-flex items-center rounded-full bg-[#ECF4E8] border border-white/50 px-4 py-2 text-[16px] font-medium text-black transition-colors hover:bg-white/50"
+          >
+            <span>Keluar</span>
+            <LogOut className="ml-64 h-4 w-4" />
+          </Link>
         </nav>
       </div>
     </div>

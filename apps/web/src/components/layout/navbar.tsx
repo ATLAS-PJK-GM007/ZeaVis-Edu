@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Leaf, Menu } from "lucide-react";
+import { Leaf, LogOut, Menu } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 
 export function Navbar() {
@@ -43,7 +43,7 @@ export function Navbar() {
             Dashboard
           </Link>
           <Link to="/scan" className={navLinkClassName(isActive("/scan"))}>
-            Scan Tanaman
+            Scan Daun
           </Link>
           <Link
             to="/diagnoses"
@@ -63,7 +63,13 @@ export function Navbar() {
             to="/expert/reviews"
             className={navLinkClassName(isActive("/expert/reviews"))}
           >
-            Review
+            Hasil Pakar
+          </Link>
+          <Link
+            to="/logout"
+            className="ml-4 inline-flex items-center rounded-full bg-[#ECF4E8] border border-white/50 px-4 py-2 text-[16px] font-medium text-black transition-colors hover:bg-white/50"
+          >
+            Keluar <LogOut className="ml-2 h-4 w-4" />
           </Link>
         </nav>
 
