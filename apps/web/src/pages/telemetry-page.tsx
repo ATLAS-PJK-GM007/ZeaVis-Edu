@@ -236,6 +236,7 @@ export function TelemetryPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [metrics, setMetrics] = useState<DiscoveredMetric[]>([]);
   const [chartMap, setChartMap] = useState<Map<string, ChartPoint[]>>(new Map());
+  const [memChartData, setMemChartData] = useState<ChartPoint[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -255,21 +256,50 @@ export function TelemetryPage() {
       setStats(statsData);
       setMetrics(discoverData);
 
-      // Fetch charts for top metrics
+      // Fetch charts for top metrics (excluding prometheus noise)
       const topMetrics = discoverData
         .filter((m) => !m.metric_name.startsWith("prometheus_") && m.service !== "prometheus")
-        .slice(0, 6);
+        .slice(0, 4);
 
       const chartPanels = topMetrics.map((m) => ({
         key: m.metric_name,
         metric: m.metric_name,
       }));
 
-      // Add CPU and disk
+      // Built-in computations + app metrics
       chartPanels.unshift({ key: "_cpu_usage_pct", metric: "_cpu_usage_pct" });
       chartPanels.unshift({ key: "_disk_usage_pct", metric: "_disk_usage_pct" });
 
+      // Memory charts (raw values, % computed client-side)
+      chartPanels.push({ key: "node_memory_MemTotal_bytes", metric: "node_memory_MemTotal_bytes" });
+      chartPanels.push({ key: "node_memory_MemAvailable_bytes", metric: "node_memory_MemAvailable_bytes" });
+
+      // App-specific metrics
+      for (const appMetric of ["zeavis_api_http_requests_total", "zeavis_api_http_requests_active"]) {
+        if (discoverData.find((m) => m.metric_name === appMetric)) {
+          chartPanels.push({ key: appMetric, metric: appMetric });
+        }
+      }
+
       const charts = await api.charts(chartPanels);
+      setChartMap(charts);
+
+      // Compute memory usage % = (total - available) / total
+      const memTotalData = charts.get("node_memory_MemTotal_bytes");
+      const memAvailData = charts.get("node_memory_MemAvailable_bytes");
+      if (memTotalData && memAvailData && memTotalData.length > 0 && memAvailData.length > 0) {
+        const merged: ChartPoint[] = [];
+        for (let i = 0; i < Math.min(memTotalData.length, memAvailData.length); i++) {
+          const total = memTotalData[i].value;
+          const avail = memAvailData[i].value;
+          if (total > 0) {
+            merged.push({ time: memTotalData[i].time, value: 1 - avail / total });
+          }
+        }
+        setMemChartData(merged);
+      } else {
+        setMemChartData([]);
+      }
       setChartMap(charts);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
@@ -402,13 +432,19 @@ export function TelemetryPage() {
         </div>
       )}
 
-      {/* CPU & Disk charts */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* CPU, Memory, Disk charts */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <MetricChart
           title="CPU Usage (last hour)"
           data={chartMap.get("_cpu_usage_pct") ?? []}
           loading={loading}
           color="#2563eb"
+        />
+        <MetricChart
+          title="Memory Usage (last hour)"
+          data={memChartData ?? []}
+          loading={loading}
+          color="#8b5cf6"
         />
         <MetricChart
           title="Disk Usage (last hour)"
@@ -417,6 +453,31 @@ export function TelemetryPage() {
           color="#f59e0b"
         />
       </div>
+
+      {/* Application Metrics */}
+      {(chartMap.has("zeavis_api_http_requests_total") || chartMap.has("zeavis_api_http_requests_active")) && (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold text-[#214B11]">Application Metrics</h3>
+          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+            {chartMap.has("zeavis_api_http_requests_total") && (
+              <MetricChart
+                title="HTTP Requests Total (API)"
+                data={chartMap.get("zeavis_api_http_requests_total") ?? []}
+                loading={loading}
+                color="#ec4899"
+              />
+            )}
+            {chartMap.has("zeavis_api_http_requests_active") && (
+              <MetricChart
+                title="Active HTTP Requests (API)"
+                data={chartMap.get("zeavis_api_http_requests_active") ?? []}
+                loading={loading}
+                color="#14b8a6"
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Top Metrics */}
       <Card className="border-slate-200 shadow-sm">
