@@ -135,7 +135,7 @@ jobs:
             docker network create app-shared-net 2>/dev/null || true
             docker network create telemetry-net 2>/dev/null || true
             docker compose pull
-            docker compose up -d
+            docker compose up -d --remove-orphans --force-recreate
             docker compose ps
             docker compose ps | grep -q "zeavis-web.*Up" || exit 1
             docker compose ps | grep -q "zeavis-api.*Up" || exit 1
