@@ -9,6 +9,7 @@ import { getCurrentUser } from '../lib/auth';
 import { classifyImage } from '../lib/image-model';
 import { uploadImageToStorage } from '../lib/uploader-client';
 import { env } from '../config/env';
+import { diagnosisCounter } from '../lib/telemetry';
 
 interface ReviewRow {
   reviewId: string | null;
@@ -222,6 +223,9 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
 
       const record = await loadDiagnosisRecord(inserted[0].id, user.id, false);
       if (!record) return serviceUnavailable('Database unavailable');
+
+      diagnosisCounter.labels(record.predictedDiseaseSlug ?? 'unknown').inc();
+
       return record;
     } catch (error) {
       const inserted = await db
@@ -240,6 +244,9 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
 
       const record = await loadDiagnosisRecord(inserted[0].id, user.id, false);
       if (!record) return serviceUnavailable('Database unavailable');
+
+      diagnosisCounter.labels('failed').inc();
+
       return record;
     }
   })

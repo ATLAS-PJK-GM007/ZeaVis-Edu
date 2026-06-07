@@ -16,6 +16,7 @@ import { desc, eq } from 'drizzle-orm';
 import { classifyImage } from '../lib/image-model';
 import { uploadImageToStorage } from '../lib/uploader-client';
 import { toDisease } from '../lib/disease-mappers';
+import { classificationCounter } from '../lib/telemetry';
 
 function toImageClassificationRecord(row: {
   id: string;
@@ -140,6 +141,8 @@ export const classificationRoutes = new Elysia({ prefix: '/api/v1' })
           `Model service error: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
       }
+
+      classificationCounter.labels(classificationResult.predictedDiseaseSlug).inc();
 
       const db = createDbClient();
       let diseaseRow;
