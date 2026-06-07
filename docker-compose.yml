@@ -2,6 +2,9 @@ networks:
   app-shared-net:
     external: true
     name: app-shared-net
+  telemetry-net:
+    external: true
+    name: telemetry-net
 
 services:
   web:
@@ -10,6 +13,7 @@ services:
     restart: always
     networks:
       - app-shared-net
+      - telemetry-net
     env_file:
       - .env
     labels:
@@ -26,6 +30,7 @@ services:
     restart: always
     networks:
       - app-shared-net
+      - telemetry-net
     env_file:
       - .env
     environment:
@@ -47,6 +52,7 @@ services:
     restart: always
     networks:
       - app-shared-net
+      - telemetry-net
     env_file:
       - .env
     environment:
