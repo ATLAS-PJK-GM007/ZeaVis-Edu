@@ -48,6 +48,23 @@ services:
       traefik.http.routers.zeavis-api.tls.certresolver: cloudflare
       traefik.http.services.zeavis-api.loadbalancer.server.port: "3000"
 
+  # Node Exporter — expose system metrics (CPU, RAM, disk) for Prometheus scraping
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: zeavis-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - "--path.rootfs=/host"
+      - "--web.listen-address=:9100"
+    volumes:
+      - /:/host:ro,rslave
+    pid: host
+    networks:
+      - app-shared-net
+      - telemetry-net
+
   ml:
     image: ghcr.io/${GITHUB_REPOSITORY:-mytheclipse/zeavis-edu}/ml:main
     container_name: zeavis-ml
