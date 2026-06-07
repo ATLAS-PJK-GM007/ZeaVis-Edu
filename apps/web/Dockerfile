@@ -11,8 +11,6 @@ COPY packages/shared packages/shared
 COPY apps/web apps/web
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ARG VITE_TELEMETRY_URL
-ENV VITE_TELEMETRY_URL=$VITE_TELEMETRY_URL
 RUN bun run --cwd packages/shared build
 RUN bun run --cwd apps/web build
 

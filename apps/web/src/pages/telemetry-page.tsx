@@ -1,21 +1,13 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { BarChart3, ExternalLink, AlertTriangle } from "lucide-react";
+import { BarChart3, AlertTriangle } from "lucide-react";
 
 /**
- * The Telemetry Iframe Page
- *
- * Options for TELEMETRY_URL (set via VITE_TELEMETRY_URL env var):
- *   - https://telemetry.zeavisedu.asepharyana.my.id  (public, via Coolify/Traefik — BEST)
- *   - http://100.96.248.86:8181                        (direct Tailscale IP — internal only)
- *
- * The public URL is accessible from anywhere and needs no Tailscale.
- * The Tailscale IP only works if the browser is on the Tailscale network.
+ * Telemetry Dashboard — proxied through nginx at /telemetry/
+ * Nginx rewrites root-relative paths so the SPA works from the sub-path.
  */
 
-const TELEMETRY_URL =
-  import.meta.env.VITE_TELEMETRY_URL ??
-  "https://telemetry.zeavisedu.asepharyana.my.id";
+const TELEMETRY_BASE = "/telemetry";
 
 const EMBED_PAGES = [
   { id: "dashboard", label: "Dashboard", path: "" },
@@ -29,21 +21,15 @@ export function TelemetryPage() {
   const [iframeState, setIframeState] = useState<"loading" | "loaded" | "error">("loading");
 
   const embedUrl = useMemo(() => {
-    const base = `${TELEMETRY_URL}${currentPage.path}`;
-    return base;
+    return `${TELEMETRY_BASE}${currentPage.path}`;
   }, [currentPage]);
 
   const handleIframeLoad = () => {
-    // Only transition to loaded if we got a real page, not an error page
-    try {
-      const iframe = document.getElementById("telemetry-iframe") as HTMLIFrameElement | null;
-      if (iframe?.contentWindow?.location?.href) {
-        setIframeState("loaded");
-      }
-    } catch {
-      // Cross-origin access error — means iframe loaded from different origin, which is normal
-      setIframeState("loaded");
-    }
+    setIframeState("loaded");
+  };
+
+  const handleIframeError = () => {
+    setIframeState("error");
   };
 
   const handleRetry = () => {
@@ -64,15 +50,6 @@ export function TelemetryPage() {
             telemetry pipeline (Prometheus → ClickHouse).
           </p>
         </div>
-        <a
-          href={embedUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-[#48A111] px-4 py-2 text-sm font-semibold text-white hover:bg-[#306D29] transition-colors"
-        >
-          <ExternalLink className="h-4 w-4" />
-          Open in New Tab
-        </a>
       </div>
 
       {/* Navigation tabs */}
@@ -119,11 +96,8 @@ export function TelemetryPage() {
                   Failed to load telemetry dashboard
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Cannot reach <code className="text-xs bg-slate-200 px-1.5 py-0.5 rounded">{TELEMETRY_URL}</code>.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Make sure the telemetry stack is running on the orange VPS
-                  and the domain/Tailscale IP is accessible.
+                  The telemetry backend may be unreachable. Make sure the
+                  telemetry stack is running on the orange VPS.
                 </p>
                 <button
                   onClick={handleRetry}
@@ -135,16 +109,14 @@ export function TelemetryPage() {
             </div>
           )}
 
-          {/* Iframe — hidden until loaded or explicitly shown */}
+          {/* Iframe */}
           <iframe
-            id="telemetry-iframe"
             src={embedUrl}
             title="Telemetry Dashboard"
-            className={`w-full border-0 ${iframeState === "loaded" ? "block" : "hidden"}`}
+            className={`w-full border-0 ${iframeState === "loaded" || iframeState === "error" ? "block" : "hidden"}`}
             style={{ height: "calc(100vh - 280px)", minHeight: "600px" }}
             onLoad={handleIframeLoad}
-            onError={() => setIframeState("error")}
-            allow="same-origin"
+            onError={handleIframeError}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
           />
         </CardContent>
