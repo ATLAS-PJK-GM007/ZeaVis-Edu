@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -7,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
 
   return {
-    plugins: [react()],
+    plugins: [react(), tsconfigPaths()],
     server: {
       proxy: {
         '/api': apiProxyTarget,
