@@ -72,8 +72,9 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
   );
 }
 
-function ChartCard({ title, data, color, unit = "", domain }: {
+function ChartCard({ title, data, color, unit = "", domain, valueFormatter }: {
   title: string; data: PromValue[]; color: string; unit?: string; domain?: [number, number];
+  valueFormatter?: (v: number) => string;
 }) {
   if (!data || data.length === 0) {
     return (
@@ -106,7 +107,10 @@ function ChartCard({ title, data, color, unit = "", domain }: {
             <YAxis domain={domain ?? ["auto", "auto"]} tick={{ fontSize: 9 }} unit={unit} />
             <Tooltip
               labelFormatter={(v) => new Date(v).toLocaleTimeString()}
-              formatter={(val: unknown) => [typeof val === "number" ? val.toFixed(2) : String(val ?? ""), title]}
+              formatter={(val: unknown) => {
+                const v = typeof val === "number" ? val : 0;
+                return [valueFormatter ? valueFormatter(v) : v.toFixed(2), title];
+              }}
             />
             <Area type="monotone" dataKey="value" stroke={color}
               fill={`url(#g-${title.replace(/\s+/g, "")})`} strokeWidth={2} />
@@ -354,8 +358,10 @@ export function TelemetryPage() {
         <StatCard icon={Activity} label="Process Mem (api)" value={procMem !== null ? fmtBytes(procMem) : "N/A"} color="text-indigo-600" />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <ChartCard title="Heap Used" data={heapData} color="#8b5cf6" />
-        <ChartCard title="Event Loop Lag" data={elLagData} color="#eab308" />
+        <ChartCard title="Heap Used" data={heapData} color="#8b5cf6"
+          valueFormatter={(v) => (v / 1024 / 1024).toFixed(1) + " MiB"} />
+        <ChartCard title="Event Loop Lag" data={elLagData} color="#eab308"
+          valueFormatter={(v) => (v * 1000).toFixed(2) + " ms"} />
       </div>
     </div>
   );
