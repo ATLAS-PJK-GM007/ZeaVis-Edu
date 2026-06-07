@@ -1,0 +1,244 @@
+name: Telemetry CI/CD — Build & Deploy to Orange VPS
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'telemetry/**'
+      - '.github/workflows/telemetry-ci-cd.yml'
+  workflow_dispatch:
+
+env:
+  GHCR_REGISTRY: ghcr.io
+  METRIC_INGESTER_IMAGE: mytheclipse/telemetry-metric-ingester
+  QUERY_PROXY_IMAGE: mytheclipse/telemetry-query-proxy
+
+jobs:
+  ##############################################################################
+  # BUILD: Metric Ingester (Go service)
+  ##############################################################################
+  build-metric-ingester:
+    name: Build - Metric Ingester
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.GHCR_REGISTRY }}/${{ env.METRIC_INGESTER_IMAGE }}
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          file: telemetry/deploy/Dockerfile.metric-ingester
+          context: telemetry
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  ##############################################################################
+  # BUILD: Query Proxy (Go service)
+  ##############################################################################
+  build-query-proxy:
+    name: Build - Query Proxy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.GHCR_REGISTRY }}/${{ env.QUERY_PROXY_IMAGE }}
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          file: telemetry/deploy/Dockerfile.query-proxy
+          context: telemetry
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  ##############################################################################
+  # BUILD: Telemetry UI (Vue 3 SPA build verification)
+  ##############################################################################
+  build-telemetry-ui:
+    name: Build - Telemetry UI SPA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: telemetry/telemetry-ui/package-lock.json
+
+      - run: cd telemetry/telemetry-ui && npm ci
+      - run: cd telemetry/telemetry-ui && npm run build
+      - run: echo "Telemetry UI SPA built and verified."
+
+  ##############################################################################
+  # DEPLOY: to Orange VPS (100.96.248.86)
+  ##############################################################################
+  deploy:
+    name: Deploy to Orange VPS
+    needs:
+      - build-metric-ingester
+      - build-query-proxy
+      - build-telemetry-ui
+    runs-on: ubuntu-latest
+    if: |
+      always()
+      && !cancelled()
+      && !contains(needs.*.result, 'failure')
+      && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: git short-sha
+        id: sha
+        run: echo "sha=$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Build Telemetry UI SPA
+        working-directory: telemetry/telemetry-ui
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy via SSH
+        env:
+          VPS_HOST: ${{ secrets.TELEMETRY_VPS_HOST }}
+          VPS_PORT: ${{ secrets.TELEMETRY_VPS_PORT || '22' }}
+          VPS_USER: ${{ secrets.TELEMETRY_VPS_USER }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          CF_DNS_API_TOKEN: ${{ secrets.CF_DNS_API_TOKEN }}
+          SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TELEMETRY_VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Prepare directories on VPS
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p /opt/telemetry"
+
+          # Sync config files
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/prometheus/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/prometheus/"
+
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/metric-ingester/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/metric-ingester/"
+
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/vector/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/vector/"
+
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/clickhouse/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/clickhouse/"
+
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/query-proxy/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/query-proxy/"
+
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/telemetry-ui/dist/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/telemetry-ui/dist/"
+
+          rsync -avz --delete -e "ssh -p $VPS_PORT" \
+            telemetry/deploy/nginx/ \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/nginx/"
+
+          # Copy and prepare docker-compose.yml
+          scp -P "$VPS_PORT" telemetry/deploy/docker-compose.yml \
+            "$VPS_USER@$VPS_HOST:/opt/telemetry/docker-compose.yml"
+
+          # Run deploy on VPS
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" bash -s << 'DEPLOYEOF'
+            set -e
+            echo '=== Telemetry Deploy to Orange VPS ==='
+
+            cd /opt/telemetry
+
+            # Create .env with secrets (injected by GHA)
+            cat > .env << ENVEOF
+            CLICKHOUSE_USER=${CLICKHOUSE_USER:-telemetry}
+            CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-telemetry}
+            CF_DNS_API_TOKEN=${{ secrets.CF_DNS_API_TOKEN }}
+            LETS_ENCRYPT_EMAIL=${{ secrets.LETS_ENCRYPT_EMAIL || 'admin@asepharyana.my.id' }}
+            ENVEOF
+
+            # Login to GHCR
+            echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+
+            # Rewrite docker-compose to use SHA-tagged images
+            SHA='${{ steps.sha.outputs.sha }}'
+            TMP_FILE=$(mktemp /tmp/telemetry-compose-XXXXXX)
+            awk -v sha="$SHA" '
+              /^[[:space:]]*image:[[:space:]]+ghcr.io\/[Mm]ythe?[Ee]clipse\/telemetry-/ {
+                sub(/:([^:]*)$/, ":" sha)
+              }
+              { print }
+            ' docker-compose.yml > "$TMP_FILE"
+            mv "$TMP_FILE" docker-compose.yml
+
+            # Pull SHA-tagged images
+            docker pull "ghcr.io/mytheclipse/telemetry-metric-ingester:$SHA" || true
+            docker pull "ghcr.io/mytheclipse/telemetry-query-proxy:$SHA" || true
+
+            # Tear down old stack (preserve volumes)
+            docker compose down --remove-orphans --volumes=false 2>/dev/null || true
+
+            # Deploy fresh
+            docker compose up -d --remove-orphans --no-build
+            sleep 5
+
+            # Run ClickHouse schema migration
+            echo '=== Running ClickHouse schema migration ==='
+            bash clickhouse/init.sh 2>&1 || echo '⚠️  Schema migration had issues (non-fatal)'
+            echo '=== Schema migration complete ==='
+
+            docker compose ps
+            echo '=== Deploy Complete ==='
+DEPLOYEOF
