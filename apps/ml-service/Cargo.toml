@@ -9,6 +9,7 @@ axum = { version = "0.7", features = ["multipart"] }
 image = "0.25"
 ndarray = "0.17"
 ort = { version = "2.0.0-rc.10", features = ["download-binaries", "ndarray"] }
+prometheus = { version = "0.14.0", features = ["process"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "net"] }

@@ -2,6 +2,9 @@ networks:
   app-shared-net:
     external: true
     name: app-shared-net
+  telemetry-net:
+    external: true
+    name: telemetry-net
 
 services:
   web:
@@ -10,6 +13,7 @@ services:
     restart: always
     networks:
       - app-shared-net
+      - telemetry-net
     env_file:
       - .env
     labels:
@@ -26,6 +30,7 @@ services:
     restart: always
     networks:
       - app-shared-net
+      - telemetry-net
     env_file:
       - .env
     environment:
@@ -33,6 +38,8 @@ services:
       API_PORT: "3000"
       WEB_APP_URL: https://zeavisedu.asepharyana.my.id
       ML_SERVICE_URL: ${ML_SERVICE_URL:-http://zeavis-ml:8000}
+    ports:
+      - "3000:3000"
     labels:
       traefik.enable: "true"
       traefik.http.routers.zeavis-api.rule: Host(`api-zeavisedu.asepharyana.my.id`)
@@ -47,11 +54,14 @@ services:
     restart: always
     networks:
       - app-shared-net
+      - telemetry-net
     env_file:
       - .env
     environment:
       MODEL_PATH: /app/model/model.onnx
       MODEL_INPUT_SIZE: "224"
+    ports:
+      - "8000:8000"
     labels:
       traefik.enable: "true"
       traefik.http.routers.zeavis-ml.rule: Host(`ml-zeavisedu.asepharyana.my.id`)

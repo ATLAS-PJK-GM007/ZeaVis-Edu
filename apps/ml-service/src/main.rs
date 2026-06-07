@@ -3,6 +3,7 @@ mod error;
 mod image;
 mod model;
 mod routes;
+mod telemetry;
 
 use anyhow::Result;
 use config::Config;
@@ -31,6 +32,9 @@ async fn main() -> Result<()> {
         model_path = ?config.model_path,
         "Model service initialized"
     );
+
+    // Set model load status metric
+    telemetry::model_load_status().set(if model.is_loaded() { 1.0 } else { 0.0 });
 
     // Create AppState
     let state = AppState { model };
