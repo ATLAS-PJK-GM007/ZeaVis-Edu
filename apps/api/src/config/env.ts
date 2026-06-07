@@ -14,7 +14,8 @@ export const env = {
   port: Number(Bun.env.API_PORT ?? 3000),
   databaseUrl: Bun.env.DATABASE_URL,
   sessionSecret: Bun.env.SESSION_SECRET,
-  uploaderBaseUrl: Bun.env.UPLOADER_BASE_URL ?? 'https://upload.asepharyana.tech',
+  uploaderBaseUrl: Bun.env.UPLOADER_BASE_URL ?? 'https://upload.asepharyana.my.id',
+  // Note: was 'https://upload.asepharyana.tech' — .tech domain is dead, changed to .my.id
   mlServiceUrl: Bun.env.ML_SERVICE_URL ?? 'http://127.0.0.1:8001',
   uploadMaxBytes: Number(Bun.env.UPLOAD_MAX_BYTES ?? 5 * 1024 * 1024),
   uploadAllowedMimeTypes,
