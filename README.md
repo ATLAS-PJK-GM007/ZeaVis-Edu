@@ -77,6 +77,17 @@ Model klasifikasi menargetkan empat label berbahasa Indonesia:
 - GitHub Container Registry
 - Traefik labels untuk routing deployment
 
+### Telemetry & Observability
+
+- Prometheus — metric scraping & remote_write
+- Metric Ingester (Go) — enrichment, filtering, aggregation
+- Vector — buffering & backpressure
+- ClickHouse — columnar analytical storage
+- Query Proxy (Go) — read-only SQL proxy
+- Telemetry UI (Vue 3) — metrics dashboard
+- Semua service ZeaVis Edu (web, api, ml-service) mengekspos metrik Prometheus di `/metrics`
+- Client-side Web Vitals (CLS, FCP, INP, LCP, TTFB) dikumpulkan di frontend
+
 ## Prasyarat
 
 Untuk menjalankan seluruh project secara lokal, siapkan:
@@ -202,6 +213,125 @@ Contoh menjalankan compose setelah environment dan network siap:
 ```bash
 docker compose up -d
 ```
+
+## Telemetry Stack
+
+Proyek ini menyertakan pipeline telemetry metric sebagai git submodule di `telemetry/`. Pipeline mengalirkan metrik dari seluruh service ZeaVis Edu ke ClickHouse untuk analisis dan visualisasi jangka panjang.
+
+### Arsitektur
+
+```mermaid
+flowchart LR
+    subgraph Apps["ZeaVis Edu"]
+        W[Web / React]
+        A[API / Elysia]
+        M[ML Service / Axum]
+    end
+
+    subgraph Telemetry["Telemetry Pipeline"]
+        P[Prometheus]
+        MI[Metric Ingester]
+        V[Vector]
+        CH[ClickHouse]
+        QP[Query Proxy]
+        TUI[Telemetry UI]
+    end
+
+    W -->|"GET /metrics"| P
+    A -->|"GET /metrics"| P
+    M -->|"GET /metrics"| P
+    P -->|remote_write| MI
+    MI -->|HTTP POST| V
+    V -->|JSONEachRow| CH
+    QP -->|SQL| CH
+    TUI -->|/proxy/query| QP
+```
+
+Setiap service ZeaVis Edu mengekspos endpoint `/metrics` dalam format Prometheus text:
+
+| Service               | Endpoint           | Port (lokal) |
+|-----------------------|--------------------|--------------|
+| Web (Vite dev)        | `GET /metrics`     | 5173         |
+| API (Elysia)          | `GET /metrics`     | 3000         |
+| ML Service (Axum)     | `GET /metrics`     | 8000         |
+
+Lihat [`METRICS.md`](./METRICS.md) untuk daftar lengkap metrik yang diekspos.
+
+### Service Telemetry
+
+| # | Service | Peran | Port |
+|---|---------|------|------|
+| 1 | **Prometheus** | Metric scraping & remote_write | 9090 |
+| 2 | **Metric Ingester** | Enrichment, filtering, aggregation | 9091 |
+| 3 | **Vector** | Buffering, backpressure, retry | 9001 |
+| 4 | **ClickHouse** | Columnar analytical storage | 8123 / 9000 |
+| 5 | **Query Proxy** | Read-only SQL proxy, tenant isolation | 9092 |
+| 6 | **Telemetry UI** | Vue 3 metrics dashboard | 8181 |
+
+### Menjalankan Telemetry Stack
+
+Semua operasi telemetry dijalankan dari **root proyek** melalui Makefile:
+
+```bash
+# Build komponen telemetry (metric-ingester + telemetry-ui)
+make telemetry-build
+
+# Start semua service telemetry (mode produksi, via Tailscale)
+make telemetry-up
+
+# Start semua service telemetry (mode lokal — port langsung terbuka)
+make telemetry-up-local
+
+# Cek status kesehatan semua service
+make telemetry-status
+
+# Lihat log (semua service, atau filter dengan s=)
+make telemetry-logs
+make telemetry-logs s=metric-ingester
+
+# Restart service tertentu
+make telemetry-restart s=prometheus
+
+# Kirim test metric
+make telemetry-test-metric
+
+# Stop semua service
+make telemetry-down
+```
+
+Untuk development lokal:
+
+```bash
+# Setup network jika belum ada
+docker network create telemetry-net
+docker network create app-shared-net
+
+# Build & start
+make telemetry-build
+make telemetry-up-local
+
+# Buka dashboard di http://localhost:8181
+```
+
+### Prometheus Auto-Discovery
+
+Prometheus menggunakan `file_sd_configs` untuk menemukan target secara dinamis. Cukup letakkan file JSON di `telemetry/prometheus/targets/` dan Prometheus akan otomatis mendeteksinya dalam 15 detik — tanpa restart.
+
+File target ZeaVis Edu sudah tersedia di [`telemetry/prometheus/targets/zeavis-edu.json`](telemetry/prometheus/targets/zeavis-edu.json):
+
+```json
+[
+  { "targets": ["zeavis-api:3000"], "labels": { "service": "zeavis-api", "component": "backend" } },
+  { "targets": ["zeavis-ml:8000"],  "labels": { "service": "zeavis-ml", "component": "inference" } }
+]
+```
+
+### Environment Variables Telemetry
+
+| Variable | Default | Deskripsi |
+|----------|---------|-----------|
+| `CLICKHOUSE_USER` | `telemetry` | User ClickHouse |
+| `CLICKHOUSE_PASSWORD` | `telemetry` | Password ClickHouse |
 
 ## Workflow Machine Learning
 

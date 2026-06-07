@@ -107,6 +107,31 @@ Run the ML service directly:
 cd apps/ml-service && cargo run
 ```
 
+Run the Telemetry stack:
+
+```bash
+# Start all telemetry services (Prometheus, Ingester, Vector, ClickHouse, Query Proxy, Telemetry UI)
+make telemetry-up
+
+# Local dev mode (port bindings exposed)
+make telemetry-up-local
+
+# Check health of all telemetry services
+make telemetry-status
+
+# View telemetry logs
+make telemetry-logs [s=<service>]
+
+# Build telemetry components
+make telemetry-build
+
+# Send a test metric
+make telemetry-test-metric
+
+# Stop telemetry
+make telemetry-down
+```
+
 ## High-level architecture
 
 - `Machine_Learning/preprocessing.py` prepares the training dataset locally. It extracts three source ZIP files, merges selected class folders into `dataset/`, maps selected Mandarin labels from Dataset 3 via `desc.json`, removes known problematic image files, then creates `dataset.zip` for upload to Google Drive/Colab.
@@ -115,6 +140,18 @@ cd apps/ml-service && cargo run
 - `Machine_Learning/convert_onnx.py` converts the SavedModel to ONNX format (`model/model.onnx`) for use by the Rust inference service.
 - TensorFlow.js export is intentionally done with the `tensorflowjs_converter` CLI rather than from Python to avoid protobuf/runtime conflicts documented in the README.
 - `apps/ml-service/` is a Rust/Axum service that loads the ONNX model and serves HTTP endpoints for health checks, metadata, and image classification predictions. It uses ONNX Runtime for cross-platform inference performance.
+
+## Telemetry architecture
+
+The repository includes a full Prometheus → ClickHouse metric pipeline as a git submodule at `telemetry/`. Each ZeaVis Edu service exposes a `GET /metrics` endpoint:
+
+- **Web app** (`apps/web`): In dev mode, a Vite plugin serves client-side session metrics (page views, Web Vitals). In production, nginx proxies `/metrics` to the API service. Source: `apps/web/src/lib/telemetry.ts`, `apps/web/vite-plugin-metrics.ts`.
+- **API** (`apps/api`): Uses `prom-client` for Node.js default metrics plus custom HTTP, auth, classification, and diagnosis counters/histograms. Source: `apps/api/src/lib/telemetry.ts`, exposed via `apps/api/src/routes/metrics.ts`.
+- **ML service** (`apps/ml-service`): Uses the `prometheus` Rust crate for HTTP metrics, prediction counts, and model load status. Source: `apps/ml-service/src/telemetry.rs`.
+
+All three share the `zeavis_` metric prefix and are scraped by the Telemetry Prometheus instance via `file_sd_configs` (see `telemetry/prometheus/targets/zeavis-edu.json`).
+
+The telemetry stack is managed from the project root via `make telemetry-*` targets (see `Makefile`). The Docker Compose files in `telemetry/deploy/` define 6 services (Prometheus, Metric Ingester, Vector, ClickHouse, Query Proxy, Telemetry UI).
 
 ## Fullstack application architecture
 

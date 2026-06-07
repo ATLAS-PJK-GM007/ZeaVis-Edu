@@ -17,6 +17,12 @@ application stack and the payload each service provides.
 > In production all metrics are scraped by the Prometheus collector running in the
 > Telemetry stack. See [`telemetry/prometheus/targets/`](./telemetry/prometheus/targets/)
 > for the auto‑discovery configuration.
+>
+> In production (nginx), the web app proxies `/metrics` to the API service:
+> see [`apps/web/nginx.conf`](apps/web/nginx.conf).
+>
+> For local development the Vite plugin `vite-plugin-metrics.ts` serves
+> client‑side session metrics at `GET /metrics` on the Vite dev server.
 
 ---
 
