@@ -1,141 +1,64 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BarChart3,
-  Activity,
-  Cpu,
-  HardDrive,
-  Database,
-  Layers,
-  RefreshCw,
-  AlertTriangle,
+  BarChart3, Activity, Cpu, HardDrive, Database,
+  RefreshCw, Server,
 } from "lucide-react";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// ─── Types ──────────────────────────────────────────────────────────
-const API_BASE = "https://telemetry.imrnes.team/proxy/dashboard";
+// ─── Prometheus API ─────────────────────────────────────────────────
+const PROM = "https://telemetry.imrnes.team/prometheus/api/v1";
+const INSTANCE = '100.96.248.86:9100';
 
-interface DashboardStats {
-  cpu_usage: number;
-  disk_usage: number;
-  total_metrics: number;
-  active_services: number;
-  uptime_seconds: number;
-  health: { disk_readonly: boolean; errors: number };
-}
-
-interface DiscoveredMetric {
-  metric_name: string;
-  service: string;
-  sample_count: number;
-  latest_value: number;
-}
-
-interface ChartPoint {
-  time: string;
+interface PromValue {
+  time: number;
   value: number;
 }
 
+async function queryRange(query: string, steps = 60): Promise<PromValue[]> {
+  const now = Math.floor(Date.now() / 1000);
+  const start = now - 3600;
+  const q = `query=${encodeURIComponent(query)}&start=${start}&end=${now}&step=${steps}`;
+  const res = await fetch(`${PROM}/query_range?${q}`);
+  if (!res.ok) throw new Error(`Prometheus: ${res.status}`);
+  const data = await res.json();
+  const results = data?.data?.result ?? [];
+  if (results.length === 0) return [];
+  return results[0].values.map((v: [number, string]) => ({
+    time: new Date(v[0] * 1000).toISOString(),
+    value: parseFloat(v[1]),
+  }));
+}
+
+async function queryInstant(query: string): Promise<number | null> {
+  const res = await fetch(`${PROM}/query?query=${encodeURIComponent(query)}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const results = data?.data?.result ?? [];
+  if (results.length === 0) return null;
+  return parseFloat(results[0].value[1]);
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────
-function fmt(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toFixed(1);
-}
-
-function fmtDuration(s: number): string {
-  const d = Math.floor(s / 86400);
-  const h = Math.floor((s % 86400) / 3600);
-  if (d > 0) return `${d}d ${h}h`;
-  const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
-
 function fmtPct(v: number): string {
-  return (v * 100).toFixed(1) + "%";
+  return v.toFixed(1) + "%";
 }
 
-// ─── API Client ──────────────────────────────────────────────────────
-class TelemetryAPI {
-  private base: string;
-  constructor(base: string) {
-    this.base = base;
-  }
-
-  async stats(): Promise<DashboardStats> {
-    const res = await fetch(`${this.base}/stats`);
-    if (!res.ok) throw new Error(`Stats API: ${res.status}`);
-    return res.json();
-  }
-
-  async discover(): Promise<DiscoveredMetric[]> {
-    const res = await fetch(`${this.base}/discover`);
-    if (!res.ok) throw new Error(`Discover API: ${res.status}`);
-    const data = await res.json();
-    return data.metrics ?? [];
-  }
-
-  async charts(
-    panels: { key: string; metric: string; aggregation?: string }[],
-  ): Promise<Map<string, ChartPoint[]>> {
-    const now = Math.floor(Date.now() / 1000);
-    const oneHourAgo = now - 3600;
-    const res = await fetch(`${this.base}/charts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        panels: panels.map((p) => ({
-          key: p.key,
-          metric: p.metric,
-          start: oneHourAgo,
-          end: now,
-          aggregation: p.aggregation ?? "avg",
-        })),
-      }),
-    });
-    if (!res.ok) throw new Error(`Charts API: ${res.status}`);
-    const data = await res.json();
-    const map = new Map<string, ChartPoint[]>();
-    for (const r of data.results ?? []) {
-      map.set(r.key, r.data ?? []);
-    }
-    return map;
-  }
+function shortMetric(name: string): string {
+  return name.replace(/^zeavis_api_/, "").replace(/^zeavis_ml_/, "");
 }
 
-const api = new TelemetryAPI(API_BASE);
-
-// ─── Stat Card ───────────────────────────────────────────────────────
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  color,
-}: {
-  icon: typeof BarChart3;
-  label: string;
-  value: string;
-  sub?: string;
-  color: string;
+// ─── StatCard ────────────────────────────────────────────────────────
+function StatCard({ icon: Icon, label, value, sub, color }: {
+  icon: typeof BarChart3; label: string; value: string; sub?: string; color: string;
 }) {
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-medium text-slate-500">
-          {label}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-slate-500">{label}</CardTitle>
         <Icon className={`h-4 w-4 ${color}`} />
       </CardHeader>
       <CardContent className="px-4 pb-4">
@@ -146,33 +69,10 @@ function StatCard({
   );
 }
 
-// ─── Metric Card ─────────────────────────────────────────────────────
-function MetricChart({
-  title,
-  data,
-  loading,
-  color,
-}: {
-  title: string;
-  data: ChartPoint[];
-  loading: boolean;
-  color: string;
+// ─── Chart ──────────────────────────────────────────────────────────
+function ChartCard({ title, data, color }: {
+  title: string; data: PromValue[]; color: string;
 }) {
-  if (loading) {
-    return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-2 px-4 pt-4">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
-            Loading...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   if (!data || data.length === 0) {
     return (
       <Card className="border-slate-200 shadow-sm">
@@ -180,50 +80,38 @@ function MetricChart({
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
-          <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
-            No data available
-          </div>
+          <div className="flex items-center justify-center h-36 text-slate-400 text-sm">No data</div>
         </CardContent>
       </Card>
     );
   }
-
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardHeader className="pb-2 px-4 pt-4">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4">
-        <ResponsiveContainer width="100%" height={160}>
+        <ResponsiveContainer width="100%" height={140}>
           <AreaChart data={data}>
             <defs>
-              <linearGradient id={`grad-${title}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={`g-${title.replace(/\s/g, "")}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={color} stopOpacity={0.2} />
                 <stop offset="95%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis
-              dataKey="time"
-              tick={{ fontSize: 10 }}
-              tickFormatter={(v) => {
-                const d = new Date(v);
-                return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-              }}
+            <XAxis dataKey="time" tick={{ fontSize: 10 }}
+              tickFormatter={(v) => new Date(v).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             />
-            <YAxis tick={{ fontSize: 10 }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
             <Tooltip
               labelFormatter={(v) => new Date(v).toLocaleTimeString()}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(val: any) => [typeof val === "number" ? val.toFixed(2) : String(val ?? ""), title]}
+              formatter={(val: unknown) => [
+                typeof val === "number" ? val.toFixed(1) + "%" : String(val ?? ""), title
+              ]}
             />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke={color}
-              fill={`url(#grad-${title})`}
-              strokeWidth={2}
-            />
+            <Area type="monotone" dataKey="value" stroke={color}
+              fill={`url(#g-${title.replace(/\s/g, "")})`} strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </CardContent>
@@ -233,74 +121,54 @@ function MetricChart({
 
 // ─── Main Page ───────────────────────────────────────────────────────
 export function TelemetryPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [metrics, setMetrics] = useState<DiscoveredMetric[]>([]);
-  const [chartMap, setChartMap] = useState<Map<string, ChartPoint[]>>(new Map());
-  const [memChartData, setMemChartData] = useState<ChartPoint[] | null>(null);
+  const [cpuData, setCpuData] = useState<PromValue[]>([]);
+  const [memData, setMemData] = useState<PromValue[]>([]);
+  const [diskData, setDiskData] = useState<PromValue[]>([]);
+  const [cpuNow, setCpuNow] = useState<number | null>(null);
+  const [memNow, setMemNow] = useState<number | null>(null);
+  const [diskNow, setDiskNow] = useState<number | null>(null);
+  const [zeavisMetrics, setZeavisMetrics] = useState<{ name: string; value: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const intervalRef = useRef<number | undefined>(undefined);
+  const intRef = useRef<number>(0);
 
-  const fetchData = useCallback(async (isRefresh = false) => {
+  const fetchAll = useCallback(async (isRefresh = false) => {
     try {
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
+      if (isRefresh) setRefreshing(true); else setLoading(true);
       setError(null);
 
-      const [statsData, discoverData] = await Promise.all([
-        api.stats(),
-        api.discover(),
+      // Run all queries in parallel
+      const [cpu, mem, disk, cpuNowVal, memNowVal, diskNowVal, upData] = await Promise.all([
+        queryRange(`100 - (avg(rate(node_cpu_seconds_total{mode="idle",instance="${INSTANCE}"}[5m])) * 100)`, 60),
+        queryRange(`(1 - node_memory_MemAvailable_bytes{instance="${INSTANCE}"} / node_memory_MemTotal_bytes{instance="${INSTANCE}"}) * 100`, 60),
+        queryRange(`(1 - node_filesystem_avail_bytes{instance="${INSTANCE}",mountpoint="/"} / node_filesystem_size_bytes{instance="${INSTANCE}",mountpoint="/"}) * 100`, 60),
+        queryInstant(`100 - (avg(rate(node_cpu_seconds_total{mode="idle",instance="${INSTANCE}"}[5m])) * 100)`),
+        queryInstant(`(1 - node_memory_MemAvailable_bytes{instance="${INSTANCE}"} / node_memory_MemTotal_bytes{instance="${INSTANCE}"}) * 100`),
+        queryInstant(`(1 - node_filesystem_avail_bytes{instance="${INSTANCE}",mountpoint="/"} / node_filesystem_size_bytes{instance="${INSTANCE}",mountpoint="/"}) * 100`),
+        // ZeaVis app metrics
+        (async () => {
+          const names = [
+            "zeavis_api_http_requests_total",
+            "zeavis_api_http_requests_active",
+            "zeavis_ml_zeavis_ml_model_load_status",
+          ];
+          const results: { name: string; value: string }[] = [];
+          for (const n of names) {
+            const val = await queryInstant(n);
+            if (val !== null) results.push({ name: n, value: val.toFixed(2) });
+          }
+          return results;
+        })(),
       ]);
 
-      setStats(statsData);
-      setMetrics(discoverData);
-
-      // Fetch charts for top metrics (excluding prometheus noise)
-      const topMetrics = discoverData
-        .filter((m) => !m.metric_name.startsWith("prometheus_") && m.service !== "prometheus")
-        .slice(0, 4);
-
-      const chartPanels = topMetrics.map((m) => ({
-        key: m.metric_name,
-        metric: m.metric_name,
-      }));
-
-      // Built-in computations + app metrics
-      chartPanels.unshift({ key: "_cpu_usage_pct", metric: "_cpu_usage_pct" });
-      chartPanels.unshift({ key: "_disk_usage_pct", metric: "_disk_usage_pct" });
-
-      // Memory charts (raw values, % computed client-side)
-      chartPanels.push({ key: "node_memory_MemTotal_bytes", metric: "node_memory_MemTotal_bytes" });
-      chartPanels.push({ key: "node_memory_MemAvailable_bytes", metric: "node_memory_MemAvailable_bytes" });
-
-      // App-specific metrics
-      for (const appMetric of ["zeavis_api_http_requests_total", "zeavis_api_http_requests_active"]) {
-        if (discoverData.find((m) => m.metric_name === appMetric)) {
-          chartPanels.push({ key: appMetric, metric: appMetric });
-        }
-      }
-
-      const charts = await api.charts(chartPanels);
-      setChartMap(charts);
-
-      // Compute memory usage % = (total - available) / total
-      const memTotalData = charts.get("node_memory_MemTotal_bytes");
-      const memAvailData = charts.get("node_memory_MemAvailable_bytes");
-      if (memTotalData && memAvailData && memTotalData.length > 0 && memAvailData.length > 0) {
-        const merged: ChartPoint[] = [];
-        for (let i = 0; i < Math.min(memTotalData.length, memAvailData.length); i++) {
-          const total = memTotalData[i].value;
-          const avail = memAvailData[i].value;
-          if (total > 0) {
-            merged.push({ time: memTotalData[i].time, value: 1 - avail / total });
-          }
-        }
-        setMemChartData(merged);
-      } else {
-        setMemChartData([]);
-      }
-      setChartMap(charts);
+      setCpuData(cpu);
+      setMemData(mem);
+      setDiskData(disk);
+      setCpuNow(cpuNowVal);
+      setMemNow(memNowVal);
+      setDiskNow(diskNowVal);
+      setZeavisMetrics(upData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
     } finally {
@@ -310,56 +178,18 @@ export function TelemetryPage() {
   }, []);
 
   useEffect(() => {
-    fetchData();
-    intervalRef.current = window.setInterval(() => fetchData(true), 30_000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [fetchData]);
+    fetchAll();
+    intRef.current = window.setInterval(() => fetchAll(true), 30_000);
+    return () => clearInterval(intRef.current);
+  }, [fetchAll]);
 
-  const serviceCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const m of metrics) {
-      counts.set(m.service, (counts.get(m.service) ?? 0) + 1);
-    }
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-  }, [metrics]);
-
-  const topMetrics = useMemo(() => {
-    return metrics.slice(0, 10);
-  }, [metrics]);
-
-  if (loading && !stats) {
+  if (loading && cpuData.length === 0 && memData.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center space-y-3">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#48A111] border-r-transparent" />
-            <p className="text-sm text-muted-foreground">
-              Loading telemetry data...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !stats) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center space-y-3 max-w-md">
-            <AlertTriangle className="h-10 w-10 text-red-500 mx-auto" />
-            <p className="text-sm font-semibold text-red-600">
-              Failed to load telemetry data
-            </p>
-            <p className="text-xs text-slate-500">{error}</p>
-            <button
-              onClick={() => fetchData()}
-              className="inline-flex items-center gap-1 rounded-full bg-[#48A111] px-4 py-2 text-sm font-semibold text-white hover:bg-[#306D29]"
-            >
-              Retry
-            </button>
+            <p className="text-sm text-muted-foreground">Loading telemetry data...</p>
           </div>
         </div>
       </div>
@@ -376,195 +206,64 @@ export function TelemetryPage() {
             Telemetry Dashboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            System metrics from Prometheus pipeline via ClickHouse.
-            {error && (
-              <span className="text-amber-600 ml-2">
-                (partial data — {error})
-              </span>
-            )}
+            Metrics from Prometheus — orange VPS ({INSTANCE})
+            {error && <span className="text-amber-600 ml-2">({error})</span>}
           </p>
         </div>
-        <button
-          onClick={() => fetchData(true)}
-          disabled={refreshing}
+        <button onClick={() => fetchAll(true)} disabled={refreshing}
           className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
         >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          Refresh
+          <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
 
       {/* Stat Cards */}
-      {stats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            icon={Cpu}
-            label="CPU Usage"
-            value={fmtPct(stats.cpu_usage)}
-            color="text-blue-600"
-          />
-          <StatCard
-            icon={HardDrive}
-            label="Disk Usage"
-            value={fmtPct(stats.disk_usage)}
-            color="text-amber-600"
-          />
-          <StatCard
-            icon={Database}
-            label="Total Metrics"
-            value={fmt(stats.total_metrics)}
-            sub={`${stats.active_services} active services`}
-            color="text-green-600"
-          />
-          <StatCard
-            icon={Activity}
-            label="Uptime"
-            value={fmtDuration(stats.uptime_seconds)}
-            sub={
-              stats.health.errors > 0
-                ? `${stats.health.errors} errors`
-                : "All healthy"
-            }
-            color={stats.health.errors > 0 ? "text-red-600" : "text-green-600"}
-          />
-        </div>
-      )}
-
-      {/* CPU, Memory, Disk charts */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <MetricChart
-          title="CPU Usage (last hour)"
-          data={chartMap.get("_cpu_usage_pct") ?? []}
-          loading={loading}
-          color="#2563eb"
-        />
-        <MetricChart
-          title="Memory Usage (last hour)"
-          data={memChartData ?? []}
-          loading={loading}
-          color="#8b5cf6"
-        />
-        <MetricChart
-          title="Disk Usage (last hour)"
-          data={chartMap.get("_disk_usage_pct") ?? []}
-          loading={loading}
-          color="#f59e0b"
-        />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={Cpu} label="CPU Usage" value={cpuNow !== null ? fmtPct(cpuNow) : "N/A"} color="text-blue-600" />
+        <StatCard icon={Database} label="Memory Usage" value={memNow !== null ? fmtPct(memNow) : "N/A"} color="text-violet-600" />
+        <StatCard icon={HardDrive} label="Disk Usage" value={diskNow !== null ? fmtPct(diskNow) : "N/A"} color="text-amber-600" />
+        <StatCard icon={Activity} label="Status" value={error ? "Degraded" : "Healthy"} sub="via Prometheus API" color={error ? "text-red-600" : "text-green-600"} />
       </div>
 
-      {/* Application Metrics */}
-      {(chartMap.has("zeavis_api_http_requests_total") || chartMap.has("zeavis_api_http_requests_active")) && (
+      {/* System Charts */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ChartCard title="CPU Usage (last hour)" data={cpuData} color="#2563eb" />
+        <ChartCard title="Memory Usage (last hour)" data={memData} color="#8b5cf6" />
+        <ChartCard title="Disk Usage (last hour)" data={diskData} color="#f59e0b" />
+      </div>
+
+      {/* ZeaVis Application Metrics */}
+      {zeavisMetrics.length > 0 && (
         <section className="space-y-4">
-          <h3 className="text-lg font-semibold text-[#214B11]">Application Metrics</h3>
-          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-            {chartMap.has("zeavis_api_http_requests_total") && (
-              <MetricChart
-                title="HTTP Requests Total (API)"
-                data={chartMap.get("zeavis_api_http_requests_total") ?? []}
-                loading={loading}
-                color="#ec4899"
-              />
-            )}
-            {chartMap.has("zeavis_api_http_requests_active") && (
-              <MetricChart
-                title="Active HTTP Requests (API)"
-                data={chartMap.get("zeavis_api_http_requests_active") ?? []}
-                loading={loading}
-                color="#14b8a6"
-              />
-            )}
+          <h3 className="text-lg font-semibold text-[#214B11] flex items-center gap-2">
+            <Server className="h-5 w-5 text-[#48A111]" /> ZeaVis Application Metrics
+          </h3>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {zeavisMetrics.map((m) => (
+              <Card key={m.name} className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-2 px-4 pt-3">
+                  <CardTitle className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    {shortMetric(m.name)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <div className="text-2xl font-bold text-[#306D29]">{m.value}</div>
+                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">{m.name}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </section>
       )}
 
-      {/* Top Metrics */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-2 px-4 pt-4">
-          <CardTitle className="text-lg font-semibold text-[#214B11] flex items-center gap-2">
-            <Layers className="h-5 w-5 text-[#48A111]" />
-            Top Metrics
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          {topMetrics.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-sm">
-              No metrics discovered yet
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 px-2 font-medium text-slate-500">
-                      Metric
-                    </th>
-                    <th className="text-left py-2 px-2 font-medium text-slate-500">
-                      Service
-                    </th>
-                    <th className="text-right py-2 px-2 font-medium text-slate-500">
-                      Samples
-                    </th>
-                    <th className="text-right py-2 px-2 font-medium text-slate-500">
-                      Latest Value
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topMetrics.map((m) => (
-                    <tr key={m.metric_name} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-2 px-2 font-mono text-xs text-slate-700 max-w-[300px] truncate">
-                        {m.metric_name}
-                      </td>
-                      <td className="py-2 px-2">
-                        <span className="inline-flex items-center rounded-full bg-[#EFF6E8] px-2 py-0.5 text-xs font-medium text-[#48A111]">
-                          {m.service}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2 text-right text-slate-600">
-                        {fmt(m.sample_count)}
-                      </td>
-                      <td className="py-2 px-2 text-right font-mono text-xs text-slate-600">
-                        {typeof m.latest_value === "number"
-                          ? m.latest_value.toFixed(4)
-                          : String(m.latest_value)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Service Distribution */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-2 px-4 pt-4">
-          <CardTitle className="text-lg font-semibold text-[#214B11] flex items-center gap-2">
-            <Layers className="h-5 w-5 text-[#48A111]" />
-            Services
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          {serviceCounts.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-sm">
-              No services discovered
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={serviceCounts.map(([name, count]) => ({ name, count }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#48A111" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      {/* Raw metric names in Prometheus */}
+      {zeavisMetrics.length === 0 && (
+        <Card className="border-slate-200 shadow-sm bg-slate-50">
+          <CardContent className="px-4 py-6 text-center text-sm text-slate-400">
+            No application metrics available. Prometheus results shown above.
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
