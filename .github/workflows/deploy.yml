@@ -118,8 +118,8 @@ jobs:
             fi
 
             cd "$DEPLOY_PATH"
-            git checkout main
-            git pull --ff-only origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             {
               printf 'GITHUB_REPOSITORY=%s\n' "$REPO_SLUG"
