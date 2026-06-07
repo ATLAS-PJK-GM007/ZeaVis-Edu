@@ -1,4 +1,4 @@
-use prometheus::{Counter, Gauge, Histogram, HistogramOpts, Registry, TextEncoder};
+use prometheus::{Counter, CounterVec, Gauge, Histogram, HistogramOpts, HistogramVec, Opts, Registry, TextEncoder};
 use std::sync::OnceLock;
 use std::time::Instant;
 
@@ -76,6 +76,76 @@ define_metric!(
         "Model load status (1 = loaded, 0 = not loaded)",
     )
     .expect("create gauge")
+);
+
+/// Per-class prediction counter
+define_metric!(
+    predictions_by_class,
+    CounterVec,
+    CounterVec::new(
+        Opts::new(
+            "zeavis_ml_predictions_by_class_total",
+            "Total predictions by predicted class label",
+        ),
+        &["label"],
+    )
+    .expect("create counter_vec")
+);
+
+/// Per-class ground-truth counter (for monitoring label distribution)
+define_metric!(
+    predictions_confidence,
+    Histogram,
+    Histogram::with_opts(
+        HistogramOpts::new(
+            "zeavis_ml_prediction_confidence",
+            "Confidence values of predictions",
+        )
+        .buckets(vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 0.99, 1.0]),
+    )
+    .expect("create histogram")
+);
+
+/// Latency of ONNX inference (model.predict call)
+define_metric!(
+    inference_duration_seconds,
+    Histogram,
+    Histogram::with_opts(
+        HistogramOpts::new(
+            "zeavis_ml_inference_duration_seconds",
+            "ONNX model inference duration in seconds",
+        )
+        .buckets(vec![0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 2.0]),
+    )
+    .expect("create histogram")
+);
+
+/// Image size processed by the ML service
+define_metric!(
+    image_size_bytes,
+    Histogram,
+    Histogram::with_opts(
+        HistogramOpts::new(
+            "zeavis_ml_image_size_bytes",
+            "Size of images sent for prediction in bytes",
+        )
+        .buckets(vec![1024.0, 10240.0, 51200.0, 102400.0, 204800.0, 512000.0, 1048576.0, 2097152.0]),
+    )
+    .expect("create histogram")
+);
+
+/// Error counter by error kind (e.g. bad_request, model_error, internal)
+define_metric!(
+    errors_total,
+    CounterVec,
+    CounterVec::new(
+        Opts::new(
+            "zeavis_ml_errors_total",
+            "Total errors by kind",
+        ),
+        &["kind"],
+    )
+    .expect("create counter_vec")
 );
 
 // ── Request Guard (Drop-based cleanup for active gauge) ─
