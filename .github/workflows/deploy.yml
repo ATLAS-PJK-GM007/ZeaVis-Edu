@@ -135,10 +135,11 @@ jobs:
             docker network create app-shared-net 2>/dev/null || true
             docker network create telemetry-net 2>/dev/null || true
             docker compose down --remove-orphans || true
-            docker rm -f zeavis-web zeavis-api zeavis-ml 2>/dev/null || true
+            docker rm -f zeavis-web zeavis-api zeavis-ml zeavis-node-exporter 2>/dev/null || true
             docker compose pull
             docker compose up -d
             docker compose ps
             docker compose ps | grep -q "zeavis-web.*Up" || exit 1
             docker compose ps | grep -q "zeavis-api.*Up" || exit 1
             docker compose ps | grep -q "zeavis-ml.*Up" || exit 1
+            docker compose ps | grep -q "zeavis-node-exporter.*Up" || echo "⚠️  node_exporter not running (non-fatal)"
