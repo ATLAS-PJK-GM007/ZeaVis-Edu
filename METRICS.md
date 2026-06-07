@@ -15,8 +15,11 @@ application stack and the payload each service provides.
 | Prometheus Collector  | —                                 | `GET /metrics` (self)      | 9090         |
 
 > In production all metrics are scraped by the Prometheus collector running in the
-> Telemetry stack. See [`telemetry/prometheus/targets/`](./telemetry/prometheus/targets/)
-> for the auto‑discovery configuration.
+> Telemetry stack on a **separate VPS** connected via **Tailscale**.
+> See [`telemetry/prometheus/targets/`](./telemetry/prometheus/targets/)
+> for the auto‑discovery configuration. Target files must use **Tailscale IPs**
+> (e.g. `100.x.x.a:3000`), not Docker hostnames, because the services are on
+> different hosts.
 >
 > In production (nginx), the web app proxies `/metrics` to the API service:
 > see [`apps/web/nginx.conf`](apps/web/nginx.conf).
@@ -98,15 +101,20 @@ The Telemetry submodule includes a Prometheus instance that uses
 ```json
 [
   {
-    "targets": ["zeavis-api:3000"],
-    "labels": { "service": "zeavis-api", "component": "backend" }
+    "targets": ["100.x.x.a:3000"],
+    "labels": { "service": "zeavis-api", "component": "backend", "env": "production" }
   },
   {
-    "targets": ["zeavis-ml:8000"],
-    "labels": { "service": "zeavis-ml", "component": "inference" }
+    "targets": ["100.x.x.b:8000"],
+    "labels": { "service": "zeavis-ml", "component": "inference", "env": "production" }
   }
 ]
 ```
+
+> ⚠️ **Cross-VPS:** Gunakan **IP Tailscale** (bukan Docker hostname) karena
+> Prometheus dan ZeaVis Edu berjalan di VPS berbeda. Pastikan port service
+> (`:3000`, `:8000`) terekspos di `0.0.0.0` atau diizinkan oleh aturan
+> `iptables`/`ufw` untuk interface Tailscale (`tailscale0`/`100.x.x.x/10`).
 
 The Prometheus config (in `telemetry/prometheus/prometheus.yml`) will
 automatically pick up new files within its 15‑second scrape interval —

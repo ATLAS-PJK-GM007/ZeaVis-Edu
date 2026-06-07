@@ -151,7 +151,11 @@ The repository includes a full Prometheus → ClickHouse metric pipeline as a gi
 
 All three share the `zeavis_` metric prefix and are scraped by the Telemetry Prometheus instance via `file_sd_configs` (see `telemetry/prometheus/targets/zeavis-edu.json`).
 
+**IMPORTANT — Production architecture:** ZeaVis Edu apps and the Telemetry stack run on **separate VPS instances** connected via **Tailscale** (mesh VPN). Prometheus scrapes the API and ML service through their **Tailscale IPs** (e.g. `100.x.x.a:3000`), not via Docker hostnames. The target file `telemetry/prometheus/targets/zeavis-edu.json` has `__CHANGE_ME__` placeholders — before deploying, replace with the actual Tailscale IPs of the app VPS.
+
 The telemetry stack is managed from the project root via `make telemetry-*` targets (see `Makefile`). The Docker Compose files in `telemetry/deploy/` define 6 services (Prometheus, Metric Ingester, Vector, ClickHouse, Query Proxy, Telemetry UI).
+
+For **local single-host dev**, Prometheus can reach app services via a shared Docker network (`app-shared-net`). Use `make telemetry-up-local` for this mode — it includes the `docker-compose.telemetry.yml` override.
 
 ## Fullstack application architecture
 

@@ -44,21 +44,23 @@ TELEMETRY_COMPOSE := telemetry/deploy/docker-compose.yml
 TELEMETRY_LOCAL   := telemetry/deploy/docker-compose.local.yml
 TELEMETRY_ZEAVIS  := docker-compose.telemetry.yml
 
-# Start all telemetry services
+# Start all telemetry services (standalone — cross-VPS production mode)
+# Prometheus scrapes ZeaVis Edu via Tailscale IPs, not Docker network.
 telemetry-up:
-	@echo ">> Starting Telemetry stack..."
+	@echo ">> Starting Telemetry stack (standalone)..."
 	CLICKHOUSE_USER=$${CLICKHOUSE_USER:-telemetry} \
 	CLICKHOUSE_PASSWORD=$${CLICKHOUSE_PASSWORD:-telemetry} \
-	docker compose -f $(TELEMETRY_COMPOSE) -f $(TELEMETRY_ZEAVIS) up -d
+	docker compose -f $(TELEMETRY_COMPOSE) up -d
 	@echo ">> Telemetry stack started. Use 'make telemetry-logs' to view output."
 
-# Start telemetry services with local port overrides (no Tailscale)
+# Start telemetry services with ZeaVis Edu network sharing (local single-host dev)
+# Prometheus can scrape app services via app-shared-net Docker network.
 telemetry-up-local:
-	@echo ">> Starting Telemetry stack (local mode)..."
+	@echo ">> Starting Telemetry stack (local dev mode)..."
 	CLICKHOUSE_USER=$${CLICKHOUSE_USER:-telemetry} \
 	CLICKHOUSE_PASSWORD=$${CLICKHOUSE_PASSWORD:-telemetry} \
 	docker compose -f $(TELEMETRY_COMPOSE) -f $(TELEMETRY_LOCAL) -f $(TELEMETRY_ZEAVIS) up -d
-	@echo ">> Telemetry stack started in local mode."
+	@echo ">> Telemetry stack started in local dev mode."
 
 # Stop all telemetry services
 telemetry-down:

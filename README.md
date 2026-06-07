@@ -218,33 +218,34 @@ docker compose up -d
 
 Proyek ini menyertakan pipeline telemetry metric sebagai git submodule di `telemetry/`. Pipeline mengalirkan metrik dari seluruh service ZeaVis Edu ke ClickHouse untuk analisis dan visualisasi jangka panjang.
 
-### Arsitektur
+### Arsitektur (Production)
+
+Di production, aplikasi dan telemetry berjalan di **VPS terpisah** dan terhubung via **Tailscale** (mesh VPN). Prometheus di VPS telemetry melakukan scrape ke service ZeaVis Edu melalui IP Tailscale masing-masing.
 
 ```mermaid
 flowchart LR
-    subgraph Apps["ZeaVis Edu"]
-        W[Web / React]
-        A[API / Elysia]
-        M[ML Service / Axum]
+    subgraph VPS1["VPS — ZeaVis Edu (App)"]
+        W[Web / React<br/>api-zeavisedu.asepharyana.id]
+        A[API / Elysia<br/>:3000]
+        M[ML Service / Axum<br/>:8000]
     end
 
-    subgraph Telemetry["Telemetry Pipeline"]
-        P[Prometheus]
-        MI[Metric Ingester]
-        V[Vector]
-        CH[ClickHouse]
-        QP[Query Proxy]
-        TUI[Telemetry UI]
+    subgraph VPS2["VPS — Telemetry Stack"]
+        P[Prometheus<br/>:9090]
+        MI[Metric Ingester<br/>:9091]
+        V[Vector<br/>:9001]
+        CH[ClickHouse<br/>:8123]
+        QP[Query Proxy<br/>:9092]
+        TUI[Telemetry UI<br/>:8181]
     end
 
-    W -->|"GET /metrics"| P
-    A -->|"GET /metrics"| P
-    M -->|"GET /metrics"| P
+    P -.->|"scrape via Tailscale IP<br/>100.x.x.a:3000/metrics"| A
+    P -.->|"scrape via Tailscale IP<br/>100.x.x.a:8000/metrics"| M
     P -->|remote_write| MI
-    MI -->|HTTP POST| V
-    V -->|JSONEachRow| CH
-    QP -->|SQL| CH
-    TUI -->|/proxy/query| QP
+    MI --> V
+    V --> CH
+    QP --> CH
+    TUI --> QP
 ```
 
 Setiap service ZeaVis Edu mengekspos endpoint `/metrics` dalam format Prometheus text:
@@ -254,6 +255,8 @@ Setiap service ZeaVis Edu mengekspos endpoint `/metrics` dalam format Prometheus
 | Web (Vite dev)        | `GET /metrics`     | 5173         |
 | API (Elysia)          | `GET /metrics`     | 3000         |
 | ML Service (Axum)     | `GET /metrics`     | 8000         |
+
+Prometheus di VPS telemetry melakukan **scrape langsung** ke API dan ML service melalui IP Tailscale mereka, bukan melalui domain publik. Konfigurasi target ada di `telemetry/prometheus/targets/zeavis-edu.json` — isi dengan IP Tailscale dari service yang dituju.
 
 Lihat [`METRICS.md`](./METRICS.md) untuk daftar lengkap metrik yang diekspos.
 
@@ -267,6 +270,18 @@ Lihat [`METRICS.md`](./METRICS.md) untuk daftar lengkap metrik yang diekspos.
 | 4 | **ClickHouse** | Columnar analytical storage | 8123 / 9000 |
 | 5 | **Query Proxy** | Read-only SQL proxy, tenant isolation | 9092 |
 | 6 | **Telemetry UI** | Vue 3 metrics dashboard | 8181 |
+
+### Arsitektur (Local Dev)
+
+Untuk development lokal di satu mesin, telemetry dan app bisa jalan bareng di satu Docker host. Prometheus bisa scrape service lewat Docker network yang sama.
+
+```bash
+# Setup network
+docker network create app-shared-net
+
+# Build & start telemetry (dengan network sharing)
+make telemetry-up-local
+```
 
 ### Menjalankan Telemetry Stack
 
@@ -317,14 +332,16 @@ make telemetry-up-local
 
 Prometheus menggunakan `file_sd_configs` untuk menemukan target secara dinamis. Cukup letakkan file JSON di `telemetry/prometheus/targets/` dan Prometheus akan otomatis mendeteksinya dalam 15 detik — tanpa restart.
 
-File target ZeaVis Edu sudah tersedia di [`telemetry/prometheus/targets/zeavis-edu.json`](telemetry/prometheus/targets/zeavis-edu.json):
+File template sudah tersedia di [`telemetry/prometheus/targets/zeavis-edu.json`](telemetry/prometheus/targets/zeavis-edu.json). **Sebelum production, isi `__CHANGE_ME__` dengan IP Tailscale masing-masing service:**
 
 ```json
 [
-  { "targets": ["zeavis-api:3000"], "labels": { "service": "zeavis-api", "component": "backend" } },
-  { "targets": ["zeavis-ml:8000"],  "labels": { "service": "zeavis-ml", "component": "inference" } }
+  { "targets": ["100.x.x.a:3000"], "labels": { "service": "zeavis-api", "component": "backend", "env": "production" } },
+  { "targets": ["100.x.x.a:8000"],  "labels": { "service": "zeavis-ml", "component": "inference", "env": "production" } }
 ]
 ```
+
+> **Catatan:** Aplikasi ZeaVis Edu mengekspose port Docker-nya (`:3000`, `:8000`) langsung ke host via `docker-compose.yml`. Pastikan port-port tersebut terbuka di network Tailscale (biasanya iptables Tailscale mengizinkan koneksi ke port localhost).
 
 ### Environment Variables Telemetry
 
