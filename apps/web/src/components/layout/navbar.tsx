@@ -65,6 +65,12 @@ export function Navbar() {
           >
             Review
           </Link>
+          <Link
+            to="/telemetry"
+            className={navLinkClassName(isActive("/telemetry"))}
+          >
+            Telemetry
+          </Link>
         </nav>
 
         <button

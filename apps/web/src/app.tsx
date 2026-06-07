@@ -14,6 +14,7 @@ import { DiseaseDetailPage } from "@/pages/disease-detail-page";
 import { DiagnosisDetailPage } from "@/pages/diagnosis-detail-page";
 import { ExpertReviewsPage } from "@/pages/expert-reviews-page";
 import { DiagnosesPage } from "@/pages/diagnoses-page";
+import { TelemetryPage } from "@/pages/telemetry-page";
 import { MainLayout } from "@/components/layout/main-layout";
 import { trackPageView } from "./lib/telemetry";
 
@@ -82,6 +83,14 @@ const router = createBrowserRouter([
     element: (
       <MainLayout>
         <DiseaseDetailPage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/telemetry",
+    element: (
+      <MainLayout>
+        <TelemetryPage />
       </MainLayout>
     ),
   },
