@@ -130,16 +130,31 @@ pub async fn predict(
     };
 
     // Preprocess the image
+    let preprocess_start = std::time::Instant::now();
     let input = preprocess_image(&bytes, state.model.input_size())?;
 
-    // Run prediction
-    let prediction = state.model.predict(input)?;
+    // Record image size metric
+    telemetry::image_size_bytes().observe(bytes.len() as f64);
 
-    // Record business and request telemetry
+    // Run prediction with timing
+    let inference_start = std::time::Instant::now();
+    let prediction = state.model.predict(input)?;
+    telemetry::inference_duration_seconds().observe(inference_start.elapsed().as_secs_f64());
+
+    // Record business telemetry
     telemetry::predictions_total().inc();
+    telemetry::predictions_by_class()
+        .with_label_values(&[&prediction.label])
+        .inc();
+    telemetry::predictions_confidence().observe(prediction.confidence as f64);
     _guard.finish();
 
     Ok(Json(prediction_response(prediction)))
+}
+
+/// Helper to record errors from route handlers
+pub fn record_error(kind: &str) {
+    telemetry::errors_total().with_label_values(&[kind]).inc();
 }
 
 pub fn router(state: AppState) -> Router {
