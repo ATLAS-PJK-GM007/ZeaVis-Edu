@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ export function AuthForm({ mode, isSubmitting, error, googleOAuthEnabled, onSubm
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,10 +55,19 @@ export function AuthForm({ mode, isSubmitting, error, googleOAuthEnabled, onSubm
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" minLength={8} value={password} onChange={(event) => {
-              setPassword(event.target.value);
-              onFieldChange?.();
-            }} required />
+            <div className="relative">
+              <Input id="password" type={showPassword ? "text" : "password"} minLength={8} value={password} onChange={(event) => {
+                setPassword(event.target.value);
+                onFieldChange?.();
+              }} required />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
           <Button className="w-full" type="submit" disabled={isSubmitting}>
