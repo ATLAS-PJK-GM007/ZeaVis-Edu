@@ -3,6 +3,8 @@ use crate::config::{LABELS, SERVICE_NAME, SERVICE_VERSION};
 use crate::model::{ModelService, Prediction};
 use crate::error::ServiceError;
 use crate::image::preprocess_image;
+use crate::telemetry;
+use crate::telemetry::RequestMetricsGuard;
 use axum::{
     extract::{State, Multipart},
     routing::{get, post},
@@ -64,22 +66,34 @@ pub fn prediction_response(prediction: Prediction) -> PredictionResponse {
     }
 }
 
+pub async fn metrics() -> (axum::http::StatusCode, String) {
+    (axum::http::StatusCode::OK, telemetry::encode_metrics())
+}
+
 pub async fn health(State(state): State<AppState>) -> Json<HealthResponse> {
-    Json(health_response(state.model.is_loaded()))
+    let _guard = RequestMetricsGuard::new();
+    let res = health_response(state.model.is_loaded());
+    _guard.finish();
+    Json(res)
 }
 
 pub async fn metadata(State(state): State<AppState>) -> Json<MetadataResponse> {
-    Json(metadata_response(
+    let _guard = RequestMetricsGuard::new();
+    let res = metadata_response(
         state.model.model_path().to_string_lossy().to_string(),
         state.model.is_loaded(),
         state.model.input_size(),
-    ))
+    );
+    _guard.finish();
+    Json(res)
 }
 
 pub async fn predict(
     State(state): State<AppState>,
     mut multipart: Multipart,
 ) -> Result<Json<PredictionResponse>, ServiceError> {
+    let _guard = RequestMetricsGuard::new();
+
     // Extract the file field from multipart
     let mut file_data = None;
     while let Ok(Some(field)) = multipart.next_field().await {
@@ -121,6 +135,10 @@ pub async fn predict(
     // Run prediction
     let prediction = state.model.predict(input)?;
 
+    // Record business and request telemetry
+    telemetry::predictions_total().inc();
+    _guard.finish();
+
     Ok(Json(prediction_response(prediction)))
 }
 
@@ -129,6 +147,7 @@ pub fn router(state: AppState) -> Router {
         .route("/health", get(health))
         .route("/metadata", get(metadata))
         .route("/predict", post(predict))
+        .route("/metrics", get(metrics))
         .with_state(state)
 }
 

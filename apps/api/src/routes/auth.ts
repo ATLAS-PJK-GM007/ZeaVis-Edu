@@ -16,6 +16,7 @@ import {
   verifyPassword,
 } from '../lib/auth';
 import { env } from '../config/env';
+import { authCounter } from '../lib/telemetry';
 
 function normalizeEmail(email: unknown) {
   return typeof email === 'string' ? email.trim().toLowerCase() : '';
@@ -63,6 +64,8 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       const token = await createSession(user.id);
       set.headers['Set-Cookie'] = createSessionCookie(token);
 
+      authCounter.labels('register', 'true').inc();
+
       return {
         user: {
           id: user.id,
@@ -90,11 +93,14 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       const user = rows[0];
 
       if (!user?.passwordHash || !(await verifyPassword(req!.password!, user.passwordHash))) {
+        authCounter.labels('login', 'false').inc();
         return badRequest('Invalid email or password');
       }
 
       const token = await createSession(user.id);
       set.headers['Set-Cookie'] = createSessionCookie(token);
+
+      authCounter.labels('login', 'true').inc();
 
       return {
         user: {

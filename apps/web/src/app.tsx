@@ -14,6 +14,7 @@ import { DiseaseDetailPage } from "@/pages/disease-detail-page";
 import { DiagnosisDetailPage } from "@/pages/diagnosis-detail-page";
 import { ExpertReviewsPage } from "@/pages/expert-reviews-page";
 import { DiagnosesPage } from "@/pages/diagnoses-page";
+import { TelemetryPage } from "@/pages/telemetry-page";
 import { LoginPage } from "@/pages/login-page";
 import { RegisterPage } from "@/pages/register-page";
 import { MainLayout } from "@/components/layout/main-layout";
@@ -36,6 +37,7 @@ function LogoutProses() {
 
   return <Navigate to="/login" replace />;
 }
+import { trackPageView } from "./lib/telemetry";
 
 const queryClient = new QueryClient();
 
@@ -129,12 +131,29 @@ const router = createBrowserRouter([
       <LogoutProses />
     ),
   },
+  {
+    path: "/telemetry",
+    element: (
+      <MainLayout>
+        <TelemetryPage />
+      </MainLayout>
+    ),
+  },
 ]);
+
+function PageViewTracker() {
+  const location = window.location;
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+  return null;
+}
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthInitializer />
+      <PageViewTracker />
       <RouterProvider router={router} />
     </QueryClientProvider>
   );

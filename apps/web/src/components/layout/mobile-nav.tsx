@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { path: "/diagnoses", label: "Diagnosa" },
   { path: "/catalog", label: "Pustaka", altPath: "/library" },
   { path: "/expert/reviews", label: "Review" },
+  { path: "/telemetry", label: "Telemetry" },
 ];
 
 export function MobileNav({ open, onClose }: Props) {

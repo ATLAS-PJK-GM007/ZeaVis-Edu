@@ -14,8 +14,15 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN bun run --cwd packages/shared build
 RUN bun run --cwd apps/web build
 
-FROM nginx:1.27-alpine AS runner
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+# =============================================================================
+# Stage 2: nginx (Alpine package — includes sub_filter module)
+# Alpine's nginx package is built with --with-http_sub_module
+# =============================================================================
+FROM alpine:3.20 AS runner
+RUN apk add --no-cache nginx
+
+COPY apps/web/nginx.conf /etc/nginx/http.d/default.conf
+COPY --from=builder /app/apps/web/dist /var/lib/nginx/html
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

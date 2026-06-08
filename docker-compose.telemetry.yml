@@ -1,0 +1,28 @@
+# =============================================================================
+# ZeaVis Edu — Telemetry Stack Integration (LOCAL DEV ONLY)
+#
+# This override connects the Telemetry submodule docker-compose to the same
+# Docker network as ZeaVis Edu services for LOCAL development on a single host.
+#
+# In PRODUCTION, the app and telemetry run on separate VPS instances
+# connected via Tailscale. See telemetry/prometheus/targets/zeavis-edu.json
+# for the Tailscale IP configuration.
+#
+# Usage (local dev only):
+#   # Ensure app-shared-net exists first:
+#   docker network create app-shared-net
+#
+#   # Start telemetry with app network access:
+#   make telemetry-up-local
+# =============================================================================
+
+networks:
+  app-shared-net:
+    external: true
+    name: app-shared-net
+
+services:
+  prometheus:
+    networks:
+      - default
+      - app-shared-net

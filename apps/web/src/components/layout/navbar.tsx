@@ -71,6 +71,12 @@ export function Navbar() {
           >
             Keluar <LogOut className="ml-2 h-4 w-4" />
           </Link>
+          <Link
+            to="/telemetry"
+            className={navLinkClassName(isActive("/telemetry"))}
+          >
+            Telemetry
+          </Link>
         </nav>
 
         <button
