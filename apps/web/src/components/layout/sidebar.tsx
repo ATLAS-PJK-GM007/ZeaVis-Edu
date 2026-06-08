@@ -114,7 +114,7 @@ export function Sidebar() {
 
       {/* Logout Button */}
       <div
-        className={`h-22 px-5 border-t border-white/10 shrink-0 flex items-center ${isSidebarOpen ? "" : "justify-center"}`}
+        className={`h-18 px-5 border-t border-white/10 shrink-0 flex items-center ${isSidebarOpen ? "" : "justify-center"}`}
       >
         <Link
           to="/logout"
