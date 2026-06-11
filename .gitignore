@@ -9,6 +9,8 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
+.venv/
+venv/
 
 .DS_Store
 

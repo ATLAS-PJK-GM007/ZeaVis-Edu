@@ -14,11 +14,10 @@ The ML pipeline lives under `Machine_Learning/`. The inference service lives und
 cd Machine_Learning
 ```
 
-Set up a Python environment:
+Activate the Python environment (already exists at repo root):
 
 ```bash
-python -m venv venv
-source venv/bin/activate
+source ../.venv/bin/activate
 pip install -r requirements.txt
 ```
 
