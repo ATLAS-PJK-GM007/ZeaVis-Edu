@@ -28,8 +28,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Set image prefix
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
@@ -37,18 +35,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Set up Python for ONNX conversion
+      - name: Set up Python for model download & export
         if: matrix.service.name == 'ml'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Generate ONNX model artifact
+      - name: Download model from Hugging Face & export ONNX
         if: matrix.service.name == 'ml'
         working-directory: Machine_Learning
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install 'tensorflow>=2.13.0' 'tf2onnx>=1.16.1' 'onnx>=1.16.0'
+          python -m pip install 'tensorflow>=2.13.0' 'tf2onnx>=1.16.1' 'onnx>=1.16.0' 'huggingface_hub'
+          python -c "
+          from huggingface_hub import hf_hub_download
+          import os
+          os.makedirs('best_model', exist_ok=True)
+          path = hf_hub_download(
+              repo_id='MythEclipse2737/corn-leaf-disease-classifier',
+              filename='best_model.keras',
+              token=os.environ.get('HF_TOKEN'),
+              local_dir='best_model',
+          )
+          print(f'Model downloaded to {path}')
+          "
+          python save_model.py
           python convert_onnx.py
 
       - name: Log in to GHCR
