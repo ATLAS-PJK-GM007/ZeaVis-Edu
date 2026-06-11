@@ -25,7 +25,7 @@ def build_clean_model(num_classes, img_size=(224, 224)):
     x = layers.Dense(1024, activation='swish')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.4)(x)
-    outputs = layers.Dense(num_classes, activation='sigmoid', dtype='float32')(x)
+    outputs = layers.Dense(num_classes, activation='softmax', dtype='float32')(x)
     return models.Model(inputs, outputs)
 
 logging.info("=== EXPORT STARTED ===")

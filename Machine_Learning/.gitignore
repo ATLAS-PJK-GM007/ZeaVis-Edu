@@ -1,0 +1,17 @@
+node_modules/
+.bun/
+.moon/cache/
+.env
+.env.*
+!.env.example
+.codegraph/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+venv/
+.DS_Store
+dataset/
+.claude/
+dataset_split/
+dataset_jagung.zip
