@@ -9,3 +9,4 @@ split-folders
 scikit-learn
 tf2onnx
 onnxruntime
+huggingface_hub

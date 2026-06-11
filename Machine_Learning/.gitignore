@@ -15,3 +15,5 @@ dataset/
 .claude/
 dataset_split/
 dataset_jagung.zip
+best_model/
+model/
