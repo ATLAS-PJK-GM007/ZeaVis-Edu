@@ -1,5 +1,6 @@
 tensorflow==2.19.0              # CPU + Colab; for local GPU, install tensorflow[and-cuda]
 tensorflowjs==4.22.0
+gdown                           # download dataset from Google Drive
 numpy
 matplotlib
 seaborn
