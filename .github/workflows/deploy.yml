@@ -41,52 +41,41 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Download model from Hugging Face & export ONNX
+      - name: Download ONNX model from Hugging Face
         if: matrix.service.name == 'ml'
         working-directory: Machine_Learning
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          set -euo pipefail
+          set -eu
+          echo "::group::Install huggingface_hub"
+          python -m pip install --upgrade pip -q
+          python -m pip install huggingface_hub -q
+          echo "::endgroup::"
 
-          # Diagnostic
-          echo "::group::Environment check"
+          echo "::group::Check HF_TOKEN"
           if [ -z "${HF_TOKEN:-}" ]; then
             echo "ERROR: HF_TOKEN secret is not set."
-            echo "Add it at: https://github.com/ATLAS-PJK-GM007/ZeaVis-Edu/settings/secrets/actions"
-            echo "Name: HF_TOKEN  Value: your Hugging Face token"
+            echo "Add it: https://github.com/ATLAS-PJK-GM007/ZeaVis-Edu/settings/secrets/actions"
             exit 1
           fi
           echo "HF_TOKEN is set (length: ${#HF_TOKEN})"
           echo "::endgroup::"
 
-          echo "::group::Install dependencies"
-          python -m pip install --upgrade pip
-          python -m pip install 'tensorflow>=2.13.0' 'tf2onnx>=1.16.1' 'onnx>=1.16.0' 'huggingface_hub'
-          echo "::endgroup::"
-
-          echo "::group::Download model from Hugging Face"
+          echo "::group::Download model.onnx"
           python -c "
           from huggingface_hub import hf_hub_download
           import os
-          os.makedirs('best_model', exist_ok=True)
+          os.makedirs('model', exist_ok=True)
           path = hf_hub_download(
               repo_id='MythEclipse2737/corn-leaf-disease-classifier',
-              filename='best_model.keras',
+              filename='model/model.onnx',
               token=os.environ['HF_TOKEN'],
-              local_dir='best_model',
+              local_dir='.',
           )
-          print(f'Model downloaded to {path}')
+          print(f'Downloaded: {path}')
           "
-          echo "::endgroup::"
-
-          echo "::group::Export SavedModel + TFLite"
-          export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          python save_model.py
-          echo "::endgroup::"
-
-          echo "::group::Export ONNX"
-          python convert_onnx.py
+          ls -lh model/model.onnx
           echo "::endgroup::"
 
       - name: Log in to GHCR
