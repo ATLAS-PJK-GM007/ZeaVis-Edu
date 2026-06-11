@@ -1,0 +1,9 @@
+# Model artifacts — not stored in git. Uploaded to Hugging Face Hub after training.
+best_model/
+model/
+dataset/
+dataset.zip
+venv/
+__pycache__/
+*.pyc
+*.pyo
