@@ -62,20 +62,25 @@ jobs:
           echo "HF_TOKEN is set (length: ${#HF_TOKEN})"
           echo "::endgroup::"
 
-          echo "::group::Download model.onnx"
+          echo "::group::Download model files from Hugging Face"
           python -c "
           from huggingface_hub import hf_hub_download
           import os
           os.makedirs('model', exist_ok=True)
-          path = hf_hub_download(
-              repo_id='MythEclipse2737/corn-leaf-disease-classifier',
-              filename='model/model.onnx',
-              token=os.environ['HF_TOKEN'],
-              local_dir='.',
-          )
-          print(f'Downloaded: {path}')
+          os.makedirs('best_model', exist_ok=True)
+          repo = 'MythEclipse2737/zeavis-edu-corn-leaf-classifier'
+          token = os.environ['HF_TOKEN']
+
+          # ONNX (for Rust inference service)
+          path = hf_hub_download(repo_id=repo, filename='model/model.onnx', token=token, local_dir='.')
+          print(f'ONNX: {path}')
+
+          # best_model.keras + calibration (for re-export if needed)
+          hf_hub_download(repo_id=repo, filename='best_model.keras', token=token, local_dir='.')
+          hf_hub_download(repo_id=repo, filename='calibration.json', token=token, local_dir='.')
+          print(f'best_model.keras and calibration.json downloaded')
           "
-          ls -lh model/model.onnx
+          ls -lh model/model.onnx best_model/best_model.keras 2>/dev/null
           echo "::endgroup::"
 
       - name: Log in to GHCR
