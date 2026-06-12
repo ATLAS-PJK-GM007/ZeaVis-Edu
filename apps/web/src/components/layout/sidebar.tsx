@@ -13,20 +13,30 @@ import {
   ChartBar,
 } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
+import { useAuthStore } from "@/store/auth-store";
 
 const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/scan", label: "Pindai Daun", icon: Scan },
   { path: "/diagnoses", label: "Diagnosa", icon: Activity },
   { path: "/catalog", label: "Pustaka", icon: BookOpen, altPath: "/library" },
-  { path: "/expert/reviews", label: "Tinjauan Pakar", icon: UserCheck },
-  { path: "/telemetry", label: "Telemetry", icon: ChartBar },
+  { path: "/expert/reviews", label: "Tinjauan Pakar", icon: UserCheck, expertOnly: true },
+  { path: "/telemetry", label: "Telemetry", icon: ChartBar, expertOnly: true },
 ];
 
 export function Sidebar() {
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const user = useAuthStore((state) => state.user);
+  const isExpert = user?.role === "expert";
+
+  const filteredNavItems = NAV_ITEMS.filter((item) => { if (!item.expertOnly || isExpert) {
+    return true;
+  }
+  return false;
+});
 
   const isActive = (path: string, altPath?: string) => {
     if (path === "/dashboard" || path === "/scan") {
@@ -83,7 +93,12 @@ export function Sidebar() {
       <nav
         className={`flex-1 overflow-y-auto py-6 flex flex-col gap-3 ${isSidebarOpen ? "px-5" : "px-0 items-center"}`}
       >
-        {NAV_ITEMS.map((item) => {
+        {filteredNavItems.map((item) => {
+          // Skip expert-only items for non-expert users
+          if (item.expertOnly && !isExpert) {
+            return null;
+          }
+
           const active = isActive(item.path, item.altPath);
           const Icon = item.icon;
 
