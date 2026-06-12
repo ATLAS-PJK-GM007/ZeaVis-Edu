@@ -116,7 +116,7 @@ export function Sidebar() {
               key={item.path}
               to={item.path}
               title={item.label}
-              onClick={() => setIsSidebarOpen(true)}
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={`flex items-center rounded-full font-medium transition-all ${
                 isSidebarOpen
                   ? "px-4 py-3 gap-3 text-[16px] w-full"
