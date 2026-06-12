@@ -17,3 +17,6 @@ dataset_split/
 dataset_jagung.zip
 best_model/
 model/
+dataset*.zip
+dataset_*/
+corn-leaf-disease.zip

@@ -2,18 +2,24 @@ use anyhow::{Context, Result};
 use std::env;
 use std::path::{Path, PathBuf};
 
-pub const LABELS: [&str; 4] = ["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"];
+pub const LABELS: [&str; 4] = ["Bercak Daun", "Daun Sehat", "Hawar Daun", "Karat Daun"];
 pub const SERVICE_NAME: &str = "zeavis-ml-service";
 pub const SERVICE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const DEFAULT_INPUT_SIZE: u32 = 224;
 pub const DEFAULT_MODEL_PATH: &str = "../../Machine_Learning/model/model.onnx";
+pub const DEFAULT_TEMPERATURE: f32 = 1.0;
+pub const CONFIDENCE_THRESHOLD_HIGH: f32 = 0.70;
+pub const CONFIDENCE_THRESHOLD_LOW: f32 = 0.45;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Config {
     pub host: String,
     pub port: u16,
     pub model_path: PathBuf,
     pub input_size: u32,
+    pub temperature: f32,
+    pub conf_threshold_high: f32,
+    pub conf_threshold_low: f32,
 }
 
 impl Config {
@@ -27,12 +33,18 @@ impl Config {
         let port = parse_env_u16("ML_SERVICE_PORT", 8000)?;
         let input_size = parse_env_u32("MODEL_INPUT_SIZE", DEFAULT_INPUT_SIZE)?;
         let model_path = env::var("MODEL_PATH").unwrap_or_else(|_| DEFAULT_MODEL_PATH.to_string());
+        let temperature = parse_env_f32("MODEL_TEMPERATURE", DEFAULT_TEMPERATURE)?;
+        let conf_threshold_high = parse_env_f32("MODEL_CONF_HIGH", CONFIDENCE_THRESHOLD_HIGH)?;
+        let conf_threshold_low = parse_env_f32("MODEL_CONF_LOW", CONFIDENCE_THRESHOLD_LOW)?;
 
         Ok(Self {
             host,
             port,
             model_path: resolve_model_path(base_dir, &model_path),
             input_size,
+            temperature,
+            conf_threshold_high,
+            conf_threshold_low,
         })
     }
 }
@@ -64,13 +76,22 @@ fn parse_env_u32(name: &str, default: u32) -> Result<u32> {
     }
 }
 
+fn parse_env_f32(name: &str, default: f32) -> Result<f32> {
+    match env::var(name) {
+        Ok(value) => value
+            .parse::<f32>()
+            .with_context(|| format!("{name} must be a valid f32")),
+        Err(_) => Ok(default),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn labels_match_training_class_order_with_display_names() {
-        assert_eq!(LABELS, ["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"]);
+        assert_eq!(LABELS, ["Bercak Daun", "Daun Sehat", "Hawar Daun", "Karat Daun"]);
     }
 
     #[test]

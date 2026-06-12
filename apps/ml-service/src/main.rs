@@ -23,13 +23,20 @@ async fn main() -> Result<()> {
     // Load configuration from environment
     let config = Config::from_env()?;
 
-    // Create ModelService and wrap in Arc
-    let model = Arc::new(ModelService::new(&config.model_path, config.input_size));
-
-    // Log model status
+    // Create ModelService with calibration and wrap in Arc
+    let model = Arc::new(ModelService::with_calibration(
+        &config.model_path,
+        config.input_size,
+        config.temperature,
+        config.conf_threshold_high,
+        config.conf_threshold_low,
+    ));
     tracing::info!(
         model_loaded = model.is_loaded(),
         model_path = ?config.model_path,
+        temperature = config.temperature,
+        conf_high = config.conf_threshold_high,
+        conf_low = config.conf_threshold_low,
         "Model service initialized"
     );
 
