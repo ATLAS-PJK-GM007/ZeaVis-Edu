@@ -51,38 +51,64 @@ MIN_FILE_SIZE = 512
 # ==========================================
 # TAHAP 0: DOWNLOAD DATASET OTOMATIS
 # ==========================================
+def _download_kagglehub(ref, zip_name, timeout=120):
+    """Download dataset via kagglehub with a timeout to prevent hanging."""
+    import multiprocessing
+    log.info(f"  Downloading {ref} via kagglehub (timeout={timeout}s)...")
+
+    def _do_download(q):
+        try:
+            import kagglehub
+            path = kagglehub.dataset_download(ref)
+            q.put(("ok", path))
+        except Exception as e:
+            q.put(("err", str(e)))
+
+    q = multiprocessing.Queue()
+    p = multiprocessing.Process(target=_do_download, args=(q,))
+    p.start()
+    p.join(timeout)
+
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        log.warning(f"  [FAIL] {ref} download timed out after {timeout}s.")
+        return None
+
+    status, val = q.get()
+    if status != "ok":
+        log.warning(f"  [FAIL] {ref} download failed: {val}")
+        return None
+
+    path = val
+    # Pack into ZIP for extraction step
+    try:
+        shutil.make_archive(zip_name.replace('.zip', ''), 'zip', path)
+        log.info(f"  [OK] {ref} -> {zip_name}")
+        return True
+    except Exception as e:
+        log.warning(f"  [FAIL] Could not pack {path} into {zip_name}: {e}")
+        return None
+
+
 def download_dataset_1():
     """Download dataset_1 (ndisan/corn-leaf-disease) from Kaggle."""
     try:
         import kagglehub
-        log.info(f"  Downloading dataset_1 from Kaggle: {KAGGLE_DS1}...")
-        path = kagglehub.dataset_download(KAGGLE_DS1)
-        log.info(f"  [OK] dataset_1 downloaded to {path}")
-        return path
     except ImportError:
-        log.warning("  [SKIP] kagglehub not installed. Install with: pip install kagglehub")
+        log.warning("  [SKIP] kagglehub not installed. Install: pip install kagglehub")
         return None
-    except Exception as e:
-        log.warning(f"  [FAIL] dataset_1 download failed: {e}")
-        log.warning("  Please download manually from https://www.kaggle.com/datasets/ndisan/corn-leaf-disease")
-        return None
+    return _download_kagglehub("ndisan/corn-leaf-disease", "dataset_1.zip")
 
 
 def download_dataset_2():
     """Download dataset_2 (smaranjitghose/corn-or-maize-leaf-disease-dataset) from Kaggle."""
     try:
         import kagglehub
-        log.info(f"  Downloading dataset_2 from Kaggle: {KAGGLE_DS2}...")
-        path = kagglehub.dataset_download(KAGGLE_DS2)
-        log.info(f"  [OK] dataset_2 downloaded to {path}")
-        return path
     except ImportError:
-        log.warning("  [SKIP] kagglehub not installed. Install with: pip install kagglehub")
+        log.warning("  [SKIP] kagglehub not installed. Install: pip install kagglehub")
         return None
-    except Exception as e:
-        log.warning(f"  [FAIL] dataset_2 download failed: {e}")
-        log.warning("  Please download manually from https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset")
-        return None
+    return _download_kagglehub("smaranjitghose/corn-or-maize-leaf-disease-dataset", "dataset_2.zip")
 
 
 def download_dataset_3():
@@ -107,31 +133,16 @@ def download_dataset_3():
     return None
 
 
-def copy_kaggle_download(src_path, target_zip_name):
-    """Copy kagglehub download into a local ZIP so extraction step works unchanged."""
-    if src_path is None or not os.path.exists(src_path):
-        return False
-    # src_path is a directory; zip it as target_zip_name
-    try:
-        shutil.make_archive(target_zip_name.replace('.zip', ''), 'zip', src_path)
-        log.info(f"  [OK] Packed {src_path} -> {target_zip_name}")
-        return True
-    except Exception as e:
-        log.warning(f"  [FAIL] Could not pack {src_path}: {e}")
-        return False
-
-
 def download_dataset(zip_name, download_fn):
     """Attempt auto-download if ZIP doesn't exist locally."""
     if os.path.exists(zip_name):
         log.info(f"  [CACHE] {zip_name} already exists, skipping download.")
         return True
     log.info(f"--- Downloading {zip_name} ---")
-    path = download_fn()
-    if path is None:
+    result = download_fn()
+    if not result:  # None or False
         return False
-    # Pack into ZIP for downstream extraction
-    return copy_kaggle_download(path, zip_name)
+    return True
 
 
 # ==========================================
