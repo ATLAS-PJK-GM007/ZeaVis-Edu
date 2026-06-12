@@ -9,9 +9,11 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
-.venv/
 venv/
-
 .DS_Store
-
+dataset/
 .claude/
+dataset_split/
+dataset_jagung.zip
+best_model/
+model/
