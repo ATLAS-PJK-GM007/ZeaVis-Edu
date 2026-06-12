@@ -14,29 +14,38 @@ import {
 } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 import { useAuthStore } from "@/store/auth-store";
+import { useUiStore } from "@/store/ui-store";
 
 const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/scan", label: "Pindai Daun", icon: Scan },
   { path: "/diagnoses", label: "Diagnosa", icon: Activity },
   { path: "/catalog", label: "Pustaka", icon: BookOpen, altPath: "/library" },
-  { path: "/expert/reviews", label: "Tinjauan Pakar", icon: UserCheck, expertOnly: true },
+  {
+    path: "/expert/reviews",
+    label: "Tinjauan Pakar",
+    icon: UserCheck,
+    expertOnly: true,
+  },
   { path: "/telemetry", label: "Telemetry", icon: ChartBar, expertOnly: true },
 ];
 
 export function Sidebar() {
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
+  const setIsSidebarOpen = useUiStore((state) => state.setIsSidebarOpen);
 
   const user = useAuthStore((state) => state.user);
   const isExpert = user?.role === "expert";
 
-  const filteredNavItems = NAV_ITEMS.filter((item) => { if (!item.expertOnly || isExpert) {
-    return true;
-  }
-  return false;
-});
+  const filteredNavItems = NAV_ITEMS.filter((item) => {
+    if (!item.expertOnly || isExpert) {
+      return true;
+    }
+    return false;
+  });
 
   const isActive = (path: string, altPath?: string) => {
     if (path === "/dashboard" || path === "/scan") {
