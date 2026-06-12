@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 def cbam_block(x, ratio=8, name="cbam"):
     """Convolutional Block Attention Module — lightweight foreground attention."""
-    channels = tf.shape(x)[-1]
+    channels = x.shape[-1]
 
     # Channel attention
     avg_pool = layers.GlobalAveragePooling2D()(x)
@@ -34,17 +34,23 @@ def cbam_block(x, ratio=8, name="cbam"):
     return x
 
 
-def build_clean_model(num_classes, img_size=(224, 224)):
-    """Build the production architecture: CBAM + lightweight head, outputting raw logits."""
+def build_clean_model(num_classes, target_size=(224, 224)):
+    """Build the production architecture: CBAM + lightweight head, outputting raw logits.
+
+    Mirrors the notebook's build_model() exactly so set_weights() maps correctly.
+    """
     base_model = tf.keras.applications.EfficientNetV2B0(
-        input_shape=img_size + (3,),
+        input_shape=target_size + (3,),
         include_top=False,
         weights=None,
     )
     base_model.trainable = False
 
-    inputs = tf.keras.Input(shape=img_size + (3,), name="input")
-    x = base_model(inputs, training=False)
+    inputs = tf.keras.Input(shape=(None, None, 3), name="input")
+    x = layers.Resizing(target_size[0], target_size[1], interpolation="bilinear",
+                        name="resize_input")(inputs)
+    x = layers.GaussianNoise(0.05, name="gauss_noise")(x)
+    x = base_model(x, training=False)
     # CBAM attention — focus on leaf regions, ignore background
     x = cbam_block(x, ratio=8, name="cbam")
     x = layers.GlobalAveragePooling2D(name="gap")(x)
