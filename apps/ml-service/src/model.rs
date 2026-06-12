@@ -161,13 +161,15 @@ mod tests {
 
     #[test]
     fn calibrate_probs_selects_top_label() {
-        let logits = [1.0, 2.0, 3.0, 0.5];
+        // [1, 2, 3, 0.5] → softmax ≈ [0.086, 0.235, 0.638, 0.040]
+        // 0.638 < 0.70 → "uncertain". Use larger gap for "confident".
+        let logits = [0.0, 0.0, 10.0, 0.0];  // softmax ≈ [0, 0, ~1, 0]
         let result = ModelService::calibrate_prediction(&logits, T, HIGH, LOW);
         assert!(result.is_ok());
         let p = result.unwrap();
         // Index 2 = Hawar Daun (highest logit)
         assert_eq!(p.label, "Hawar Daun");
-        assert!(p.confidence > 0.5);
+        assert!(p.confidence >= 0.999);
         assert_eq!(p.status, "confident");
     }
 
