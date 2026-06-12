@@ -61,6 +61,7 @@ pub fn metadata_response(model_path: String, model_loaded: bool, input_size: u32
 
 pub fn prediction_response(prediction: Prediction) -> PredictionResponse {
     PredictionResponse {
+        status: "ok".to_string(),
         label: prediction.label,
         confidence: prediction.confidence,
         probabilities: prediction.probabilities,
@@ -131,7 +132,7 @@ pub async fn predict(
     };
 
     // Preprocess the image
-    let preprocess_start = std::time::Instant::now();
+    let _preprocess_start = std::time::Instant::now();
     let input = preprocess_image(&bytes, state.model.input_size())?;
 
     // Record image size metric
