@@ -63,26 +63,47 @@ def build_clean_model(num_classes, target_size=(224, 224)):
     return models.Model(inputs, outputs)
 
 
+def _read_labels_for_classes():
+    """Detect number of classes from model/labels.json or best_model/calibration.json."""
+    for path in ["model/labels.json", "best_model/calibration.json"]:
+        if os.path.exists(path):
+            with open(path) as f:
+                meta = json.load(f)
+            labels = meta.get("labels")
+            if labels:
+                return len(labels)
+    log.warning("Could not detect num_classes from metadata; defaulting to 4.")
+    return 4
+
+
 log.info("=== EXPORT STARTED (v3.0) ===")
 try:
-    MODEL_KERAS_PATH = "best_model/best_model.keras"
+    CKPT_DIR = "best_model"
+    WEIGHTS_PATH = os.path.join(CKPT_DIR, "model.weights.h5")
+    MODEL_KERAS_PATH = os.path.join(CKPT_DIR, "best_model.keras")
     OUTPUT_DIR = "model"
     saved_model_dir = os.path.join(OUTPUT_DIR, "saved_model")
     tflite_path = os.path.join(OUTPUT_DIR, "model.tflite")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    if not os.path.exists(MODEL_KERAS_PATH):
-        raise FileNotFoundError(f"Model file not found at {MODEL_KERAS_PATH}")
+    # Use weights H5 as primary source (portable, no Lambda serialization issues)
+    if not os.path.exists(WEIGHTS_PATH):
+        raise FileNotFoundError(
+            f"Weights file not found at {WEIGHTS_PATH}. "
+            "Run the notebook Cell 31 (Save Model) first to generate it."
+        )
 
-    log.info(f"Loading trained weights from {MODEL_KERAS_PATH}...")
-    original_model = tf.keras.models.load_model(MODEL_KERAS_PATH, compile=False)
+    log.info(f"Detecting model configuration...")
+    num_classes = _read_labels_for_classes()
 
-    log.info("Building clean architecture (CBAM + lightweight head)...")
-    num_classes = original_model.output_shape[-1]
+    log.info(f"Building export architecture ({num_classes} classes)...")
     clean_model = build_clean_model(num_classes=num_classes)
-    clean_model.set_weights(original_model.get_weights())
-    log.info("Weights cloned successfully.")
+
+    log.info(f"Loading trained weights from {WEIGHTS_PATH}...")
+    clean_model.load_weights(WEIGHTS_PATH)
+    log.info("Weights loaded successfully.")
+
 
     # ─── Export SavedModel (raw logits) ───
     log.info(f"Exporting SavedModel (raw logits) at: {saved_model_dir}...")
