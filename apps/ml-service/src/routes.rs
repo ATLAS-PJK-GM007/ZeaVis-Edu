@@ -61,7 +61,7 @@ pub fn metadata_response(model_path: String, model_loaded: bool, input_size: u32
 
 pub fn prediction_response(prediction: Prediction) -> PredictionResponse {
     PredictionResponse {
-        status: "ok".to_string(),
+        status: prediction.status,
         label: prediction.label,
         confidence: prediction.confidence,
         probabilities: prediction.probabilities,
