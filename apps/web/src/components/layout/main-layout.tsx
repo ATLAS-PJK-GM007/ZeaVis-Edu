@@ -3,11 +3,15 @@ import { Footer } from "./footer";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
 import { Leaf, Menu } from "lucide-react";
+import { useUiStore } from "@/store/ui-store";
 
 type Props = { children: ReactNode };
 
 export function MainLayout({ children }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
+  const setIsSidebarOpen = useUiStore((state) => state.setIsSidebarOpen);
 
   return (
     <div className="flex w-full h-screen bg-[#ECF4E8] overflow-hidden relative">
@@ -15,7 +19,13 @@ export function MainLayout({ children }: Props) {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col w-full h-screen overflow-hidden"
+        onClick={() => {
+          if (isSidebarOpen) {
+            setIsSidebarOpen(false);
+          }
+        }}
+      >
         {/* Header Mobile */}
         <div className="md:hidden flex items-center justify-between px-5 h-20 bg-[#306D29] text-white shrink-0 shadow-sm z-20">
           <div className="flex items-center gap-3 font-semibold">
@@ -40,10 +50,12 @@ export function MainLayout({ children }: Props) {
         </div>
 
         {/* Mobile Navigation */}
-        <MobileNav
-          open={mobileMenuOpen}
-          onClose={() => setMobileMenuOpen(false)}
-        />
+        <div className="block md:hidden shrink-0">
+          <MobileNav
+            open={mobileMenuOpen}
+            onClose={() => setMobileMenuOpen(false)}
+          />
+        </div>
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
