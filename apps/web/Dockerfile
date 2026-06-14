@@ -5,6 +5,10 @@ COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
+<<<<<<< HEAD
+=======
+ENV BUN_INSTALL_FROZEN_LOCKFILE=0
+>>>>>>> 02ae0221749491518468e6bd9c56084f9687cd34
 RUN bun install
 
 COPY packages/shared packages/shared
