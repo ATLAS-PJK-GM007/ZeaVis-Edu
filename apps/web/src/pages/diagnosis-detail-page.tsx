@@ -71,11 +71,7 @@ export function DiagnosisDetailPage() {
             Hasil deteksi AI dan panduan edukasi
           </p>
         </div>
-        <Button
-          asChild
-          variant="outline"
-          className="border-[#214B11] text-[#214B11] hover:bg-[#214B11] hover:text-white"
-        >
+        <Button asChild variant="outline">
           <Link to="/diagnoses">Kembali ke Riwayat</Link>
         </Button>
       </div>

@@ -9,6 +9,7 @@ import {
   RefreshCcw,
   FlaskConical,
   CheckCircle2,
+  Camera,
 } from "lucide-react";
 import { RiskBadge } from "@/components/risk-badge";
 
@@ -62,10 +63,8 @@ export function DiagnosisResultView({
             alt="Daun yang dianalisis"
             className="w-full h-48 md:h-64 object-cover rounded-xl"
           />
-          <div className="mt-3 flex items-center gap-2 text-slate-500 text-sm px-1">
-            <span className="w-4 h-4 bg-slate-200 rounded flex items-center justify-center text-[10px]">
-              📷
-            </span>
+          <div className="mt-3 flex items-center gap-2 text-slate-500 text-md px-1">
+            <Camera className="w-5 h-5 text-gray-500" />
             Gambar yang dianalisis
           </div>
         </div>
