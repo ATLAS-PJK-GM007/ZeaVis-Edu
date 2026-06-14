@@ -19,13 +19,7 @@ export function MainLayout({ children }: Props) {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full h-screen overflow-hidden"
-        onClick={() => {
-          if (isSidebarOpen) {
-            setIsSidebarOpen(false);
-          }
-        }}
-      >
+      <div className="flex-1 flex flex-col w-full h-screen overflow-hidden">
         {/* Header Mobile */}
         <div className="md:hidden flex items-center justify-between px-5 h-20 bg-[#306D29] text-white shrink-0 shadow-sm z-20">
           <div className="flex items-center gap-3 font-semibold">

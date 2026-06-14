@@ -3,14 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Leaf,
   LogOut,
-  Menu,
-  ChevronLeft,
+  ChevronsLeft,
   LayoutDashboard,
   Scan,
   Activity,
   BookOpen,
   UserCheck,
   ChartBar,
+  ChevronsRight,
 } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 import { useAuthStore } from "@/store/auth-store";
@@ -81,6 +81,7 @@ export function Sidebar() {
           </div>
         </div>
 
+        {/* Toggle Button */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className={`rounded-xl transition-colors flex items-center justify-center shrink-0 ${
@@ -91,9 +92,9 @@ export function Sidebar() {
           title={isSidebarOpen ? "Sembunyikan Menu" : "Buka Menu"}
         >
           {isSidebarOpen ? (
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronsLeft className="w-7 h-7" />
           ) : (
-            <Menu className="w-6 h-6" />
+            <ChevronsRight className="w-7 h-7" />
           )}
         </button>
       </div>
@@ -103,7 +104,6 @@ export function Sidebar() {
         className={`flex-1 overflow-y-auto py-6 flex flex-col gap-3 ${isSidebarOpen ? "px-5" : "px-0 items-center"}`}
       >
         {filteredNavItems.map((item) => {
-          // Skip expert-only items for non-expert users
           if (item.expertOnly && !isExpert) {
             return null;
           }
@@ -116,7 +116,6 @@ export function Sidebar() {
               key={item.path}
               to={item.path}
               title={item.label}
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={`flex items-center rounded-full font-medium transition-all ${
                 isSidebarOpen
                   ? "px-4 py-3 gap-3 text-[16px] w-full"
