@@ -72,6 +72,14 @@ jobs:
       - name: Install Tauri CLI
         run: cd apps/tauri && bun install
 
+      - name: Init Tauri Android project
+        working-directory: apps/tauri
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+          NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+        run: bun tauri android init
+
       - name: Build Tauri Android APK
         working-directory: apps/tauri
         env:
