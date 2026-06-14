@@ -118,6 +118,9 @@ export function CatalogPage() {
             return (
               <div
                 key={disease.slug}
+                onClick={() =>
+                  setExpandedId(isExpanded ? null : disease.slug)
+                }
                 className={`bg-white rounded-2xl border transition-all duration-300 ${
                   isExpanded
                     ? "border-[#214B11]/30 shadow-md ring-1 ring-[#214B11]/5"
@@ -126,9 +129,6 @@ export function CatalogPage() {
               >
                 {/* Accordion Header */}
                 <div
-                  onClick={() =>
-                    setExpandedId(isExpanded ? null : disease.slug)
-                  }
                   className="flex items-center justify-between p-4 md:p-5 cursor-pointer select-none"
                 >
                   <div className="flex items-center gap-4">
