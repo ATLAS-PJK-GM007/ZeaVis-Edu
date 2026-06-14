@@ -5,7 +5,7 @@ COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
-RUN bun install
+RUN bun install --no-frozen-lockfile
 
 COPY packages/shared packages/shared
 COPY apps/web apps/web
