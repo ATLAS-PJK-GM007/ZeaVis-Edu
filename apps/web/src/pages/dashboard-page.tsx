@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUiStore } from "@/store/ui-store";
 import { apiClient } from "@/lib/api-client";
-import bg from "@/assets/images/dashboard-bg.png";
+import bg from "@/assets/images/dashboard-bg.webp";
 
 export function DashboardPage() {
   const { dashboardCompact } = useUiStore();

@@ -304,7 +304,7 @@ export function ScanPage() {
 
               <div className="mt-4">
                 <div className="rounded-lg overflow-hidden mt-4">
-                  <div className="relative h-36 overflow-hidden bg-[url('/src/assets/images/scan-guide-bg.png')] bg-cover bg-center text-white md:h-44">
+                  <div className="relative h-36 overflow-hidden bg-[url('/src/assets/images/scan-guide-bg.webp')] bg-cover bg-center text-white md:h-44">
                     <div className="absolute inset-0 bg-black/25" />
                     <div className="absolute inset-0 bg-linear-to-b from-black/5 via-transparent to-black/35" />
                     <div className="relative z-10 flex h-full flex-col items-center justify-center gap-5 text-center">

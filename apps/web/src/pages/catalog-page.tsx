@@ -1,174 +1,268 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
-import type { RiskLevel } from '@zeavis/shared';
-import { Card, CardContent } from '@/components/ui/card';
-import { RiskBadge } from '@/components/risk-badge';
-import { apiClient } from '@/lib/api-client';
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  CheckCircle2,
+  Pill,
+  ShieldCheck,
+  Search,
+  Leaf,
+} from "lucide-react";
+import { apiClient } from "@/lib/api-client";
+import { RiskBadge } from "@/components/risk-badge";
+import { diseaseCatalogSeed } from "@zeavis/shared/diseases";
+
 
 export function CatalogPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialRisk = searchParams.get('risk') as RiskLevel | null;
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [riskFilter, setRiskFilter] = useState("all");
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [riskFilter, setRiskFilter] = useState<RiskLevel | 'all'>(initialRisk ?? 'all');
-
-  // Sync URL params with state
-  useEffect(() => {
-    if (initialRisk && initialRisk !== riskFilter) {
-      setRiskFilter(initialRisk);
-    }
-  }, [initialRisk]);
-
-  const { data: diseases, isLoading, error } = useQuery({
-    queryKey: ['diseases'],
+  const { data: diseases, isLoading } = useQuery({
+    queryKey: ["diseases"],
     queryFn: () => apiClient.getDiseases(),
   });
 
-  const filteredDiseases = (diseases || [])
-    .sort((a, b) => a.displayOrder - b.displayOrder)
-    .filter((disease) => {
+  const filteredDiseases = useMemo(() => {
+    if (!diseases) return [];
+
+    return diseases.filter((disease) => {
       const matchesSearch =
         disease.commonName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        disease.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        disease.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        disease.symptoms.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
+        disease.symptoms.some((symptom) =>
+          symptom.toLowerCase().includes(searchQuery.toLowerCase()),
+        );
 
-      const matchesRisk = riskFilter === 'all' || disease.riskLevel === riskFilter;
+      const matchesRisk =
+        riskFilter === "all" || disease.riskLevel === riskFilter;
 
       return matchesSearch && matchesRisk;
     });
+  }, [diseases, searchQuery, riskFilter]);
+
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        Memuat pustaka penyakit...
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-800">Pustaka Penyakit</h1>
-          <p className="text-gray-500 mt-1 text-md">
-            Referensi lengkap penyakit dan kondisi daun jagung yang dapat dideteksi oleh sistem AI ZeaVis Edu
-          </p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+      {/* Page Title */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-[#214B11]">
+          Pustaka Penyakit
+        </h1>
+        <p className="mt-1 text-muted-foreground text-sm md:text-base">
+          Referensi lengkap penyakit dan kondisi daun jagung yang dapat
+          dideteksi oleh sistem AI ZeaVis Edu.
+        </p>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex flex-col md:flex-row gap-4 items-end bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex-1 w-full space-y-1.5">
+          <label className="text-sm font-semibold text-slate-700">
+            Cari penyakit
+          </label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari berdasarkan nama atau gejala..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#214B11]/20 focus:border-[#214B11] transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="w-full md:w-48 space-y-1.5 shrink-0">
+          <label className="text-sm font-semibold text-slate-700">
+            Filter risiko
+          </label>
+          <select
+            value={riskFilter}
+            onChange={(e) => setRiskFilter(e.target.value)}
+            className="w-full py-2 px-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#214B11]/20 focus:border-[#214B11] transition-all bg-white"
+          >
+            <option value="all">Semua Risiko</option>
+            <option value="high">Risiko Tinggi</option>
+            <option value="medium">Risiko Sedang</option>
+            <option value="low">Risiko Rendah</option>
+          </select>
         </div>
       </div>
 
-      {/* Filters */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-end">
-          <div className="flex-1">
-            <label htmlFor="search" className="block text-sm font-medium mb-2">
-              Cari penyakit
-            </label>
-            <div className="relative">
-              <AlertCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                id="search"
-                type="text"
-                placeholder="Cari berdasarkan nama atau gejala..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-border bg-background pl-10 pr-3 py-2 text-sm"
-              />
-            </div>
+      {/* Accordion List */}
+      <div className="space-y-4">
+        {filteredDiseases.length === 0 ? (
+          <div className="text-center py-10 bg-white rounded-2xl border border-slate-200">
+            <p className="text-slate-500">
+              Tidak ada penyakit yang sesuai dengan pencarianmu.
+            </p>
           </div>
-          <div>
-            <label htmlFor="risk-filter" className="block text-sm font-medium mb-2">
-              Filter risiko
-            </label>
-            <select
-              id="risk-filter"
-              value={riskFilter}
-              onChange={(e) => {
-                const v = e.target.value as RiskLevel | 'all';
-                setRiskFilter(v);
-                const next = new URLSearchParams(searchParams);
-                if (v === 'all') next.delete('risk');
-                else next.set('risk', v);
-                setSearchParams(next);
-              }}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="all">Semua Risiko</option>
-              <option value="low">Risiko Rendah</option>
-              <option value="medium">Risiko Sedang</option>
-              <option value="high">Risiko Tinggi</option>
-            </select>
-          </div>
-        </div>
+        ) : (
+          filteredDiseases.map((disease) => {
+            const isExpanded = expandedId === disease.slug;
+            
+            const seedData = diseaseCatalogSeed.find(seed => seed.slug === disease.slug);
+            const finalImageUrl = disease.imageUrl || seedData?.imageUrl || "https://placehold.co/100x100?text=Daun";
+            const finalMedicines = disease.medicineRecommendations || seedData?.medicineRecommendations;
 
-        {isLoading && (
-          <Card className="p-8 text-center text-muted-foreground">
-            Memuat katalog...
-          </Card>
-        )}
 
-        {error && (
-          <Card className="p-8 text-center text-red-600">
-            Katalog belum tersedia
-          </Card>
-        )}
-
-        {!isLoading && !error && filteredDiseases.length === 0 && (
-          <Card className="p-8 text-center text-muted-foreground">
-            Tidak ada penyakit yang cocok dengan filter ini.
-          </Card>
-        )}
-
-        {!isLoading && !error && filteredDiseases.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {filteredDiseases.map((disease) => (
-              <Link
+            return (
+              <div
                 key={disease.slug}
-                to={`/catalog/${disease.slug}`}
-                className="block transition-transform hover:scale-[1.03]"
+                className={`bg-white rounded-2xl border transition-all duration-300 ${
+                  isExpanded
+                    ? "border-[#214B11]/30 shadow-md ring-1 ring-[#214B11]/5"
+                    : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
+                }`}
               >
-                <Card className="h-full rounded-2xl bg-white shadow-sm hover:shadow-md">
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
+                {/* Accordion Header */}
+                <div
+                  onClick={() =>
+                    setExpandedId(isExpanded ? null : disease.slug)
+                  }
+                  className="flex items-center justify-between p-4 md:p-5 cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={finalImageUrl}
+                      alt={disease.commonName}
+                      className="w-12 h-12 md:w-16 md:h-16 rounded-xl object-cover shrink-0 bg-slate-100"
+                    />
+                    <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                         <h3 className="text-lg font-bold text-[#214B11]">
                           {disease.commonName}
                         </h3>
-                        <p className="text-sm text-slate-400 italic">
-                          {disease.label}
-                        </p>
+                        <div className="w-fit">
+                          <RiskBadge level={disease.riskLevel} />
+                        </div>
                       </div>
-                      <RiskBadge level={disease.riskLevel} />
+                      <p className="text-sm text-slate-500 italic mt-0.5">
+                        {disease.label}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-50 text-slate-400">
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Accordion Content */}
+                {isExpanded && (
+                  <div className="p-4 md:p-6 border-t border-slate-100 animate-in slide-in-from-top-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <img
+                        src={
+                          finalImageUrl
+                        }
+                        alt="Detail Penyakit"
+                        className="w-full h-48 md:h-full object-cover rounded-xl"
+                      />
+
+                      <div className="space-y-5">
+                        <div>
+                          <h4 className="font-bold text-[#214B11] flex items-center gap-2 mb-2">
+                            Deskripsi
+                          </h4>
+                          <p className="text-sm text-slate-600 leading-relaxed">
+                            {disease.description || disease.summary}
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="font-bold text-[#214B11] flex items-center gap-2 mb-3">
+                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            Gejala
+                          </h4>
+                          <ul className="space-y-2">
+                            {disease.symptoms?.map((symptom, idx) => (
+                              <li
+                                key={idx}
+                                className="flex items-start gap-2 text-sm text-slate-600"
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                                <span>{symptom}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
                     </div>
 
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {disease.summary}
-                    </p>
-
-                    {disease.symptoms.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-muted-foreground mb-1">
-                          Gejala:
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                      <div className="bg-[#F2F8F0] border border-[#D5E8CE] rounded-xl p-5">
+                        <h4 className="font-bold text-[#214B11] flex items-center gap-2 mb-3">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                          Panduan Pencegahan
                         </h4>
-                        <ul className="space-y-1">
-                          {disease.symptoms.slice(0, 2).map((symptom, index) => (
-                            <li key={index} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                              <span className="text-primary mt-0.5">•</span>
-                              {symptom}
+                        <ul className="space-y-2">
+                          {disease.recommendations?.map((rec, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-start gap-2 text-sm text-slate-700"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                              <span>{rec}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                    )}
 
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <div
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: disease.accentColor }}
-                      />
-                      <span className="text-xs text-primary font-medium">
-                        Lihat detail →
-                      </span>
+                      <div className="bg-[#F8F4FD] border border-[#E9DDF5] rounded-xl p-5">
+                        <h4 className="font-bold text-purple-900 flex items-center gap-2 mb-3">
+                          <Pill className="w-4 h-4 text-purple-600" />
+                          Rekomendasi Obat
+                        </h4>
+                        <ul className="space-y-2">
+                        {finalMedicines ? (
+                          finalMedicines.map((obat, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                              <Leaf className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
+                              <span>{obat}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-sm text-slate-500 italic">
+                            Belum ada data rekomendasi obat spesifik.
+                          </li>
+                        )}
+                      </ul>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
+      </div>
+
+      {/* Warning Box */}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start mt-8">
+        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-sm text-amber-800 leading-relaxed">
+          <strong>Disclaimer:</strong> Informasi dalam pustaka ini bersifat
+          edukatif dan disarikan dari literatur ilmiah. ZeaVis Edu bukan
+          pengganti diagnosis lapangan oleh{" "}
+          <strong>Petugas Pengamat Organisme Pengganggu Tanaman (POPT)</strong>{" "}
+          atau ahli pertanian berlisensi. Selalu konsultasikan kondisi tanaman
+          Anda kepada dinas pertanian atau balai penelitian tanaman terkait.
+        </p>
+      </div>
     </div>
   );
 }

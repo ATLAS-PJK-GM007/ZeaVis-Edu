@@ -1,10 +1,20 @@
-export const diseaseLabels = ['Bercak Daun', 'Hawar Daun', 'Karat Daun', 'Daun Sehat'] as const;
+export const diseaseLabels = [
+  "Bercak Daun",
+  "Hawar Daun",
+  "Karat Daun",
+  "Daun Sehat",
+] as const;
 export type DiseaseLabel = (typeof diseaseLabels)[number];
 
-export const diseaseSlugs = ['bercak-daun', 'hawar-daun', 'karat-daun', 'daun-sehat'] as const;
+export const diseaseSlugs = [
+  "bercak-daun",
+  "hawar-daun",
+  "karat-daun",
+  "daun-sehat",
+] as const;
 export type DiseaseSlug = (typeof diseaseSlugs)[number];
 
-export const riskLevels = ['low', 'medium', 'high'] as const;
+export const riskLevels = ["low", "medium", "high"] as const;
 export type RiskLevel = (typeof riskLevels)[number];
 
 export type DiseaseCatalogItem = {
@@ -15,6 +25,8 @@ export type DiseaseCatalogItem = {
   description: string;
   symptoms: string[];
   recommendations: string[];
+  medicineRecommendations: string[];
+  imageUrl: string;
   riskLevel: RiskLevel;
   accentColor: string;
   displayOrder: number;
@@ -22,100 +34,133 @@ export type DiseaseCatalogItem = {
 
 export const diseaseCatalogSeed: DiseaseCatalogItem[] = [
   {
-    slug: 'bercak-daun',
-    label: 'Bercak Daun',
-    commonName: 'Gray Leaf Spot',
-    summary: 'Penyakit jamur yang menyebabkan bercak abu-abu pada daun jagung.',
+    slug: "bercak-daun",
+    label: "Bercak Daun",
+    commonName: "Gray Leaf Spot",
+    summary: "Penyakit jamur yang menyebabkan bercak abu-abu pada daun jagung.",
     description:
-      'Bercak Daun adalah penyakit jamur yang disebabkan oleh Cercospora zeae-maydis. Penyakit ini ditandai dengan munculnya bercak berbentuk persegi panjang berwarna abu-abu dengan tepi coklat pada daun jagung. Penyakit ini berkembang pesat dalam kondisi lembab dan dapat mengurangi hasil panen secara signifikan.',
+      "Bercak Daun adalah penyakit jamur yang disebabkan oleh Cercospora zeae-maydis. Penyakit ini ditandai dengan munculnya bercak berbentuk persegi panjang berwarna abu-abu dengan tepi coklat pada daun jagung. Penyakit ini berkembang pesat dalam kondisi lembab dan dapat mengurangi hasil panen secara signifikan.",
     symptoms: [
-      'Bercak berbentuk persegi panjang berwarna abu-abu',
-      'Tepi bercak berwarna coklat atau merah',
-      'Bercak biasanya muncul pada daun bagian bawah terlebih dahulu',
-      'Dalam kondisi lembab, bercak dapat berkembang dengan cepat',
+      "Bercak berbentuk persegi panjang berwarna abu-abu",
+      "Tepi bercak berwarna coklat atau merah",
+      "Bercak biasanya muncul pada daun bagian bawah terlebih dahulu",
+      "Dalam kondisi lembab, bercak dapat berkembang dengan cepat",
     ],
     recommendations: [
-      'Gunakan varietas jagung yang tahan terhadap penyakit ini',
-      'Terapkan rotasi tanaman dengan tanaman non-inang',
-      'Kurangi kelembaban dengan meningkatkan jarak tanam',
-      'Aplikasikan fungisida jika diperlukan',
-      'Buang sisa tanaman yang terinfeksi setelah panen',
+      "Gunakan varietas jagung yang tahan terhadap penyakit ini",
+      "Terapkan rotasi tanaman dengan tanaman non-inang",
+      "Kurangi kelembaban dengan meningkatkan jarak tanam",
+      "Aplikasikan fungisida jika diperlukan",
+      "Buang sisa tanaman yang terinfeksi setelah panen",
     ],
-    riskLevel: 'high',
-    accentColor: '#9CA3AF',
+    medicineRecommendations: [
+      "Azoksistrobin 250 SC: fungisida strobilurin sistemik",
+      "Piraklostrobin (Headline 250 EC): 1 mL/L air",
+      "Kombinasi strobilurin + triazol untuk efikasi maksimal",
+      "Aplikasi preventif lebih efektif daripada kuratif",
+    ],
+    imageUrl:
+      "https://images.unsplash.com/photo-1651029826601-9d3fae8926d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+    riskLevel: "high",
+    accentColor: "#DC2626",
     displayOrder: 1,
   },
   {
-    slug: 'hawar-daun',
-    label: 'Hawar Daun',
-    commonName: 'Northern/Southern Leaf Blight',
-    summary: 'Penyakit jamur yang menyebabkan hawar pada daun jagung dengan gejala bercak memanjang.',
+    slug: "hawar-daun",
+    label: "Hawar Daun",
+    commonName: "Northern/Southern Leaf Blight",
+    summary:
+      "Penyakit jamur yang menyebabkan hawar pada daun jagung dengan gejala bercak memanjang.",
     description:
-      'Hawar Daun adalah penyakit jamur yang disebabkan oleh Exserohilum turcicum (Northern Leaf Blight) atau Bipolaris maydis (Southern Leaf Blight). Penyakit ini ditandai dengan munculnya bercak memanjang berwarna coklat atau abu-abu pada daun jagung. Penyakit ini dapat menyebabkan kerusakan daun yang parah dan mengurangi hasil panen.',
+      "Hawar Daun adalah penyakit jamur yang disebabkan oleh Exserohilum turcicum (Northern Leaf Blight) atau Bipolaris maydis (Southern Leaf Blight). Penyakit ini ditandai dengan munculnya bercak memanjang berwarna coklat atau abu-abu pada daun jagung. Penyakit ini dapat menyebabkan kerusakan daun yang parah dan mengurangi hasil panen.",
     symptoms: [
-      'Bercak memanjang berwarna coklat atau abu-abu',
-      'Bercak dapat mencapai panjang 10-15 cm',
-      'Tepi bercak sering berwarna lebih gelap',
-      'Dalam kondisi lembab, bercak dapat berkembang dengan cepat',
-      'Daun dapat mati jika terinfeksi parah',
+      "Bercak memanjang berwarna coklat atau abu-abu",
+      "Bercak dapat mencapai panjang 10-15 cm",
+      "Tepi bercak sering berwarna lebih gelap",
+      "Dalam kondisi lembab, bercak dapat berkembang dengan cepat",
+      "Daun dapat mati jika terinfeksi parah",
     ],
     recommendations: [
-      'Gunakan varietas jagung yang tahan terhadap penyakit ini',
-      'Terapkan rotasi tanaman dengan tanaman non-inang',
-      'Kurangi kelembaban dengan meningkatkan jarak tanam',
-      'Aplikasikan fungisida jika diperlukan',
-      'Buang sisa tanaman yang terinfeksi setelah panen',
+      "Gunakan varietas jagung yang tahan terhadap penyakit ini",
+      "Terapkan rotasi tanaman dengan tanaman non-inang",
+      "Kurangi kelembaban dengan meningkatkan jarak tanam",
+      "Aplikasikan fungisida jika diperlukan",
+      "Buang sisa tanaman yang terinfeksi setelah panen",
     ],
-    riskLevel: 'high',
-    accentColor: '#8B4513',
+    medicineRecommendations: [
+      "Mancozeb 80 WP: 2 g/L air, semprotkan 7–10 hari sekali",
+      "Propineb 70 WP: 2 g/L air, dimulai saat gejala awal",
+      "Azoksistrobin + Difenokonazol (Amistar Top 325 SC)",
+      "Klorotalonil 75 WP sebagai fungisida protektif",
+    ],
+    riskLevel: "high",
+    accentColor: "#DC2626",
     displayOrder: 2,
+    imageUrl:
+      "https://images.unsplash.com/photo-1671559457949-5ac52323e19d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
   },
   {
-    slug: 'karat-daun',
-    label: 'Karat Daun',
-    commonName: 'Common Rust',
-    summary: 'Penyakit jamur yang menyebabkan pustula berwarna coklat kemerahan pada daun jagung.',
+    slug: "karat-daun",
+    label: "Karat Daun",
+    commonName: "Common Rust",
+    summary:
+      "Penyakit jamur yang menyebabkan pustula berwarna coklat kemerahan pada daun jagung.",
     description:
-      'Karat Daun adalah penyakit jamur yang disebabkan oleh Puccinia sorghi. Penyakit ini ditandai dengan munculnya pustula kecil berwarna coklat kemerahan pada permukaan daun jagung. Penyakit ini berkembang dalam kondisi lembab dan dapat mengurangi hasil panen jika tidak dikendalikan.',
+      "Karat Daun adalah penyakit jamur yang disebabkan oleh Puccinia sorghi. Penyakit ini ditandai dengan munculnya pustula kecil berwarna coklat kemerahan pada permukaan daun jagung. Penyakit ini berkembang dalam kondisi lembab dan dapat mengurangi hasil panen jika tidak dikendalikan.",
     symptoms: [
-      'Pustula kecil berwarna coklat kemerahan pada permukaan daun',
-      'Pustula biasanya muncul pada daun bagian bawah terlebih dahulu',
-      'Dalam kondisi lembab, pustula dapat berkembang dengan cepat',
-      'Daun dapat menjadi kuning dan mati jika terinfeksi parah',
+      "Pustula kecil berwarna coklat kemerahan pada permukaan daun",
+      "Pustula biasanya muncul pada daun bagian bawah terlebih dahulu",
+      "Dalam kondisi lembab, pustula dapat berkembang dengan cepat",
+      "Daun dapat menjadi kuning dan mati jika terinfeksi parah",
     ],
     recommendations: [
-      'Gunakan varietas jagung yang tahan terhadap penyakit ini',
-      'Terapkan rotasi tanaman dengan tanaman non-inang',
-      'Kurangi kelembaban dengan meningkatkan jarak tanam',
-      'Aplikasikan fungisida jika diperlukan',
-      'Buang sisa tanaman yang terinfeksi setelah panen',
+      "Gunakan varietas jagung yang tahan terhadap penyakit ini",
+      "Terapkan rotasi tanaman dengan tanaman non-inang",
+      "Kurangi kelembaban dengan meningkatkan jarak tanam",
+      "Aplikasikan fungisida jika diperlukan",
+      "Buang sisa tanaman yang terinfeksi setelah panen",
     ],
-    riskLevel: 'medium',
-    accentColor: '#DC2626',
+    medicineRecommendations: [
+      "Propikonazol 250 EC: 0.5 mL/L air, 2 minggu sekali",
+      "Tebukonazol 250 EC: fungisida sistemik triazol",
+      "Trifloksistrobin + Tebukonazol (Nativo 75 WG)",
+      "Aplikasikan saat ≥ 5% permukaan daun terinfeksi",
+    ],
+    imageUrl:
+      "https://images.unsplash.com/photo-1660904900487-3c6fbcb3b387?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+    riskLevel: "medium",
+    accentColor: "#8B4513",
     displayOrder: 3,
   },
   {
-    slug: 'daun-sehat',
-    label: 'Daun Sehat',
-    commonName: 'Healthy Leaf',
-    summary: 'Daun jagung yang sehat tanpa tanda-tanda penyakit atau kerusakan.',
+    slug: "daun-sehat",
+    label: "Daun Sehat",
+    commonName: "Healthy Leaf",
+    summary:
+      "Daun jagung yang sehat tanpa tanda-tanda penyakit atau kerusakan.",
     description:
-      'Daun Sehat menunjukkan kondisi daun jagung yang optimal tanpa adanya gejala penyakit jamur atau kerusakan lainnya. Daun yang sehat memiliki warna hijau cerah, tekstur normal, dan tidak menunjukkan bercak, pustula, atau tanda-tanda kerusakan lainnya.',
+      "Daun Sehat menunjukkan kondisi daun jagung yang optimal tanpa adanya gejala penyakit jamur atau kerusakan lainnya. Daun yang sehat memiliki warna hijau cerah, tekstur normal, dan tidak menunjukkan bercak, pustula, atau tanda-tanda kerusakan lainnya.",
+    imageUrl: "https://cdn.iespa.or.id/image/manfaat-daun-jagung/public",
     symptoms: [
-      'Warna daun hijau cerah dan seragam',
-      'Tekstur daun normal dan tidak ada bercak',
-      'Tidak ada pustula atau tanda-tanda penyakit lainnya',
-      'Daun terlihat kuat dan tidak layu',
+      "Warna daun hijau cerah dan seragam",
+      "Tekstur daun normal dan tidak ada bercak",
+      "Tidak ada pustula atau tanda-tanda penyakit lainnya",
+      "Daun terlihat kuat dan tidak layu",
     ],
     recommendations: [
-      'Pertahankan praktik budidaya yang baik',
-      'Lakukan monitoring rutin untuk mendeteksi penyakit sejak dini',
-      'Terapkan rotasi tanaman untuk menjaga kesehatan tanah',
-      'Berikan nutrisi yang cukup untuk pertumbuhan optimal',
-      'Jaga kelembaban tanah yang sesuai',
+      "Pertahankan praktik budidaya yang baik",
+      "Lakukan monitoring rutin untuk mendeteksi penyakit sejak dini",
+      "Terapkan rotasi tanaman untuk menjaga kesehatan tanah",
+      "Berikan nutrisi yang cukup untuk pertumbuhan optimal",
+      "Jaga kelembaban tanah yang sesuai",
     ],
-    riskLevel: 'low',
-    accentColor: '#22C55E',
+    medicineRecommendations: [
+      "Tidak diperlukan aplikasi fungisida saat ini",
+      "Pupuk foliar mikro (Fe, Mn, Zn) dapat memperkuat ketahanan",
+      "Pupuk organik/biostimulant untuk memperbaiki kondisi tanah",
+    ],
+    riskLevel: "low",
+    accentColor: "#22C55E",
     displayOrder: 4,
   },
 ];
