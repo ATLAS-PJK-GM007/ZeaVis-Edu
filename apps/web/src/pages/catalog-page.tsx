@@ -8,7 +8,6 @@ import {
   Pill,
   ShieldCheck,
   Search,
-  Leaf,
   FlaskConical,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
@@ -105,7 +104,7 @@ export function CatalogPage() {
           <div className="text-center py-10 bg-white rounded-2xl border border-slate-200">
             <p className="text-slate-500">
               Tidak ada penyakit yang sesuai dengan pencarianmu.
-            </p>
+            </p>F
           </div>
         ) : (
           filteredDiseases.map((disease) => {

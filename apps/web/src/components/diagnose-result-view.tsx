@@ -8,8 +8,9 @@ import {
   Pill,
   RefreshCcw,
   FlaskConical,
+  CheckCircle2,
 } from "lucide-react";
-import { RiskBadge } from "./risk-badge";
+import { RiskBadge } from "@/components/risk-badge";
 
 type Props = {
   imageUrl: string;
@@ -103,7 +104,7 @@ export function DiagnosisResultView({
             <span className="text-sm font-medium text-slate-600">
               Tingkat Keparahan:
             </span>
-            <RiskBadge level={getRiskLevelKey(riskLevel ?? "medium")} />
+            <RiskBadge level={getRiskLevelKey(riskLevel)} />
           </div>
         </div>
       </div>
@@ -193,7 +194,7 @@ export function DiagnosisResultView({
           >
             <div className="flex items-center gap-3 font-bold text-[#6B21A8]">
               <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Pill className="w-4 h-4 text-purple-700" />
+                <FlaskConical className="w-4 h-4 text-purple-700" />
               </div>
               Rekomendasi Obat
             </div>
@@ -208,7 +209,7 @@ export function DiagnosisResultView({
               <ul className="space-y-2">
                 {medicines.map((med, i) => (
                   <li key={i} className="flex gap-2 items-start">
-                    <FlaskConical className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />{" "}
+                    <Pill className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />{" "}
                     <span>{med}</span>
                   </li>
                 ))}
@@ -235,25 +236,5 @@ export function DiagnosisResultView({
         </div>
       </div>
     </div>
-  );
-}
-
-function CheckCircle2(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
   );
 }
