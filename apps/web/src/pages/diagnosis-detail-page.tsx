@@ -45,7 +45,7 @@ export function DiagnosisDetailPage() {
 
   const diagnosis = query.data;
 
-  // fallback Logic for image and medicine recommendations
+  // Fallback logic for image and medicine recommendations
   const finalImageUrl =
     diagnosis.imageUrl || "/src/assets/images/placeholder-image.png";
 
@@ -64,7 +64,7 @@ export function DiagnosisDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-3xl font-extrabold text-[#214B11]">
+          <h1 className="text-xl md:text-2xl font-bold text-[#214B11]">
             Analisis & Modul Edukasi
           </h1>
           <p className="text-sm font-medium text-slate-500 mt-1">

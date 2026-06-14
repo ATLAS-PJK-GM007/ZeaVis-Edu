@@ -7,7 +7,9 @@ import {
   ShieldCheck,
   Pill,
   RefreshCcw,
+  FlaskConical,
 } from "lucide-react";
+import { RiskBadge } from "./risk-badge";
 
 type Props = {
   imageUrl: string;
@@ -35,6 +37,13 @@ export function DiagnosisResultView({
   onRescan,
 }: Props) {
   const [openSection, setOpenSection] = useState<string>("detail");
+
+  const getRiskLevelKey = (level: string): "low" | "medium" | "high" => {
+    const normalized = level.toLowerCase();
+    if (normalized.includes("rendah")) return "low";
+    if (normalized.includes("tinggi")) return "high";
+    return "medium";
+  };
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? "" : section);
@@ -94,9 +103,7 @@ export function DiagnosisResultView({
             <span className="text-sm font-medium text-slate-600">
               Tingkat Keparahan:
             </span>
-            <span className="px-3 py-1 bg-[#D97706] text-white text-xs font-bold rounded-full">
-              {riskLevel.toUpperCase()}
-            </span>
+            <RiskBadge level={getRiskLevelKey(riskLevel ?? "medium")} />
           </div>
         </div>
       </div>
@@ -201,7 +208,7 @@ export function DiagnosisResultView({
               <ul className="space-y-2">
                 {medicines.map((med, i) => (
                   <li key={i} className="flex gap-2 items-start">
-                    <span className="text-purple-400 shrink-0 mt-0.5">⚕️</span>{" "}
+                    <FlaskConical className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />{" "}
                     <span>{med}</span>
                   </li>
                 ))}
