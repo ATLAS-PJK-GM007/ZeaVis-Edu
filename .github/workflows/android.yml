@@ -147,6 +147,7 @@ jobs:
 
       - name: Create Release and upload APK
         if: github.event_name != 'pull_request'
+        id: release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
