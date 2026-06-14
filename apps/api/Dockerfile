@@ -5,7 +5,7 @@ COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 FROM oven/bun:1.3.14 AS runner
 WORKDIR /app
