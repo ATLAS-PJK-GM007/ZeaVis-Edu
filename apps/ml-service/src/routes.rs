@@ -30,6 +30,7 @@ pub struct MetadataResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PredictionResponse {
+    pub status: String,
     pub label: String,
     pub confidence: f32,
     pub probabilities: std::collections::BTreeMap<String, f32>,
@@ -60,6 +61,7 @@ pub fn metadata_response(model_path: String, model_loaded: bool, input_size: u32
 
 pub fn prediction_response(prediction: Prediction) -> PredictionResponse {
     PredictionResponse {
+        status: prediction.status,
         label: prediction.label,
         confidence: prediction.confidence,
         probabilities: prediction.probabilities,
@@ -130,7 +132,7 @@ pub async fn predict(
     };
 
     // Preprocess the image
-    let preprocess_start = std::time::Instant::now();
+    let _preprocess_start = std::time::Instant::now();
     let input = preprocess_image(&bytes, state.model.input_size())?;
 
     // Record image size metric
@@ -202,33 +204,35 @@ mod tests {
         assert_eq!(response.labels.len(), 4);
         assert_eq!(
             response.labels,
-            vec!["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"]
+            vec!["Bercak Daun", "Daun Sehat", "Hawar Daun", "Karat Daun"]
         );
     }
 
     #[test]
     fn prediction_response_matches_prediction_contract() {
         let prediction = Prediction {
-            label: "Karat Daun".to_string(),
+            status: "confident".to_string(),
+            label: "Hawar Daun".to_string(),
             confidence: 0.6,
             probabilities: {
                 let mut map = std::collections::BTreeMap::new();
                 map.insert("Bercak Daun".to_string(), 0.1);
                 map.insert("Daun Sehat".to_string(), 0.2);
-                map.insert("Karat Daun".to_string(), 0.6);
-                map.insert("Hawar Daun".to_string(), 0.1);
+                map.insert("Hawar Daun".to_string(), 0.6);
+                map.insert("Karat Daun".to_string(), 0.1);
                 map
             },
         };
 
         let response = prediction_response(prediction);
 
-        assert_eq!(response.label, "Karat Daun");
+        assert_eq!(response.status, "confident");
+        assert_eq!(response.label, "Hawar Daun");
         assert_eq!(response.confidence, 0.6);
         assert_eq!(response.probabilities.len(), 4);
         assert_eq!(response.probabilities.get("Bercak Daun"), Some(&0.1));
         assert_eq!(response.probabilities.get("Daun Sehat"), Some(&0.2));
-        assert_eq!(response.probabilities.get("Karat Daun"), Some(&0.6));
-        assert_eq!(response.probabilities.get("Hawar Daun"), Some(&0.1));
+        assert_eq!(response.probabilities.get("Hawar Daun"), Some(&0.6));
+        assert_eq!(response.probabilities.get("Karat Daun"), Some(&0.1));
     }
 }

@@ -62,20 +62,44 @@ jobs:
           echo "HF_TOKEN is set (length: ${#HF_TOKEN})"
           echo "::endgroup::"
 
-          echo "::group::Download model.onnx"
+          echo "::group::Download model files from Hugging Face"
           python -c "
           from huggingface_hub import hf_hub_download
-          import os
-          os.makedirs('model', exist_ok=True)
-          path = hf_hub_download(
-              repo_id='MythEclipse2737/corn-leaf-disease-classifier',
-              filename='model/model.onnx',
-              token=os.environ['HF_TOKEN'],
-              local_dir='.',
-          )
-          print(f'Downloaded: {path}')
+          import os, shutil
+          repo = 'MythEclipse2737/zeavis-edu-corn-leaf-classifier'
+          token = os.environ['HF_TOKEN']
+          base = os.path.abspath('.')
+
+          # Files sit at root of HF repo → copy to correct subdirs
+          # model.onnx goes to model/ for Docker COPY
+          os.makedirs(os.path.join(base, 'model'), exist_ok=True)
+          os.makedirs(os.path.join(base, 'best_model'), exist_ok=True)
+
+          # ONNX → model/model.onnx (Docker expects this path)
+          p = hf_hub_download(repo_id=repo, filename='model.onnx', token=token)
+          shutil.copy2(p, os.path.join(base, 'model', 'model.onnx'))
+          print('model/model.onnx OK')
+
+          # TFLite (optional, for edge)
+          p = hf_hub_download(repo_id=repo, filename='model.tflite', token=token)
+          shutil.copy2(p, os.path.join(base, 'model', 'model.tflite'))
+          print('model/model.tflite OK')
+
+          # Labels
+          p = hf_hub_download(repo_id=repo, filename='labels.json', token=token)
+          shutil.copy2(p, os.path.join(base, 'model', 'labels.json'))
+          print('model/labels.json OK')
+
+          # Keras model + calibration for re-export
+          p = hf_hub_download(repo_id=repo, filename='best_model.keras', token=token)
+          shutil.copy2(p, os.path.join(base, 'best_model', 'best_model.keras'))
+          print('best_model/best_model.keras OK')
+
+          p = hf_hub_download(repo_id=repo, filename='calibration.json', token=token)
+          shutil.copy2(p, os.path.join(base, 'best_model', 'calibration.json'))
+          print('best_model/calibration.json OK')
           "
-          ls -lh model/model.onnx
+          ls -lh model/model.onnx model/model.tflite model/labels.json best_model/best_model.keras 2>/dev/null
           echo "::endgroup::"
 
       - name: Log in to GHCR

@@ -30,7 +30,7 @@ def main():
     parser.add_argument(
         "--opset",
         type=int,
-        default=13,
+        default=18,
         help="ONNX opset version to target",
     )
 
