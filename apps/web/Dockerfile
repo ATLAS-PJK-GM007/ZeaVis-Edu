@@ -1,7 +1,7 @@
 FROM oven/bun:1.3.14 AS builder
 WORKDIR /app
 
-COPY package.json bunfig.toml tsconfig.base.json ./
+COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
