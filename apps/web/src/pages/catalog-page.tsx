@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Search,
   Leaf,
+  FlaskConical,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { RiskBadge } from "@/components/risk-badge";
@@ -224,14 +225,14 @@ export function CatalogPage() {
 
                       <div className="bg-[#F8F4FD] border border-[#E9DDF5] rounded-xl p-5">
                         <h4 className="font-bold text-purple-900 flex items-center gap-2 mb-3">
-                          <Pill className="w-4 h-4 text-purple-600" />
+                          <FlaskConical className="w-4 h-4 text-purple-600" />
                           Rekomendasi Obat
                         </h4>
                         <ul className="space-y-2">
                         {finalMedicines ? (
                           finalMedicines.map((obat, idx) => (
                             <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
-                              <Leaf className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
+                              <Pill className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
                               <span>{obat}</span>
                             </li>
                           ))
