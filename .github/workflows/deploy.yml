@@ -177,7 +177,7 @@ jobs:
               cat << 'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-            WEB_APP_URL=https://zeavisedu.asepharyana.tech
+            WEB_APP_URL=https://zeavisedu.asepharyana.my.id
             ML_SERVICE_URL=http://zeavis-ml:8000
             ENVEOF
             } > .env
