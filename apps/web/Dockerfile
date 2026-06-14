@@ -1,11 +1,10 @@
 FROM oven/bun:1.3.14 AS builder
 WORKDIR /app
 
-COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
+COPY package.json bunfig.toml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
-ENV BUN_INSTALL_FROZEN_LOCKFILE=0
 RUN bun install
 
 COPY packages/shared packages/shared
