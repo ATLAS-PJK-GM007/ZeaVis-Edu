@@ -136,6 +136,10 @@ jobs:
           rm -rf gen/android
           bun tauri android init
 
+      - name: Patch AndroidManifest (CAMERA permission)
+        working-directory: apps/tauri
+        run: bash scripts/patch-android-manifest.sh
+
       - name: Build Tauri Android APK
         working-directory: apps/tauri
         env:
