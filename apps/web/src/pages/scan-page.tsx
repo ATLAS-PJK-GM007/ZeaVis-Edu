@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
@@ -20,6 +20,7 @@ import { diseaseCatalogSeed } from "@zeavis/shared"; // Import data seed lokal d
 import { apiClient } from "@/lib/api-client";
 import { trackScan, trackDiagnosisResult } from "@/lib/telemetry";
 import { DiagnosisResultView } from "../components/diagnose-result-view";
+import { CameraCapture } from "../components/camera-capture";
 
 export function ScanPage() {
   const [fileName, setFileName] = useState<string | null>(null);
@@ -32,6 +33,24 @@ export function ScanPage() {
   const imageRef = useRef<HTMLImageElement | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Camera mode state
+  const [useCamera, setUseCamera] = useState(false);
+  const handleCameraCapture = useCallback(
+    (file: File) => {
+      setFileName(file.name);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+
+      const img = new Image();
+      img.onload = () => {
+        setImageDimensions({ width: img.width, height: img.height });
+      };
+      img.src = url;
+      setUseCamera(false);
+    },
+    [],
+  );
 
   const mutation = useMutation({
     mutationFn: (file: File) => apiClient.createDiagnosis(file),
@@ -112,33 +131,70 @@ export function ScanPage() {
 
               {!previewUrl ? (
                 <div className="space-y-3">
-                  <div
-                    className="w-full border-2 border-dashed border-green-300 rounded-md p-10 h-60 text-center cursor-pointer"
-                    onClick={() => inputRef.current?.click()}
-                  >
-                    <Upload className="mx-auto text-green-500 mb-3" size={48} />
-                    <h3 className="font-semibold text-base text-gray-800 mb-1">
-                      Seret & Lepas Foto Daun
-                    </h3>
-                    <p className="text-xs text-gray-500 mb-3">
-                      atau klik untuk memilih file berkas dari perangkat Anda
-                    </p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full inline-flex items-center gap-1 text-xs font-medium">
-                        <Check size={14} /> PNG, JPG, JPEG, WEBP
-                      </div>
-                      <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full inline-flex items-center gap-1 text-xs font-medium">
-                        <Check size={14} /> Maks. 5 MB
-                      </div>
-                    </div>
+                  {/* Mode toggle */}
+                  <div className="flex rounded-lg bg-gray-100 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setUseCamera(false)}
+                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                        !useCamera
+                          ? "bg-white text-green-700 shadow-sm"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      <Upload size={16} className="inline mr-1.5" />
+                      Unggah
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUseCamera(true)}
+                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                        useCamera
+                          ? "bg-white text-green-700 shadow-sm"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      <Camera size={16} className="inline mr-1.5" />
+                      Kamera
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => inputRef.current?.click()}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Upload size={18} /> Pilih Berkas
-                  </button>
+
+                  {useCamera ? (
+                    <CameraCapture
+                      onCapture={handleCameraCapture}
+                      onClose={() => setUseCamera(false)}
+                    />
+                  ) : (
+                    <>
+                      <div
+                        className="w-full border-2 border-dashed border-green-300 rounded-md p-10 h-60 text-center cursor-pointer"
+                        onClick={() => inputRef.current?.click()}
+                      >
+                        <Upload className="mx-auto text-green-500 mb-3" size={48} />
+                        <h3 className="font-semibold text-base text-gray-800 mb-1">
+                          Seret & Lepas Foto Daun
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-3">
+                          atau klik untuk memilih file berkas dari perangkat Anda
+                        </p>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full inline-flex items-center gap-1 text-xs font-medium">
+                            <Check size={14} /> PNG, JPG, JPEG, WEBP
+                          </div>
+                          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full inline-flex items-center gap-1 text-xs font-medium">
+                            <Check size={14} /> Maks. 5 MB
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => inputRef.current?.click()}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Upload size={18} /> Pilih Berkas
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
