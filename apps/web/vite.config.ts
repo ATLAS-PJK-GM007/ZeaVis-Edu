@@ -9,7 +9,22 @@ export default defineConfig(({ mode }) => {
   const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
 
   return {
-    plugins: [react(), tsconfigPaths(), metricsPlugin()],
+    plugins: [
+      react(),
+      tsconfigPaths(),
+      metricsPlugin(),
+      {
+        name: 'cloudflare-rocket-loader-fix',
+        transformIndexHtml(html) {
+          // Prevent Cloudflare Rocket Loader from mangling <script type="module">
+          // which breaks the entire JS bundle (blank page)
+          return html.replace(
+            /<script type="module"/g,
+            '<script data-cfasync="false" type="module"',
+          );
+        },
+      },
+    ],
     server: {
       proxy: {
         '/api': apiProxyTarget,
