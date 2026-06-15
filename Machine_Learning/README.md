@@ -1,6 +1,8 @@
-# Corn Leaf Disease Classification
+# Pipeline Machine Learning — ZeaVis Edu
 
-Pipeline lengkap untuk klasifikasi penyakit daun jagung menggunakan **EfficientNetV2B0**, mulai dari persiapan dataset, pelatihan di Google Colab, hingga ekspor model ke format **TFLite** dan **TensorFlow.js** untuk kebutuhan produksi.
+> Panduan lengkap: preprocessing dataset, pelatihan di Google Colab, ekspor model ke TFLite, TensorFlow.js, dan ONNX.
+
+← [Kembali ke README utama](../README.md)
 
 ---
 
@@ -391,3 +393,7 @@ export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
 ### Sesi Colab terputus saat training
 **Solusi:** Gunakan callback `ModelCheckpoint` di notebook untuk menyimpan checkpoint secara berkala ke Google Drive, sehingga training bisa dilanjutkan dari checkpoint terakhir tanpa mengulang dari awal.
+
+---
+
+← [Kembali ke README utama](../README.md) &bull; [ML Service →](../apps/ml-service/README.md)

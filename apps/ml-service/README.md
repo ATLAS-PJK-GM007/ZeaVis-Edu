@@ -1,8 +1,25 @@
-# ML Service — Rust Axum ONNX Runtime
+# ML Inference Service — ZeaVis Edu
 
-Layanan inferensi machine learning berbasis Rust dengan Axum web framework dan ONNX Runtime untuk klasifikasi penyakit daun jagung. Service ini menyediakan endpoint HTTP untuk prediksi real-time dengan performa tinggi dan konsumsi resource minimal.
+> Layanan inferensi machine learning berbasis Rust/Axum + ONNX Runtime untuk klasifikasi penyakit daun jagung.
 
-## Fitur
+← [Kembali ke README utama](../../README.md)
+
+---
+
+## Daftar Isi
+
+1. [Fitur](#1-fitur)
+2. [Prasyarat & Instalasi](#2-prasyarat--instalasi)
+3. [Menjalankan Service](#3-menjalankan-service)
+4. [Environment Variables](#4-environment-variables)
+5. [Endpoint API](#5-endpoint-api)
+6. [Verifikasi & Testing](#6-verifikasi--testing)
+7. [Docker Deployment](#7-docker-deployment)
+8. [Troubleshooting](#8-troubleshooting)
+
+---
+
+## 1. Fitur
 
 - **Framework:** Axum (async Rust web framework)
 - **Runtime Inferensi:** ONNX Runtime untuk kompatibilitas lintas platform
@@ -10,14 +27,12 @@ Layanan inferensi machine learning berbasis Rust dengan Axum web framework dan O
 - **Endpoint:** Health check, metadata, dan prediksi gambar
 - **Multipart Upload:** Dukungan upload gambar langsung via HTTP POST
 
-## Prasyarat
+---
+
+## 2. Prasyarat & Instalasi
 
 - Rust 1.70+ dan Cargo
 - Model ONNX di `../../Machine_Learning/model/model.onnx` (atau path custom via `MODEL_PATH`)
-
-## Instalasi & Setup
-
-### Instalasi Dependensi
 
 Dependensi Rust sudah terdaftar di `Cargo.toml`. Cargo akan mengunduh dan mengkompilasi otomatis saat pertama kali build.
 
@@ -27,75 +42,58 @@ cargo build
 
 Output build lokal berada di `target/` dan direktori tersebut diabaikan oleh Git.
 
-## Menjalankan Service Lokal
+---
+
+## 3. Menjalankan Service
 
 Semua perintah di bawah dijalankan dari direktori `apps/ml-service`.
 
-### Opsi 1: Default (Port 8000, Model dari Machine_Learning/)
+### Opsi 1: Default (Port 8000)
 
 ```bash
-cd apps/ml-service
 cargo run
 ```
 
-Service akan mencari model di path default dan mendengarkan di `http://localhost:8000`:
+Service akan mencari model di path default:
 ```
 ../../Machine_Learning/model/model.onnx
 ```
 
 ### Opsi 2: Local Development dengan .env.example (Port 8001)
 
-Untuk development lokal dengan port 8001 (sesuai `.env.example`):
-
 ```bash
-cd apps/ml-service
 source .env.example
 cargo run
 ```
 
-Service akan mendengarkan di `http://localhost:8001` karena `ML_SERVICE_PORT=8001` di `.env.example`.
-
-### Opsi 3: Custom Model Path
-
-Jika model berada di lokasi lain, gunakan environment variable `MODEL_PATH`:
+### Opsi 3: Custom Model Path & Port
 
 ```bash
-cd apps/ml-service
-MODEL_PATH=/path/to/model.onnx cargo run
-```
-
-Atau kombinasikan dengan port custom:
-
-```bash
-cd apps/ml-service
 ML_SERVICE_PORT=9000 MODEL_PATH=/path/to/model.onnx cargo run
 ```
 
-## Environment Variables
+---
+
+## 4. Environment Variables
 
 | Variable | Default | Keterangan |
 |---|---|---|
 | `ML_SERVICE_HOST` | `0.0.0.0` | Bind address |
-| `ML_SERVICE_PORT` | `8000` | Bind port (override untuk local dev dengan `.env.example`) |
+| `ML_SERVICE_PORT` | `8000` | Bind port |
 | `MODEL_PATH` | `../../Machine_Learning/model/model.onnx` | Path ke file model ONNX |
-| `MODEL_INPUT_SIZE` | `224` | Ukuran input gambar (224x224 untuk EfficientNetV2B0) |
+| `MODEL_INPUT_SIZE` | `224` | Ukuran input gambar (224×224 untuk EfficientNetV2B0) |
 | `RUST_LOG` | `info` | Level logging (debug, info, warn, error) |
 
-## Endpoint API
+---
 
-### 1. Health Check
+## 5. Endpoint API
 
-**Default (port 8000):**
+### Health Check
+
 ```bash
 curl http://localhost:8000/health
 ```
 
-**Local dev dengan .env.example (port 8001):**
-```bash
-curl http://localhost:8001/health
-```
-
-**Response:**
 ```json
 {
   "status": "ok",
@@ -103,19 +101,12 @@ curl http://localhost:8001/health
 }
 ```
 
-### 2. Metadata
+### Metadata
 
-**Default (port 8000):**
 ```bash
 curl http://localhost:8000/metadata
 ```
 
-**Local dev dengan .env.example (port 8001):**
-```bash
-curl http://localhost:8001/metadata
-```
-
-**Response:**
 ```json
 {
   "service_name": "zeavis-ml-service",
@@ -123,32 +114,19 @@ curl http://localhost:8001/metadata
   "model_path": "../../Machine_Learning/model/model.onnx",
   "model_loaded": true,
   "input_size": 224,
-  "labels": [
-    "Bercak Daun",
-    "Daun Sehat",
-    "Karat Daun",
-    "Hawar Daun"
-  ]
+  "labels": ["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"]
 }
 ```
 
-### 3. Prediksi
+### Prediksi
 
 Upload gambar daun jagung untuk klasifikasi:
 
-**Default (port 8000):**
 ```bash
 curl -X POST http://localhost:8000/predict \
   -F "file=@/path/to/corn-leaf.jpg"
 ```
 
-**Local dev dengan .env.example (port 8001):**
-```bash
-curl -X POST http://localhost:8001/predict \
-  -F "file=@/path/to/corn-leaf.jpg"
-```
-
-**Response:**
 ```json
 {
   "label": "Daun Sehat",
@@ -162,15 +140,16 @@ curl -X POST http://localhost:8001/predict \
 }
 ```
 
-## Verifikasi & Testing
+---
+
+## 6. Verifikasi & Testing
 
 ### Build Produksi
 
 ```bash
 cargo build --release
+# Binary di target/release/zeavis-ml-service
 ```
-
-Output binary akan tersedia di `target/release/zeavis-ml-service`.
 
 ### Menjalankan Tests
 
@@ -178,104 +157,28 @@ Output binary akan tersedia di `target/release/zeavis-ml-service`.
 cargo test
 ```
 
-Tests mencakup validasi loading model, preprocessing gambar, dan output prediksi.
-
-### Verifikasi Manual
-
-#### Dengan default port 8000:
-
-1. Jalankan service:
-   ```bash
-   cargo run
-   ```
-
-2. Di terminal lain, test health endpoint:
-   ```bash
-   curl http://localhost:8000/health
-   ```
-
-3. Test metadata:
-   ```bash
-   curl http://localhost:8000/metadata
-   ```
-
-4. Test prediksi dengan gambar sample:
-   ```bash
-   curl -X POST http://localhost:8000/predict \
-     -F "file=@../../Machine_Learning/dataset/Daun\ Sehat/sample.jpg"
-   ```
-
-#### Dengan local dev port 8001 (.env.example):
-
-1. Jalankan service dengan .env.example:
-   ```bash
-   source .env.example
-   cargo run
-   ```
-
-2. Di terminal lain, test health endpoint:
-   ```bash
-   curl http://localhost:8001/health
-   ```
-
-3. Test metadata:
-   ```bash
-   curl http://localhost:8001/metadata
-   ```
-
-4. Test prediksi dengan gambar sample:
-   ```bash
-   curl -X POST http://localhost:8001/predict \
-     -F "file=@../../Machine_Learning/dataset/Daun\ Sehat/sample.jpg"
-   ```
-
-## Troubleshooting
-
-### Model tidak ditemukan
-
-**Error:** `Failed to load model: No such file or directory`
-
-**Solusi:** Pastikan file model tersedia di path yang benar:
-```bash
-ls -la ../../Machine_Learning/model/model.onnx
-```
-
-Atau set path custom:
-```bash
-MODEL_PATH=/absolute/path/to/model.onnx cargo run
-```
-
-### Port sudah digunakan
-
-**Error:** `Address already in use`
-
-**Solusi:** Service menggunakan port 8000 secara default. Jika port sudah digunakan, ubah dengan environment variable:
+### Verifikasi Manual (default port 8000)
 
 ```bash
-ML_SERVICE_PORT=9000 cargo run
+# 1. Start service
+cargo run
+
+# 2. Health check
+curl http://localhost:8000/health
+
+# 3. Metadata
+curl http://localhost:8000/metadata
+
+# 4. Prediksi
+curl -X POST http://localhost:8000/predict \
+  -F "file=@../../Machine_Learning/dataset/Daun\ Sehat/sample.jpg"
 ```
 
-Atau jika menggunakan `.env.example` (port 8001), pastikan tidak ada service lain di port tersebut:
+---
 
-```bash
-lsof -i :8001
-```
+## 7. Docker Deployment
 
-### ONNX Runtime tidak kompatibel
-
-**Error:** `ONNX Runtime initialization failed`
-
-**Solusi:** Pastikan ONNX Runtime binary kompatibel dengan sistem operasi. Cargo akan mengunduh binary yang sesuai otomatis. Jika masalah persisten, coba rebuild:
-```bash
-cargo clean
-cargo build
-```
-
-## Deployment
-
-### Docker
-
-Service dapat di-deploy via Docker. Jalankan build dari root repository karena Dockerfile menyalin source service dan artifact ONNX dari beberapa direktori repo.
+Service dapat di-deploy via Docker. Build dari root repository karena Dockerfile menyalin source service dan artifact ONNX dari beberapa direktori repo.
 
 ```bash
 docker build -f apps/ml-service/Dockerfile -t zeavis-ml-service .
@@ -284,11 +187,42 @@ docker run -p 8000:8000 zeavis-ml-service
 
 Pastikan `Machine_Learning/model/model.onnx` sudah dibuat sebelum build image.
 
-### Docker Compose
+---
 
-Lihat `docker-compose.yml` di root repository untuk deployment lengkap dengan web, API, dan ML service.
+## 8. Troubleshooting
 
-## Dokumentasi Terkait
+### Model tidak ditemukan
 
-- [`Machine_Learning/README.md`](../../Machine_Learning/README.md) — Panduan training dan ekspor model ONNX
-- [`README.md`](../../README.md) — Dokumentasi proyek utama
+**Error:** `Failed to load model: No such file or directory`
+
+**Solusi:**
+```bash
+ls -la ../../Machine_Learning/model/model.onnx
+# Atau set path custom:
+MODEL_PATH=/absolute/path/to/model.onnx cargo run
+```
+
+### Port sudah digunakan
+
+**Error:** `Address already in use`
+
+**Solusi:**
+```bash
+ML_SERVICE_PORT=9000 cargo run
+# Cek port yang digunakan:
+lsof -i :8000
+```
+
+### ONNX Runtime tidak kompatibel
+
+**Error:** `ONNX Runtime initialization failed`
+
+**Solusi:** Pastikan binary ONNX Runtime kompatibel dengan sistem operasi. Jika masalah persisten:
+```bash
+cargo clean
+cargo build
+```
+
+---
+
+← [Kembali ke README utama](../../README.md) &bull; [Pipeline ML →](../../Machine_Learning/README.md) &bull; [Infra →](../../infra/README.md)

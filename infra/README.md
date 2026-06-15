@@ -1,6 +1,25 @@
-# Infra — ZeaVis Edu Multi-VPS Deployment
+# Infrastruktur — ZeaVis Edu
 
-## Arsitektur
+> Arsitektur multi-VPS untuk deployment produksi ZeaVis Edu dengan Tailscale mesh VPN dan observabilitas penuh.
+
+← [Kembali ke README utama](../README.md)
+
+---
+
+## Daftar Isi
+
+1. [Arsitektur](#1-arsitektur)
+2. [Prasyarat GitHub Secrets](#2-prasyarat-github-secrets)
+3. [Setup VPS](#3-setup-vps)
+4. [Port yang Dibuka](#4-port-yang-dibuka)
+5. [Metrics Flow](#5-metrics-flow)
+6. [Perintah Penting](#6-perintah-penting)
+
+---
+
+## 1. Arsitektur
+
+ZeaVis Edu berjalan di **dua VPS terpisah** yang terhubung melalui **Tailscale** mesh VPN:
 
 ```
 ┌─────────────────────────────────────────────┐     ┌──────────────────────────────────────────────┐
@@ -44,32 +63,41 @@
 └─────────────────────────────────────────────┘     └──────────────────────────────────────────────┘
 ```
 
-## Prerequisites
+| VPS | Hostname | OS | Peran |
+|---|---|---|---|
+| **App VPS** | `imrnes` | Arch Linux | Web (:80), API (:3000), ML Service (:8000) |
+| **Telemetry VPS** | `orange` | Ubuntu | Prometheus, ClickHouse, Telemetry UI |
 
-### GitHub Secrets (untuk CI/CD)
+---
 
-**App VPS deploy (`.github/workflows/deploy.yml`):**
-| Secret | Value |
-|--------|-------|
+## 2. Prasyarat GitHub Secrets
+
+### App VPS — `.github/workflows/deploy.yml`
+
+| Secret | Keterangan |
+|---|---|
 | `VPS_HOST` | `100.108.1.124` (imrnes) |
 | `VPS_USER` | `mytheclipse` |
-| `VPS_SSH_KEY` | Private SSH key for imrnes |
+| `VPS_SSH_KEY` | Private SSH key untuk imrnes |
 | `VPS_PORT` | `22` |
 | `DATABASE_URL` | PostgreSQL connection string |
 | `SESSION_SECRET` | Random session secret |
 
-**Telemetry VPS deploy (`.github/workflows/telemetry-ci-cd.yml`):**
-| Secret | Value |
-|--------|-------|
+### Telemetry VPS — `.github/workflows/telemetry-ci-cd.yml`
+
+| Secret | Keterangan |
+|---|---|
 | `TELEMETRY_VPS_HOST` | `100.96.248.86` (orange) |
-| `TELEMETRY_VPS_USER` | SSH username for orange |
-| `TELEMETRY_VPS_SSH_KEY` | Private SSH key for orange |
+| `TELEMETRY_VPS_USER` | SSH username |
+| `TELEMETRY_VPS_SSH_KEY` | Private SSH key |
 | `TELEMETRY_VPS_PORT` | `22` |
-| `GHCR_PAT` | GitHub PAT with `write:packages` + `read:packages` |
+| `GHCR_PAT` | GitHub PAT dengan `write:packages` + `read:packages` |
 
-### VPS Setup
+---
 
-#### 1. App VPS (imrnes — 100.108.1.124)
+## 3. Setup VPS
+
+### App VPS (imrnes — 100.108.1.124)
 
 ```bash
 # Create Docker network
@@ -79,33 +107,35 @@ docker network create telemetry-net
 # ZeaVis Edu apps deploy automatically via GitHub Actions
 ```
 
-#### 2. Telemetry VPS (orange — 100.96.248.86)
+### Telemetry VPS (orange — 100.96.248.86)
 
-Deploy via GitHub Actions workflow `.github/workflows/telemetry-ci-cd.yml`.
+Deploy via GitHub Actions atau manual:
 
-Atau manual:
 ```bash
 ssh mytheclipse@100.96.248.86
 mkdir -p /opt/telemetry
-# ... sync files from telemetry/ directory ...
 cd /opt/telemetry
 docker compose up -d
 bash clickhouse/init.sh
 ```
 
-## Port yang dibuka
+---
+
+## 4. Port yang Dibuka
 
 ### App VPS (imrnes)
+
 | Port | Service | Akses |
-|------|---------|-------|
+|---|---|---|
 | 80/443 | Web (via Traefik/Coolify) | Public |
 | 3000 | API metrics | Tailscale-only |
 | 8000 | ML service metrics | Tailscale-only |
 | 9100 | Node Exporter | Tailscale-only |
 
 ### Telemetry VPS (orange)
+
 | Port | Service | Akses |
-|------|---------|-------|
+|---|---|---|
 | 80/443 | Telemetry UI (via Coolify Traefik) | Public |
 | 8181 | Telemetry UI (direct) | Tailscale-only |
 | 9090 | Prometheus | Tailscale-only |
@@ -114,27 +144,44 @@ bash clickhouse/init.sh
 | 8123 | ClickHouse HTTP | Tailscale-only |
 | 9000 | ClickHouse Native | Tailscale-only |
 
-## Metrics Flow
+---
 
-1. **App services** expose `/metrics` pada port masing-masing
+## 5. Metrics Flow
+
+1. **App services** mengekspos `GET /metrics` di port masing-masing
 2. **Prometheus** di orange VPS scrape via Tailscale IP (`100.108.1.124:PORT`)
-3. **Prometheus** forward ke **Metric Ingester** via `remote_write`
-4. **Metric Ingester** enrich → filter → forward ke **Vector**
-5. **Vector** buffer → write ke **ClickHouse**
+3. Prometheus forward ke **Metric Ingester** via `remote_write`
+4. Metric Ingester enrich → filter → forward ke **Vector**
+5. Vector buffer → write ke **ClickHouse**
 6. **Telemetry UI** query via **Query Proxy** → **ClickHouse**
 
-## Useful Commands
+```
+App Services (/metrics)
+    │
+    ▼ (scrape via Tailscale)
+Prometheus ──(remote_write)──► Metric Ingester ──► Vector ──► ClickHouse
+                                                                │
+                                                    Query Proxy ◄── Telemetry UI
+```
+
+---
+
+## 6. Perintah Penting
 
 ```bash
-# Telemetry stack status
+# Status telemetry stack
 make telemetry-status
 
-# View telemetry logs
+# Lihat log service tertentu
 make telemetry-logs s=prometheus
 
-# Send test metric
+# Kirim test metric
 make telemetry-test-metric
 
-# Restart a service
+# Restart service
 make telemetry-restart s=vector
 ```
+
+---
+
+← [Kembali ke README utama](../README.md) &bull; [ML Service →](../apps/ml-service/README.md) &bull; [Pipeline ML →](../Machine_Learning/README.md)
