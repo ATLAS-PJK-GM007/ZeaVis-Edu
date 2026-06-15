@@ -314,12 +314,18 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       }
 
       const token = await createSession(user.id);
-      set.headers['Set-Cookie'] = createSessionCookie(token, request.headers);
+      const sessionCookie = createSessionCookie(token, request.headers);
 
       authCounter.labels('login', 'true').inc();
 
       const successUrl = `${env.webAppUrl}/login?token=${encodeURIComponent(token)}`;
-      if (platform === 'tauri') return renderTauriDeepLinkPage(successUrl);
+      if (platform === 'tauri') {
+        // Inject Set-Cookie into the response so the browser gets it on redirect
+        const resp = renderTauriDeepLinkPage(successUrl);
+        resp.headers.set('Set-Cookie', sessionCookie);
+        return resp;
+      }
+      set.headers['Set-Cookie'] = sessionCookie;
       set.status = 302;
       set.headers['Location'] = successUrl;
     } catch (err) {

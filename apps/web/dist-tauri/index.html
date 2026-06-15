@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ZeaVis Edu</title>
+  <script>
+    var LIVE = 'https://zeavisedu.asepharyana.my.id';
+    var T = window.__TAURI_INTERNALS__;
+
+    function navigate(path) {
+      window.location.replace(LIVE + path);
+    }
+
+    // On cold start, check if the app was opened via a deep link (Google OAuth)
+    // before redirecting to the live web app.
+    if (T && T.invoke) {
+      T.invoke('plugin:deep-link|get_current')
+        .then(function(urls) {
+          if (urls && urls.length > 0 && urls[0]) {
+            try {
+              var u = new URL(urls[0]);
+              var target = u.pathname + u.search + u.hash;
+              if (target && target !== '/') {
+                // Preserve full path + query (e.g. /login?token=xxx)
+                navigate(target);
+                return;
+              }
+            } catch (e) { /* malformed URL — fall through */ }
+          }
+          // No deep link — redirect to live app home
+          navigate('/');
+        })
+        .catch(function() { navigate('/'); });
+    } else {
+      // Not in Tauri (dev mode or unknown) — redirect to live
+      navigate('/');
+    }
+  </script>
+</head>
+<body style="background:#f0fdf4;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
+  <p style="color:#16a34a">Memuat ZeaVis Edu...</p>
+</body>
+</html>
