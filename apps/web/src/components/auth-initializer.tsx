@@ -13,7 +13,7 @@ export function AuthInitializer() {
   });
 
   useEffect(() => {
-    if (query.data) {
+    if (query.data?.user) {
       setUser(query.data.user);
     }
   }, [query.data, setUser]);
