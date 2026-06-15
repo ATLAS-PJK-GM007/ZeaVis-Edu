@@ -19,7 +19,37 @@ export async function openUrl(url: string): Promise<void> {
     window.location.href = url;
     return;
   }
-  // Lazy-import Tauri opener only in Tauri context
   const { openUrl: tauriOpenUrl } = await import('@tauri-apps/plugin-opener');
   await tauriOpenUrl(url);
+}
+
+/**
+ * Listen for deep link URLs when the app is opened from an external link.
+ * On Android, after Google OAuth completes in the system browser, the
+ * callback page redirects to zeavisedu://... which triggers this listener.
+ * We extract the path + query and navigate the WebView there.
+ */
+export async function setupDeepLinkHandler(): Promise<void> {
+  if (!isTauri()) return;
+
+  const { onOpenUrl } = await import('@tauri-apps/plugin-deep-link');
+  onOpenUrl((urls) => {
+    for (const url of urls) {
+      // url looks like: zeavisedu://zeavisedu.asepharyana.my.id/login?token=xxx
+      // Extract path + query after the host
+      try {
+        const u = new URL(url);
+        const target = u.pathname + u.search + u.hash;
+        if (target && target !== '/') {
+          window.location.href = target;
+        }
+      } catch {
+        // If URL parsing fails, try to extract everything after the scheme
+        const match = url.match(/^[^:]+:\/\/(?:[^/]+)?(\/.*)?$/);
+        if (match?.[1]) {
+          window.location.href = match[1];
+        }
+      }
+    }
+  });
 }

@@ -21,6 +21,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { apiClient } from "@/lib/api-client";
+import { setupDeepLinkHandler } from "@/lib/tauri";
 
 function LogoutProses() {
   const setUser = useAuthStore((state) => state.setUser);
@@ -161,6 +162,11 @@ function GlobalErrorTracker() {
 }
 
 export function App() {
+  // Register deep link handler for Android OAuth return
+  useEffect(() => {
+    setupDeepLinkHandler();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthInitializer />
