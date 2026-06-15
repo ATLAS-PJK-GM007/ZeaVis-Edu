@@ -10,7 +10,7 @@
     "beforeDevCommand": "echo 'Dev mode - connect to localhost:5173'"
   },
   "app": {
-    "withGlobalTauri": false,
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "ZeaVis Edu",
