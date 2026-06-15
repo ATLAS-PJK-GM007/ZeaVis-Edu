@@ -1,80 +1,152 @@
-# ZeaVis Edu
+<p align="center">
+  <br>
+  <img src=".github/assets/zeavis-logo.svg" alt="ZeaVis Edu" width="128"><br>
+  <h1 align="center">ZeaVis Edu</h1>
+  <p align="center">
+    <strong>Asisten Edukasi Interaktif untuk Deteksi Penyakit Daun Jagung</strong><br>
+    <em>Computer Vision &bull; EfficientNetV2B0 &bull; Transfer Learning</em>
+  </p>
+</p>
 
-> Klasifikasi penyakit daun jagung berbasis machine learning — dari dataset hingga aplikasi web.
+<p align="center">
+  <a href="#-tentang"><b>Tentang</b></a> &bull;
+  <a href="#-tim"><b>Tim</b></a> &bull;
+  <a href="#-ringkasan-eksekutif"><b>Ringkasan</b></a> &bull;
+  <a href="#-cakupan--deliverables"><b>Cakupan</b></a> &bull;
+  <a href="#-jadwal"><b>Jadwal</b></a> &bull;
+  <a href="#-tech-stack"><b>Tech Stack</b></a> &bull;
+  <a href="#-memulai"><b>Memulai</b></a> &bull;
+  <a href="#-dokumentasi"><b>Dokumentasi</b></a>
+</p>
 
-**ZeaVis Edu** adalah aplikasi edukasi pengenalan penyakit daun jagung melalui klasifikasi gambar. Repositori ini mencakup pipeline machine learning lengkap (EfficientNetV2B0), layanan inferensi Rust/ONNX Runtime, aplikasi web React, API backend Elysia, serta infrastruktur multi-VPS dengan observabilitas penuh.
-
----
-
-## Daftar Isi
-
-1. [Tentang ZeaVis Edu](#1-tentang-zeavis-edu)
-2. [Kelas Penyakit](#2-kelas-penyakit)
-3. [Arsitektur Proyek](#3-arsitektur-proyek)
-4. [Tech Stack](#4-tech-stack)
-5. [Panduan Memulai](#5-panduan-memulai)
-   - [5.1 Instalasi Root Workspace](#51-instalasi-root-workspace)
-   - [5.2 Menjalankan Aplikasi Web & API](#52-menjalankan-aplikasi-web--api)
-   - [5.3 Pipeline Machine Learning](#53-pipeline-machine-learning)
-   - [5.4 ML Inference Service](#54-ml-inference-service)
-   - [5.5 Infrastruktur & Deployment](#55-infrastruktur--deployment)
-   - [5.6 Telemetry & Observabilitas](#56-telemetry--observabilitas)
-6. [Dokumentasi Lengkap](#6-dokumentasi-lengkap)
-7. [Troubleshooting Umum](#7-troubleshooting-umum)
-
----
-
-## 1. Tentang ZeaVis Edu
-
-ZeaVis Edu membantu petani, peneliti, dan pelajar mengidentifikasi penyakit daun jagung secara cepat menggunakan kamera. Pengguna cukup mengunggah foto daun jagung dan sistem akan mengklasifikasikannya ke dalam salah satu dari empat kategori kondisi daun.
-
-### Fitur Utama
-
-- **Aplikasi Web** — Antarmuka pengguna interaktif berbasis React + Vite
-- **API Backend** — Layanan data dan autentikasi berbasis Elysia + PostgreSQL
-- **ML Inference Service** — Inferensi real-time via Rust/Axum + ONNX Runtime
-- **Pipeline ML** — Preprocessing dataset, pelatihan di Google Colab, ekspor model ke TFLite, TFJS, dan ONNX
-- **Infrastruktur Multi-VPS** — Deployment produksi dengan Tailscale mesh VPN
-- **Observabilitas** — Prometheus → ClickHouse pipeline dengan dashboard metrik
+<br>
 
 ---
 
-## 2. Kelas Penyakit
+## 🌽 Tentang
 
-Model mengklasifikasikan gambar ke dalam **4 kelas** berbahasa Indonesia:
+**ZeaVis Edu** adalah aplikasi edukasi berbasis **Computer Vision** yang membantu petani, mahasiswa pertanian, dan penyuluh lapangan mengidentifikasi penyakit daun jagung secara mandiri — cukup dengan mengunggah foto daun jagung.
 
-| Label | Deskripsi |
+Proyek ini merupakan **Capstone Project** dalam program **Pijak × IBM SkillsBuild** dengan tema **"AI for Smart Education"**, dirancang untuk menjembatani kesenjangan antara pengetahuan teori pertanian dan kebutuhan praktis di lapangan.
+
+---
+
+## 👥 Tim
+
+| NPM | Nama | Learning Path | Peran |
+|---|---|---|---|
+| APC246D6Y0028 | **Asep Haryana Saputra** | Back-End | Arsitektur sistem, RESTful API, deployment Docker/Cloud, keamanan upload stream |
+| APC013D6X0081 | **Selly Supriyatin** | Front-End | UI/UX responsif, mekanisme unggah gambar, modul edukasi (rekomendasi obat & penanganan) |
+| APC013D6Y0091 | **Taufik Pathurrohman** | Machine Learning | Data Engineering — ekstraksi dataset, cleaning, augmentasi gambar |
+| APC414D6Y0138 | **Luhung Pandyaska Suyi** | Machine Learning | Model Architecture & Training — CNN, hyperparameter tuning |
+| APC013D6Y0269 | **Ardian** | Machine Learning | Model Evaluation & Deployment Prep — confusion matrix, konversi ke production-ready |
+
+---
+
+## 📋 Ringkasan Eksekutif
+
+### Masalah
+
+Data BPS menunjukkan penurunan luas panen jagung dari **2.764.366 Ha (2022)** menjadi **2.487.191 Ha (2023)**. Salah satu penyebab utamanya adalah penyakit daun seperti **Hawar Daun**, **Karat Daun**, dan **Bercak Daun Abu-abu** yang menyebabkan nekrosis dan menghambat fotosintesis.
+
+Petani sering kesulitan mengidentifikasi penyakit secara kasat mata dan memiliki **ketergantungan tinggi pada POPT** (Petugas Pengendali Organisme Pengganggu Tumbuhan) akibat minimnya media pembelajaran interaktif.
+
+### Solusi
+
+ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
+
+1. 📸 **Unggah** foto daun jagung yang diduga terinfeksi
+2. 🤖 **Deteksi otomatis** penyakit oleh model AI (EfficientNetV2B0)
+3. 📚 **Dapatkan** informasi detail penyakit, panduan pencegahan, dan rekomendasi obat secara mandiri
+
+### Metode Teknis
+
+| Komponen | Pilihan |
 |---|---|
-| **Bercak Daun** | *Gray Leaf Spot* — bercak abu-abu memanjang |
-| **Hawar Daun** | *Northern/Southern Leaf Blight* — hawar coklat berbentuk panjang |
-| **Karat Daun** | *Common Rust* — bintik coklat kemerahan berbentuk pustula |
-| **Daun Sehat** | Daun jagung tanpa gejala penyakit |
+| Arsitektur Model | **EfficientNetV2B0** — keseimbangan optimal antara akurasi dan efisiensi parameter |
+| Metode Pelatihan | **Transfer Learning** pada Google Colab (GPU T4) |
+| Sumber Dataset | Kaggle — [Corn Leaf Disease](https://www.kaggle.com/datasets/ndisan/corn-leaf-disease) |
+| Deployment | VPS dengan Docker, ONNX Runtime untuk inferensi real-time |
 
 ---
 
-## 3. Arsitektur Proyek
+## 🎯 Cakupan & Deliverables
+
+### Cakupan
+
+| ✅ Dalam Cakupan | ❌ Di Luar Cakupan |
+|---|---|
+| Klasifikasi 3 penyakit + 1 daun sehat | Penyakit pada batang atau buah jagung |
+| Deteksi berbasis unggah gambar daun | Prediksi tanpa input gambar |
+| Rekomendasi obat & penanganan | Diagnosis pengganti ahli/POPT |
+| Aplikasi web edukatif | Aplikasi mobile native |
+
+### 4 Kelas yang Diklasifikasikan
+
+| Label | Nama Ilmiah | Gejala |
+|---|---|---|
+| **Hawar Daun** | *Northern/Southern Leaf Blight* | Hawar coklat memanjang pada daun |
+| **Karat Daun** | *Common Rust* | Bintik coklat kemerahan berbentuk pustula |
+| **Bercak Daun** | *Gray Leaf Spot* | Bercak abu-abu memanjang |
+| **Daun Sehat** | — | Tanpa gejala penyakit |
+
+### Deliverables Proyek
+
+| No | Tahapan | Deskripsi |
+|---|---|---|
+| 1 | **Pengumpulan Data** | Dataset gambar 3 penyakit + 1 daun sehat dari Kaggle beserta pelabelan |
+| 2 | **Model ML** | Model Computer Vision terlatih di Google Colab, siap produksi |
+| 3 | **UI Antarmuka** | Front-End berbasis React + Vite dengan fitur unggah gambar |
+| 4 | **Back-End Integration** | API + ML Service untuk inferensi real-time via Docker |
+| 5 | **Prototipe Akhir** | Aplikasi web final dengan klasifikasi + modul edukasi (rekomendasi obat & penanganan) |
+
+---
+
+## 📅 Jadwal
+
+| Minggu | Tanggal | Fase | Aktivitas |
+|---|---|---|---|
+| **1** | 11–17 Mei 2026 | Inisiasi & Data | Spesifikasi teknis (Asep) • Dataset dari Kaggle + preprocessing (Taufik) • Wireframe UI/UX (Selly) |
+| **2** | 18–24 Mei 2026 | Training & Dev Awal | Implementasi EfficientNetV2B0 di Colab (Luhung) • Slicing UI ke React (Selly) • Setup server, database, routing API (Asep) |
+| **3** | 25–31 Mei 2026 | Evaluasi & Modul Edukasi | Evaluasi akurasi + konversi model ke ONNX/TFLite (Ardian) • Halaman edukasi obat & penanganan (Selly) • RESTful API untuk image upload & inferensi (Asep) |
+| **4** | 1–7 Juni 2026 | Integrasi & Testing | Integrasi penuh Front-End ↔ API ↔ Model ML • Pengujian end-to-end • Stress testing & error handling (Semua) |
+| **5** | 8–14 Juni 2026 | Deployment & Finalisasi | Deployment ke VPS (Asep) • Bug fixing & optimalisasi UI/UX (Selly) • Dokumentasi teknis & materi presentasi (Semua) |
+
+---
+
+## ⚠️ Manajemen Risiko
+
+| Risiko | Solusi |
+|---|---|
+| **Overfitting akibat imbalanced data** | Augmentasi tingkat lanjut (kecerahan, noise, rotasi) + confidence threshold < 75% → minta user foto ulang |
+| **Server downtime / latensi tinggi** | Batasan upload ≤ 5 MB + kompresi server-side + rate limiting + container Docker isolasi resource |
+| **Foto blur / objek bukan daun jagung** | Panduan visual (overlay) pada UI + validasi anomali + disclaimer "alat bantu edukasi, bukan pengganti POPT" |
+| **Bottleneck integrasi ML ↔ API ↔ UI** | API Contract ketat di minggu ke-1 + integrasi bertahap (CI) mulai minggu ke-3 |
+
+---
+
+## 🏗️ Arsitektur Proyek
 
 ```
 .
 ├── apps/
-│   ├── api/                # Backend Elysia/Bun + Drizzle ORM + PostgreSQL
-│   ├── ml-service/         # Layanan inferensi Rust/Axum + ONNX Runtime
-│   └── web/                # Frontend React + Vite + Tailwind
-├── Machine_Learning/       # Pipeline dataset, training, dan ekspor model
-│   └── README.md           # ⤷ Panduan lengkap pipeline ML
+│   ├── api/                  # Backend Elysia/Bun + Drizzle ORM + PostgreSQL
+│   ├── ml-service/           # Rust/Axum + ONNX Runtime inference service
+│   └── web/                  # Frontend React + Vite + Tailwind CSS
+├── Machine_Learning/         # Pipeline dataset, training Colab, ekspor model
+│   └── README.md             # ⤷ Panduan lengkap pipeline ML
 ├── infra/
-│   └── README.md           # ⤷ Panduan deployment multi-VPS
-├── packages/
-│   └── shared/             # Tipe dan utilitas bersama TypeScript
-├── telemetry/              # Submodule — Prometheus → ClickHouse pipeline
-├── docker-compose.yml      # Konfigurasi deployment container
-├── package.json            # Root workspace Bun + Moon
-└── README.md               # ⤷ Anda di sini
+│   └── README.md             # ⤷ Panduan deployment multi-VPS
+├── packages/shared/          # Tipe & utilitas TypeScript bersama
+├── telemetry/                # Submodule — Prometheus → ClickHouse pipeline
+├── docker-compose.yml        # Konfigurasi deployment container
+├── package.json              # Root workspace Bun + Moon
+└── README.md                 # ⤷ Anda di sini
 ```
 
 | Komponen | Teknologi | Dokumentasi |
 |---|---|---|
-| Web Frontend | React, Vite, Tailwind, Zustand | `apps/web/` |
+| Web Frontend | React, Vite, Tailwind, Zustand, TanStack Query | `apps/web/` |
 | API Backend | Bun, Elysia, Drizzle ORM, PostgreSQL | `apps/api/` |
 | ML Inference | Rust, Axum, ONNX Runtime | [`apps/ml-service/README.md`](apps/ml-service/README.md) |
 | ML Pipeline | Python, TensorFlow/Keras, EfficientNetV2B0 | [`Machine_Learning/README.md`](Machine_Learning/README.md) |
@@ -83,58 +155,56 @@ Model mengklasifikasikan gambar ke dalam **4 kelas** berbahasa Indonesia:
 
 ---
 
-## 4. Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
 React &bull; Vite &bull; TypeScript &bull; React Router &bull; TanStack Query &bull; Zustand &bull; Tailwind CSS
 
 ### Backend API
-Bun &bull; Elysia &bull; Drizzle ORM &bull; PostgreSQL
+Bun &bull; Elysia &bull; Drizzle ORM &bull; PostgreSQL &bull; prom-client
 
 ### Machine Learning
-Python &bull; TensorFlow/Keras &bull; EfficientNetV2B0 &bull; Rust &bull; Axum &bull; ONNX Runtime &bull; TFLite &bull; TensorFlow.js
+Python &bull; TensorFlow/Keras &bull; EfficientNetV2B0 &bull; Google Colab (GPU T4)
+Rust &bull; Axum &bull; ONNX Runtime &bull; TFLite &bull; TensorFlow.js
 
-### Tooling & Deployment
-Bun workspaces &bull; Moon task runner &bull; Docker &bull; Docker Compose &bull; Coolify &bull; Traefik
+### DevOps & Infrastruktur
+Docker &bull; Docker Compose &bull; Coolify &bull; Traefik &bull; Tailscale &bull; GitHub Actions (CI/CD)
 
-### Telemetry & Observabilitas
+### Observabilitas
 Prometheus &bull; Metric Ingester (Go) &bull; Vector &bull; ClickHouse &bull; Query Proxy (Go) &bull; Telemetry UI (Vue 3)
 
 ---
 
-## 5. Panduan Memulai
+## 🚀 Memulai
 
 ### Prasyarat
 
-- **Bun** — untuk workspace TypeScript
-- **Python 3.9–3.11** — untuk pipeline ML
-- **Rust & Cargo** — untuk `apps/ml-service`
-- **Docker & Docker Compose** — untuk deployment dan telemetry
-- **PostgreSQL** — untuk backend API
+- **Bun** — runtime & package manager
+- **Python 3.9–3.11** — pipeline ML
+- **Rust & Cargo** — `apps/ml-service`
+- **Docker & Docker Compose** — deployment & telemetry
+- **PostgreSQL** — backend API
 
-### 5.1 Instalasi Root Workspace
+### Instalasi
 
 ```bash
-# Clone repositori
-git clone https://github.com/mytheclipse/zeavis-edu.git
-cd zeavis-edu
-
-# Instal dependensi TypeScript workspace
+git clone https://github.com/ATLAS-PJK-GM007/ZeaVis-Edu.git
+cd ZeaVis-Edu
 bun install
 ```
 
-### 5.2 Menjalankan Aplikasi Web & API
+### Menjalankan Development
 
 ```bash
-# Semua task development (web + api)
-bun run dev
-
-# Atau jalankan terpisah:
-cd apps/web && bun run dev     # Frontend — Vite dev server
-cd apps/api && bun run start   # API backend
+bun run dev                # Semua service (web + api)
+cd apps/web && bun run dev # Hanya frontend
+cd apps/api && bun run start # Hanya backend API
+cd apps/ml-service && cargo run  # Hanya ML service (port 8000)
 ```
 
-**Environment variables** yang perlu disiapkan di root `.env`:
+### Environment Variables
+
+Salin `.env.example` ke `.env` dan isi:
 
 | Variable | Keterangan |
 |---|---|
@@ -143,146 +213,65 @@ cd apps/api && bun run start   # API backend
 | `WEB_APP_URL` | URL frontend (untuk CORS) |
 | `ML_SERVICE_URL` | URL layanan inferensi ML |
 
-### 5.3 Pipeline Machine Learning
+### Pipeline ML (Ringkasan)
 
-Pipeline lengkap preprocessing dataset, pelatihan model di Google Colab, dan ekspor ke berbagai format produksi.
+1. Unduh 3 dataset ZIP → letakkan di `Machine_Learning/`
+2. `python preprocessing.py` — gabungkan & bersihkan dataset
+3. Upload `dataset.zip` ke Google Drive
+4. Jalankan `notebook.ipynb` di Google Colab (GPU T4)
+5. Download `best_model.keras`
+6. `python save_model.py` → TFLite + SavedModel
+7. Konversi ke TFJS & ONNX
 
 > 📖 **Panduan lengkap:** [`Machine_Learning/README.md`](Machine_Learning/README.md)
 
-**Ringkasan alur:**
-
-1. Unduh 3 file ZIP dataset ke `Machine_Learning/`
-2. Jalankan `python preprocessing.py` untuk menggabungkan dataset
-3. Upload `dataset.zip` ke Google Drive
-4. Jalankan `notebook.ipynb` di Google Colab (GPU T4)
-5. Download `best_model.keras` hasil training
-6. Ekspor model: `python save_model.py` → TFLite + SavedModel
-7. Konversi ke TFJS dan ONNX
-
-**Output pipeline:**
-
-| Path | Format | Kegunaan |
-|---|---|---|
-| `Machine_Learning/model/saved_model/` | TensorFlow SavedModel | Jembatan konversi |
-| `Machine_Learning/model/model.tflite` | TFLite | Mobile (Android/iOS) |
-| `Machine_Learning/model/model.onnx` | ONNX | Rust inference service |
-| `Machine_Learning/model/tfjs_model/` | TensorFlow.js | Web browser |
-
-### 5.4 ML Inference Service
-
-Layanan inferensi berbasis Rust/Axum dengan ONNX Runtime untuk prediksi real-time.
-
-> 📖 **Panduan lengkap:** [`apps/ml-service/README.md`](apps/ml-service/README.md)
+### Deployment
 
 ```bash
-cd apps/ml-service
-cargo run                           # Default port 8000
-
-# Atau dengan konfigurasi custom:
-MODEL_PATH=/path/to/model.onnx ML_SERVICE_PORT=9000 cargo run
+docker compose up -d       # App services
+make telemetry-up          # Telemetry stack
 ```
 
-**Endpoint utama:**
-
-| Method | Path | Deskripsi |
-|---|---|---|
-| `GET` | `/health` | Health check + status model |
-| `GET` | `/metadata` | Info model, label, versi |
-| `POST` | `/predict` | Klasifikasi gambar (multipart upload) |
-
-### 5.5 Infrastruktur & Deployment
-
-> 📖 **Panduan lengkap:** [`infra/README.md`](infra/README.md)
-
-Arsitektur produksi berjalan di **dua VPS terpisah** yang terhubung via **Tailscale** mesh VPN:
-
-| VPS | Hostname | Peran |
-|---|---|---|
-| **App VPS** | `imrnes` (Arch Linux) | Web, API, ML Service |
-| **Telemetry VPS** | `orange` (Ubuntu) | Prometheus, ClickHouse, Telemetry UI |
-
-```bash
-# Deploy app services via Docker Compose
-docker compose up -d
-
-# Deploy telemetry stack
-make telemetry-up
-```
-
-### 5.6 Telemetry & Observabilitas
-
-Pipeline metrik lengkap: **Prometheus → Metric Ingester → Vector → ClickHouse → Telemetry UI**.
-
-Setiap service ZeaVis Edu mengekspos endpoint `GET /metrics` dalam format Prometheus. Prometheus di Telemetry VPS melakukan scrape melalui IP Tailscale.
-
-```bash
-make telemetry-up          # Mode produksi
-make telemetry-up-local    # Mode development lokal
-make telemetry-status      # Cek kesehatan
-make telemetry-logs        # Lihat log
-```
-
-| Service | Port | Peran |
-|---|---|---|
-| Prometheus | 9090 | Scraping & remote_write |
-| Metric Ingester | 9091 | Enrichment & filtering |
-| Vector | 9001 | Buffering |
-| ClickHouse | 8123 | Penyimpanan analitik |
-| Query Proxy | 9092 | Read-only SQL proxy |
-| Telemetry UI | 8181 | Dashboard metrik |
+> 📖 **Panduan infrastruktur:** [`infra/README.md`](infra/README.md)
 
 ---
 
-## 6. Dokumentasi Lengkap
+## 📚 Dokumentasi
 
 | Dokumen | Isi |
 |---|---|
-| [`Machine_Learning/README.md`](Machine_Learning/README.md) | Panduan lengkap pipeline ML — preprocessing, training Colab, ekspor model TFLite/TFJS/ONNX |
-| [`apps/ml-service/README.md`](apps/ml-service/README.md) | ML inference service — setup, endpoint API, konfigurasi, troubleshooting |
+| [`Machine_Learning/README.md`](Machine_Learning/README.md) | Pipeline ML lengkap — preprocessing, training Colab, ekspor TFLite/TFJS/ONNX |
+| [`apps/ml-service/README.md`](apps/ml-service/README.md) | ML Inference Service — setup, endpoint API, konfigurasi |
 | [`infra/README.md`](infra/README.md) | Arsitektur multi-VPS — diagram, GitHub Secrets, port, metrics flow |
-| [`METRICS.md`](METRICS.md) | Daftar lengkap metrik Prometheus yang diekspos |
+| [`METRICS.md`](METRICS.md) | Daftar lengkap metrik Prometheus |
 | `telemetry/` (submodule) | Source code telemetry stack |
 
 ---
 
-## 7. Troubleshooting Umum
+## 🔧 Troubleshooting
 
-### `bun install` gagal
-Pastikan Bun versi terbaru terinstal:
-```bash
-bun --version   # minimal 1.x
-```
-
-### API membutuhkan database
-Pastikan `DATABASE_URL` tersedia di root `.env` dan PostgreSQL dapat diakses.
-
-### ML service gagal memuat model
-Pastikan `Machine_Learning/model/model.onnx` sudah dibuat:
-```bash
-ls -la Machine_Learning/model/model.onnx
-```
-Jika belum, jalankan pipeline ML terlebih dahulu — lihat [`Machine_Learning/README.md`](Machine_Learning/README.md).
-
-### Docker Compose gagal — network tidak ditemukan
-```bash
-docker network create app-shared-net
-```
-
-### Konversi TensorFlow.js gagal (konflik protobuf)
-```bash
-export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-```
+| Masalah | Solusi |
+|---|---|
+| `bun install` gagal | `bun --version` — pastikan ≥ 1.x |
+| API perlu database | Isi `DATABASE_URL` di root `.env` |
+| ML service gagal muat model | `ls Machine_Learning/model/model.onnx` — jalankan pipeline ML jika belum ada |
+| Docker Compose gagal | `docker network create app-shared-net` |
+| Konversi TFJS gagal | `export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python` |
 
 ---
 
-## Pengembangan
+## 📖 Daftar Pustaka
 
-1. `bun install`
-2. Jalankan service yang dibutuhkan secara lokal
-3. `bun run typecheck` sebelum commit
-4. `bun run build` untuk verifikasi build produksi
-5. Ikuti dokumentasi detail di masing-masing README untuk perubahan spesifik
+1. Prayogi, A. et al. *"Klasifikasi Penyakit Daun Jagung Menggunakan CNN"* — [SISTEMATIS](https://ejournal.rizaniamedia.com/index.php/sistematis/article/view/87/49)
+2. Nugroho, A. et al. *"Deteksi Penyakit Daun Jagung dengan Deep Learning"* — [MIND Journal](https://ejurnal.itenas.ac.id/index.php/mindjournal/article/view/14032/4209)
+3. Ramadhan, F. et al. *"Identifikasi Penyakit Jagung Berbasis Citra Digital"* — [Informa](https://www.informa.poltekindonusa.ac.id/index.php/informa/article/view/199/170)
+4. Corteva Agriscience. *"Kenali Ragam Jenis Penyakit Jagung dan Cara Mengatasinya"* — [corteva.com](https://www.corteva.com/id/berita/Kenali-Ragam-Jenis-Penyakit-Jagung-dan-Cara-Mengatasinya.html)
 
 ---
 
-> 🧬 **ZeaVis Edu** — Memberdayakan pertanian presisi melalui machine learning
+<p align="center">
+  <sub>
+    Capstone Project • Pijak × IBM SkillsBuild • AI for Smart Education<br>
+    © 2026 ZeaVis Edu Team
+  </sub>
+</p>
