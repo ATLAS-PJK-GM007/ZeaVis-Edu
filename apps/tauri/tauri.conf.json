@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "com.zeavis.edu",
   "build": {
-    "frontendDist": "../web/dist-tauri",
+    "frontendDist": "../web/dist",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "echo 'Nothing to build (APK loads live web content)'",
-    "beforeDevCommand": "echo 'Dev mode - connect to localhost:5173'"
+    "beforeBuildCommand": "cd ../web && bun run build",
+    "beforeDevCommand": "cd ../web && bun run dev"
   },
   "app": {
     "withGlobalTauri": true,

@@ -1,7 +1,6 @@
 /**
  * Lightweight Tauri environment detection and utilities.
- * Avoids importing @tauri-apps/api at module level so the web build
- * doesn't bundle Tauri internals.
+ * Uses raw __TAURI_INTERNALS__ IPC to avoid bundling/import issues on Android.
  */
 
 let _isTauri: boolean | null = null;
@@ -14,24 +13,30 @@ export function isTauri(): boolean {
   return _isTauri;
 }
 
+/** Get the Tauri IPC invoke function directly from the global internals. */
+function tauriInvoke(): (cmd: string, args?: Record<string, unknown>) => Promise<unknown> {
+  const T = (window as any).__TAURI_INTERNALS__;
+  if (!T?.invoke) throw new Error('Tauri IPC not available');
+  return T.invoke.bind(T);
+}
+
 export async function openUrl(url: string): Promise<void> {
   if (!isTauri()) {
+    // Not in Tauri — normal browser navigation
     window.location.href = url;
     return;
   }
-  const { openUrl: tauriOpenUrl } = await import('@tauri-apps/plugin-opener');
-  await tauriOpenUrl(url);
+  try {
+    const invoke = tauriInvoke();
+    await invoke('plugin:opener|open_url', { url });
+  } catch (err) {
+    console.error('Tauri openUrl failed, trying fallback:', err);
+    // Fallback: navigate the WebView (Google will block, but best effort)
+    window.location.href = url;
+  }
 }
 
-/**
- * Listen for deep link URLs when the app is opened from an external link.
- * On Android, after Google OAuth completes in the system browser, the
- * callback page redirects to zeavisedu://... which triggers this listener.
- * We extract the path + query and navigate the WebView there.
- */
 function processDeepLinkUrl(url: string): void {
-  // url looks like: zeavisedu://login/login?token=xxx
-  // We need to extract path+query and navigate the WebView there
   try {
     const u = new URL(url);
     const target = u.pathname + u.search + u.hash;
@@ -39,32 +44,34 @@ function processDeepLinkUrl(url: string): void {
       window.location.href = target;
       return;
     }
-  } catch { /* try fallback below */ }
+  } catch { /* fall through */ }
 
-  // Fallback: handle both double-slash (://) and single-slash (:/) schemes
+  // Fallback: handle both :// and :/ custom schemes
   let match = url.match(/^[^:]+:\/\/(?:[^/]+)?(\/.*)?$/);
-  if (!match) {
-    match = url.match(/^[^:]+:\/(\/.*)?$/);
-  }
-  if (match?.[1]) {
-    window.location.href = match[1];
-  }
+  if (!match) match = url.match(/^[^:]+:\/(\/.*)?$/);
+  if (match?.[1]) window.location.href = match[1];
 }
 
 export async function setupDeepLinkHandler(): Promise<void> {
   if (!isTauri()) return;
 
-  const { onOpenUrl, getCurrent } = await import('@tauri-apps/plugin-deep-link');
+  try {
+    const invoke = tauriInvoke();
 
-  // Handle cold-start deep links (app opened via intent)
-  getCurrent().then((urls) => {
-    if (urls?.[0]) processDeepLinkUrl(urls[0]);
-  }).catch(() => { /* ignore */ });
+    // Cold-start: app just opened via intent:// or custom scheme
+    invoke('plugin:deep-link|get_current')
+      .then((urls: any) => {
+        if (urls?.[0]) processDeepLinkUrl(urls[0]);
+      })
+      .catch(() => { /* plugin may not be registered yet */ });
 
-  // Handle warm-start deep links (app already running, new intent received)
-  onOpenUrl((urls) => {
-    for (const url of urls) {
-      processDeepLinkUrl(url);
-    }
-  });
+    // Warm-start: listen for new URLs while app is running
+    const { listen } = await import('@tauri-apps/api/event');
+    listen('deep-link://new-url', (event: any) => {
+      const urls = event.payload as string[];
+      for (const url of urls) processDeepLinkUrl(url);
+    });
+  } catch (err) {
+    console.error('Tauri deep-link setup failed:', err);
+  }
 }
