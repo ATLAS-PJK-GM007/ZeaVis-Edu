@@ -186,7 +186,8 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       prompt: 'select_account',
     });
 
-    set.redirect = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    set.status = 302;
+    set.headers['Location'] = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   })
   .get('/google/callback', async ({ query, set, request }) => {
     if (!env.googleOAuthEnabled) {
@@ -199,7 +200,8 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
 
     // User denied or Google returned an error
     if (error || !code) {
-      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent(error ?? 'missing_code')}`;
+      set.status = 302;
+      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent(error ?? 'missing_code')}`;
       return;
     }
 
@@ -210,13 +212,15 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       idPayload = decodeGoogleIdToken(tokens.id_token);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Google auth failed';
-      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent(msg)}`;
+      set.status = 302;
+      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent(msg)}`;
       return;
     }
 
     // Validate email
     if (!idPayload.email_verified || !idPayload.email) {
-      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent('Email not verified by Google')}`;
+      set.status = 302;
+      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent('Email not verified by Google')}`;
       return;
     }
 
@@ -256,8 +260,10 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       authCounter.labels('login', 'true').inc();
 
       // Redirect to web app with token in URL for localStorage fallback
-      set.redirect = `${env.webAppUrl}/login?token=${encodeURIComponent(token)}`;
+      set.status = 302;
+      set.headers['Location'] = `${env.webAppUrl}/login?token=${encodeURIComponent(token)}`;
     } catch (err) {
-      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent('Database unavailable')}`;
+      set.status = 302;
+      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent('Database unavailable')}`;
     }
   });
