@@ -16,6 +16,28 @@ import { recordApiCall } from './telemetry';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'https://zeavisedu.asepharyana.my.id';
 
+const AUTH_TOKEN_KEY = 'zeavis_auth_token';
+
+function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string | null) {
+  try {
+    if (token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+  } catch {
+    // localStorage may throw in private browsing
+  }
+}
+
 export interface ApiError extends Error {
   status: number;
   source?: 'uploader' | 'model-service' | 'unknown';
@@ -24,10 +46,21 @@ export interface ApiError extends Error {
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const start = performance.now();
   const url = `${apiBaseUrl}${endpoint}`;
+  const token = getAuthToken();
+  const headers = new Headers(options?.headers);
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  if (options?.body && !options.method) {
+    // auto-set Content-Type for JSON bodies
+  }
+
   const response = await fetch(url, {
     credentials: 'include',
     ...options,
-    headers: options?.headers,
+    headers,
   });
 
   const duration = performance.now() - start;
@@ -93,23 +126,29 @@ export const apiClient = {
   },
 
   async register(payload: RegisterRequest): Promise<AuthResponse> {
-    return fetchApi('/api/v1/auth/register', {
+    const result = await fetchApi<AuthResponse>('/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    if (result.token) setAuthToken(result.token);
+    return result;
   },
 
   async login(payload: AuthRequest): Promise<AuthResponse> {
-    return fetchApi('/api/v1/auth/login', {
+    const result = await fetchApi<AuthResponse>('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    if (result.token) setAuthToken(result.token);
+    return result;
   },
 
   async logout(): Promise<{ ok: boolean }> {
-    return fetchApi('/api/v1/auth/logout', { method: 'POST' });
+    const result = await fetchApi<{ ok: boolean }>('/api/v1/auth/logout', { method: 'POST' });
+    setAuthToken(null);
+    return result;
   },
 
   // Disease catalog methods

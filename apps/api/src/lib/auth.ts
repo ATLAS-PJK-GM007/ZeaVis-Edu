@@ -61,6 +61,19 @@ export function readSessionToken(cookieHeader: string | null | undefined) {
   return decodeURIComponent(sessionCookie.slice(sessionCookieName.length + 1));
 }
 
+/**
+ * Extract bearer token from Authorization header.
+ * Used as fallback when cookies are blocked (e.g. Android WebView third-party blocking).
+ */
+export function readBearerToken(headers?: { get(name: string): string | null }) {
+  if (!headers) return null;
+  const auth = headers.get('authorization');
+  if (!auth) return null;
+  const parts = auth.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') return null;
+  return parts[1];
+}
+
 export async function createSession(userId: string) {
   const db = createDbClient();
   const token = randomBytes(32).toString('base64url');
@@ -83,8 +96,12 @@ export async function deleteSession(token: string | null) {
   await db.delete(sessions).where(eq(sessions.tokenHash, hashToken(token)));
 }
 
-export async function getCurrentUser(cookieHeader: string | null | undefined): Promise<CurrentUser | null> {
-  const token = readSessionToken(cookieHeader);
+export async function getCurrentUser(
+  cookieHeader: string | null | undefined,
+  headers?: { get(name: string): string | null },
+): Promise<CurrentUser | null> {
+  // Try cookie first, then Authorization header (for Android WebView where 3rd-party cookies are blocked)
+  const token = readSessionToken(cookieHeader) ?? readBearerToken(headers);
   if (!token) return null;
 
   const db = createDbClient();

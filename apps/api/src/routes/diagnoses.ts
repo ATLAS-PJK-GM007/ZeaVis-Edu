@@ -175,7 +175,7 @@ function getFileFromBody(body: unknown): File | null {
 
 export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
   .post('/diagnoses', async ({ body, request }) => {
-    const user = await getCurrentUser(request.headers.get('cookie'));
+    const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
     if (!user) return unauthorized('Authentication required');
 
     const file = getFileFromBody(body);
@@ -251,7 +251,7 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
     }
   })
   .get('/diagnoses', async ({ request }) => {
-    const user = await getCurrentUser(request.headers.get('cookie'));
+    const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
     if (!user) return unauthorized('Authentication required');
 
     try {
@@ -270,7 +270,7 @@ export const diagnosisRoutes = new Elysia({ prefix: '/api/v1' })
     }
   })
   .get('/diagnoses/:id', async ({ params, request }) => {
-    const user = await getCurrentUser(request.headers.get('cookie'));
+    const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
     if (!user) return unauthorized('Authentication required');
 
     try {
