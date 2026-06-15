@@ -16,7 +16,7 @@ function isDiagnosisRecordOrNull(record: unknown): record is DiagnosisRecord {
 
 export const expertRoutes = new Elysia({ prefix: '/api/v1/expert' })
   .get('/reviews', async ({ request }) => {
-    const user = await getCurrentUser(request.headers.get('cookie'));
+    const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
     if (!user) return unauthorized('Authentication required');
     if (user.role !== 'expert') return forbidden('Expert role required');
 
@@ -36,7 +36,7 @@ export const expertRoutes = new Elysia({ prefix: '/api/v1/expert' })
     }
   })
   .post('/reviews/:diagnosisId', async ({ params, body, request }) => {
-    const user = await getCurrentUser(request.headers.get('cookie'));
+    const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
     if (!user) return unauthorized('Authentication required');
     if (user.role !== 'expert') return forbidden('Expert role required');
 

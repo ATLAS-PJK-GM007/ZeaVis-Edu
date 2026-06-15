@@ -13,7 +13,7 @@ export const dashboardRoutes = new Elysia({ prefix: '/api/v1' })
   .get('/dashboard/summary', async ({ request }) => {
     try {
       const db = createDbClient();
-      const user = await getCurrentUser(request.headers.get('cookie'));
+      const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
 
       const diseases = await db.select().from(diseaseCatalog).orderBy(diseaseCatalog.displayOrder);
       const manualRows = await db.select().from(manualClassifications).orderBy(desc(manualClassifications.createdAt)).limit(1);
