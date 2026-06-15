@@ -29,8 +29,10 @@ export function AuthForm({ mode, isSubmitting, error, googleOAuthEnabled, onSubm
   const handleGoogleLogin = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     const platform = isTauri() ? 'tauri' : 'web';
-    const base = window.location.origin;
-    const googleUrl = `${base}/api/v1/auth/google?platform=${platform}`;
+    // Use API base URL, not window.location.origin — on Tauri Android
+    // the origin is http://tauri.localhost which is not the API server.
+    const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+    const googleUrl = `${apiBase}/api/v1/auth/google?platform=${platform}`;
     await openUrl(googleUrl);
   }, []);
 
