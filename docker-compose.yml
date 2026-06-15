@@ -38,8 +38,6 @@ services:
       API_PORT: "3000"
       WEB_APP_URL: https://zeavisedu.asepharyana.my.id
       ML_SERVICE_URL: ${ML_SERVICE_URL:-http://zeavis-ml:8000}
-    ports:
-      - "3000:3000"
     labels:
       traefik.enable: "true"
       traefik.http.routers.zeavis-api.rule: Host(`api-zeavisedu.asepharyana.my.id`)
@@ -53,8 +51,6 @@ services:
     image: prom/node-exporter:v1.8.2
     container_name: zeavis-node-exporter
     restart: unless-stopped
-    ports:
-      - "9100:9100"
     command:
       - "--path.rootfs=/host"
       - "--web.listen-address=:9100"
@@ -77,8 +73,6 @@ services:
     environment:
       MODEL_PATH: /app/model/model.onnx
       MODEL_INPUT_SIZE: "224"
-    ports:
-      - "8000:8000"
     labels:
       traefik.enable: "true"
       traefik.http.routers.zeavis-ml.rule: Host(`ml-zeavisedu.asepharyana.my.id`)
