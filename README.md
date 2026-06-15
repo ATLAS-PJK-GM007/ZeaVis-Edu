@@ -4,7 +4,7 @@
   <h1 align="center">ZeaVis Edu</h1>
   <p align="center">
     <strong>Asisten Edukasi Interaktif untuk Deteksi Penyakit Daun Jagung</strong><br>
-    <em>Computer Vision &bull; EfficientNetV2B0 &bull; Transfer Learning</em>
+    <em>Computer Vision &bull; EfficientNetV2B0 &bull; Rust ONNX Runtime &bull; Tauri 2 Android</em>
   </p>
 </p>
 
@@ -16,6 +16,7 @@
   <a href="#-jadwal"><b>Jadwal</b></a> &bull;
   <a href="#-tech-stack"><b>Tech Stack</b></a> &bull;
   <a href="#-memulai"><b>Memulai</b></a> &bull;
+  <a href="#-platform"><b>Platform</b></a> &bull;
   <a href="#-dokumentasi"><b>Dokumentasi</b></a>
 </p>
 
@@ -79,7 +80,7 @@ ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
 | Klasifikasi 3 penyakit + 1 daun sehat | Penyakit pada batang atau buah jagung |
 | Deteksi berbasis unggah gambar daun | Prediksi tanpa input gambar |
 | Rekomendasi obat & penanganan | Diagnosis pengganti ahli/POPT |
-| Aplikasi web edukatif | Aplikasi mobile native |
+| Aplikasi Web + Android (Tauri 2) | Aplikasi iOS |
 
 ### 4 Kelas yang Diklasifikasikan
 
@@ -98,7 +99,7 @@ ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
 | 2 | **Model ML** | Model Computer Vision terlatih di Google Colab, siap produksi |
 | 3 | **UI Antarmuka** | Front-End berbasis React + Vite dengan fitur unggah gambar |
 | 4 | **Back-End Integration** | API + ML Service untuk inferensi real-time via Docker |
-| 5 | **Prototipe Akhir** | Aplikasi web final dengan klasifikasi + modul edukasi (rekomendasi obat & penanganan) |
+| 5 | **Prototipe Akhir** | Aplikasi Web + Android (Tauri 2) dengan klasifikasi & modul edukasi (rekomendasi obat & penanganan) |
 
 ---
 
@@ -131,7 +132,8 @@ ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
 .
 ├── apps/
 │   ├── api/                  # Backend Elysia/Bun + Drizzle ORM + PostgreSQL
-│   ├── ml-service/           # Rust/Axum + ONNX Runtime inference service
+│   ├── ml-service/           # Rust/Axum + ONNX Runtime inference engine
+│   ├── tauri/                # Tauri 2 mobile wrapper → Android APK
 │   └── web/                  # Frontend React + Vite + Tailwind CSS
 ├── Machine_Learning/         # Pipeline dataset, training Colab, ekspor model
 │   └── README.md             # ⤷ Panduan lengkap pipeline ML
@@ -147,8 +149,9 @@ ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
 | Komponen | Teknologi | Dokumentasi |
 |---|---|---|
 | Web Frontend | React, Vite, Tailwind, Zustand, TanStack Query | `apps/web/` |
+| Android App | Tauri 2, Rust, WebView, Deep Link OAuth | `apps/tauri/` |
 | API Backend | Bun, Elysia, Drizzle ORM, PostgreSQL | `apps/api/` |
-| ML Inference | Rust, Axum, ONNX Runtime | [`apps/ml-service/README.md`](apps/ml-service/README.md) |
+| ML Inference Engine | Rust, Axum, ONNX Runtime | [`apps/ml-service/README.md`](apps/ml-service/README.md) |
 | ML Pipeline | Python, TensorFlow/Keras, EfficientNetV2B0 | [`Machine_Learning/README.md`](Machine_Learning/README.md) |
 | Infrastruktur | Docker, Coolify, Traefik, Tailscale | [`infra/README.md`](infra/README.md) |
 | Telemetry | Prometheus, ClickHouse, Vector, Vue 3 | `telemetry/` |
@@ -157,15 +160,18 @@ ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
 
 ## 🛠️ Tech Stack
 
-### Frontend
+### Frontend & Mobile
 React &bull; Vite &bull; TypeScript &bull; React Router &bull; TanStack Query &bull; Zustand &bull; Tailwind CSS
+**Tauri 2** (Android) &bull; Rust &bull; WebView &bull; Deep Link OAuth
 
 ### Backend API
 Bun &bull; Elysia &bull; Drizzle ORM &bull; PostgreSQL &bull; prom-client
 
 ### Machine Learning
 Python &bull; TensorFlow/Keras &bull; EfficientNetV2B0 &bull; Google Colab (GPU T4)
-Rust &bull; Axum &bull; ONNX Runtime &bull; TFLite &bull; TensorFlow.js
+
+### Inference Engine
+**Rust** &bull; **Axum** &bull; **ONNX Runtime** &bull; TFLite &bull; TensorFlow.js
 
 ### DevOps & Infrastruktur
 Docker &bull; Docker Compose &bull; Coolify &bull; Traefik &bull; Tailscale &bull; GitHub Actions (CI/CD)
@@ -181,7 +187,8 @@ Prometheus &bull; Metric Ingester (Go) &bull; Vector &bull; ClickHouse &bull; Qu
 
 - **Bun** — runtime & package manager
 - **Python 3.9–3.11** — pipeline ML
-- **Rust & Cargo** — `apps/ml-service`
+- **Rust & Cargo** — `apps/ml-service` (inference) & `apps/tauri` (Android)
+- **Java 21 + Android SDK** — build Android APK
 - **Docker & Docker Compose** — deployment & telemetry
 - **PostgreSQL** — backend API
 
@@ -199,7 +206,9 @@ bun install
 bun run dev                # Semua service (web + api)
 cd apps/web && bun run dev # Hanya frontend
 cd apps/api && bun run start # Hanya backend API
-cd apps/ml-service && cargo run  # Hanya ML service (port 8000)
+cd apps/ml-service && cargo run  # ML inference engine (port 8000)
+cd apps/tauri && bun run tauri dev        # Tauri desktop dev
+cd apps/tauri && bun run tauri android dev  # Tauri Android dev
 ```
 
 ### Environment Variables
@@ -233,6 +242,46 @@ make telemetry-up          # Telemetry stack
 ```
 
 > 📖 **Panduan infrastruktur:** [`infra/README.md`](infra/README.md)
+
+---
+
+## 📱 Platform
+
+ZeaVis Edu tersedia di **dua platform** dari satu codebase:
+
+| Platform | Teknologi | Build |
+|---|---|---|
+| **Web** | React + Vite → Static SPA | `bun run build` |
+| **Android** | Tauri 2 + Rust → WebView APK | `cd apps/tauri && bun run tauri android build --apk` |
+
+### Tauri 2 Android
+
+Aplikasi Android membungkus frontend web yang sama dalam **WebView native** menggunakan **Tauri 2**, memberikan akses ke API native Android tanpa menulis ulang UI.
+
+**Fitur Android:**
+- **Google OAuth** — Login via system browser + deep link `zeavisedu://` kembali ke app
+- **Kamera** — Izin `CAMERA` untuk unggah foto daun jagung langsung dari kamera
+- **Tauri Plugin Opener** — Buka URL eksternal di system browser
+- **Tauri Plugin Deep Link** — Tangkap OAuth callback tanpa memerlukan server redirect
+
+**CI/CD Android:**
+- GitHub Actions workflow `.github/workflows/android.yml`
+- Build otomatis di setiap push/PR ke `main`
+- Patch `AndroidManifest.xml` untuk menambahkan izin kamera + intent filter deep link
+- APK ditandatangani (signed) via `apksigner` + release ke GitHub Releases
+
+```bash
+# Development Android (butuh Android SDK + emulator/device)
+cd apps/tauri
+bun run tauri android init        # Init project Android
+bun run tauri android dev         # Dev dengan hot reload
+bun run tauri android build --apk # Build APK production
+
+# CI/CD — dijalankan otomatis via GitHub Actions
+.github/workflows/android.yml
+```
+
+> Konfigurasi: `apps/tauri/tauri.conf.json` &bull; `apps/tauri/gen/android/`
 
 ---
 
