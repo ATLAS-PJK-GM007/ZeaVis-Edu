@@ -55,15 +55,47 @@ async function exchangeGoogleCode(code: string): Promise<GoogleTokenResponse> {
 }
 
 function decodeGoogleIdToken(idToken: string): GoogleIdPayload {
-  // JWT: header.payload.signature — we only need the payload
-  // Google's id_token is verified via the token endpoint (direct server-to-server),
-  // so we can safely decode without verifying the signature here.
   const parts = idToken.split('.');
   if (parts.length !== 3) {
     throw new Error('Invalid id_token format');
   }
   const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
   return JSON.parse(payload);
+}
+
+/**
+ * Render a page for the Android system browser that redirects back to the
+ * Tauri app via a custom scheme (zeavisedu://). The app's AndroidManifest
+ * must register an intent filter for this scheme.
+ */
+function renderTauriDeepLinkPage(targetUrl: string): Response {
+  // Rewrite https://... to zeavisedu://... for the custom scheme
+  const deepLink = targetUrl.replace(/^https?:\/\//, 'zeavisedu://');
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kembali ke ZeaVis Edu</title></head>
+<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f0fdf4">
+<div style="text-align:center;padding:2rem">
+<p style="color:#166534;font-size:1.1rem;margin-bottom:1.5rem">Login berhasil!<br>Kembali ke aplikasi...</p>
+<a href="${deepLink.replace(/"/g, '&quot;')}" style="display:inline-block;background:#16a34a;color:white;padding:0.75rem 2rem;border-radius:0.5rem;text-decoration:none;font-weight:600;font-size:1rem">Buka ZeaVis Edu</a>
+<p style="color:#6b7280;font-size:0.8rem;margin-top:1rem">Jika tombol tidak berfungsi, salin URL ini:<br><code style="word-break:break-all;font-size:0.75rem">${deepLink.replace(/</g, '&lt;')}</code></p>
+</div>
+<script>window.location.href=${JSON.stringify(deepLink)};</script>
+</body></html>`;
+  return new Response(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html;charset=utf-8' },
+  });
+}
+
+function resolvePlatform(stateRaw: string | undefined): string {
+  try {
+    if (stateRaw) {
+      const parsed = JSON.parse(Buffer.from(stateRaw, 'base64url').toString('utf-8'));
+      return parsed.platform ?? 'web';
+    }
+  } catch { /* ignore */ }
+  return 'web';
 }
 
 function normalizeEmail(email: unknown) {
@@ -171,11 +203,14 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
     set.headers['Set-Cookie'] = clearSessionCookie(request.headers);
     return { ok: true };
   })
-  .get('/google', ({ set }) => {
+  .get('/google', ({ query, set }) => {
     if (!env.googleOAuthEnabled) {
       set.status = 404;
       return { error: 'Google OAuth is not configured' };
     }
+
+    const platform = (query as Record<string, string>).platform ?? 'web';
+    const state = Buffer.from(JSON.stringify({ platform })).toString('base64url');
 
     const params = new URLSearchParams({
       client_id: env.googleClientId!,
@@ -184,6 +219,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       scope: 'openid email profile',
       access_type: 'offline',
       prompt: 'select_account',
+      state,
     });
 
     set.status = 302;
@@ -195,13 +231,20 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       return { error: 'Google OAuth is not configured' };
     }
 
-    const code = (query as Record<string, string>).code;
-    const error = (query as Record<string, string>).error;
+    const q = query as Record<string, string>;
+    const code = q.code;
+    const error = q.error;
+    const platform = resolvePlatform(q.state);
 
     // User denied or Google returned an error
+    const makeErrorUrl = (msg: string) =>
+      `${env.webAppUrl}/login?error=${encodeURIComponent(msg)}`;
+
     if (error || !code) {
+      const url = makeErrorUrl(error ?? 'missing_code');
+      if (platform === 'tauri') return renderTauriDeepLinkPage(url);
       set.status = 302;
-      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent(error ?? 'missing_code')}`;
+      set.headers['Location'] = url;
       return;
     }
 
@@ -212,15 +255,19 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       idPayload = decodeGoogleIdToken(tokens.id_token);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Google auth failed';
+      const url = makeErrorUrl(msg);
+      if (platform === 'tauri') return renderTauriDeepLinkPage(url);
       set.status = 302;
-      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent(msg)}`;
+      set.headers['Location'] = url;
       return;
     }
 
     // Validate email
     if (!idPayload.email_verified || !idPayload.email) {
+      const url = makeErrorUrl('Email not verified by Google');
+      if (platform === 'tauri') return renderTauriDeepLinkPage(url);
       set.status = 302;
-      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent('Email not verified by Google')}`;
+      set.headers['Location'] = url;
       return;
     }
 
@@ -231,19 +278,15 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
     try {
       const db = createDbClient();
 
-      // 1. Try to find user by googleId
       let user = await db.select().from(users).where(eq(users.googleId, googleId)).limit(1).then(r => r[0] ?? null);
 
-      // 2. If not found, try by email (link existing account)
       if (!user) {
         user = await db.select().from(users).where(eq(users.email, email)).limit(1).then(r => r[0] ?? null);
         if (user) {
-          // Link googleId to existing account
           await db.update(users).set({ googleId }).where(eq(users.id, user.id));
         }
       }
 
-      // 3. Create new user if nothing matched
       if (!user) {
         const inserted = await db
           .insert(users)
@@ -253,17 +296,19 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
         authCounter.labels('register', 'true').inc();
       }
 
-      // Create session
       const token = await createSession(user.id);
       set.headers['Set-Cookie'] = createSessionCookie(token, request.headers);
 
       authCounter.labels('login', 'true').inc();
 
-      // Redirect to web app with token in URL for localStorage fallback
+      const successUrl = `${env.webAppUrl}/login?token=${encodeURIComponent(token)}`;
+      if (platform === 'tauri') return renderTauriDeepLinkPage(successUrl);
       set.status = 302;
-      set.headers['Location'] = `${env.webAppUrl}/login?token=${encodeURIComponent(token)}`;
+      set.headers['Location'] = successUrl;
     } catch (err) {
+      const url = makeErrorUrl('Database unavailable');
+      if (platform === 'tauri') return renderTauriDeepLinkPage(url);
       set.status = 302;
-      set.headers['Location'] = `${env.webAppUrl}/login?error=${encodeURIComponent('Database unavailable')}`;
+      set.headers['Location'] = url;
     }
   });

@@ -3,6 +3,9 @@
   "description": "Capability for the main window",
   "windows": ["main"],
   "permissions": [
-    "core:default"
+    "core:default",
+    "opener:default",
+    "opener:allow-open-url",
+    "deep-link:default"
   ]
 }
