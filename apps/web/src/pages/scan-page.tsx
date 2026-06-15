@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import type { DiagnosisRecord } from "@zeavis/shared";
+import { diseaseCatalogSeed } from "@zeavis/shared"; // Import data seed lokal ditambahkan
 import { apiClient } from "@/lib/api-client";
 import { trackScan, trackDiagnosisResult } from "@/lib/telemetry";
 import { DiagnosisResultView } from "../components/diagnose-result-view";
@@ -76,7 +77,7 @@ export function ScanPage() {
   const [diagnosisPreview, setDiagnosisPreview] =
     useState<DiagnosisRecord | null>(null);
 
-  const diagnosesQuery = useQuery({
+  useQuery({
     queryKey: ["diagnoses"],
     queryFn: () => apiClient.getDiagnoses(),
     enabled: previewOpen,
@@ -373,29 +374,46 @@ export function ScanPage() {
               </div>
             )}
 
-            <DiagnosisResultView
-              imageUrl={
-                previewUrl ||
-                diagnosisPreview.imageUrl ||
-                "https://placehold.co/600x400?text=Foto+Daun"
-              }
-              confidence={diagnosisPreview.confidence ?? 0}
-              diseaseName={
-                diagnosisPreview.disease?.commonName ?? "Tidak Diketahui"
-              }
-              scientificName={diagnosisPreview.disease?.label ?? ""}
-              riskLevel={diagnosisPreview.disease?.riskLevel ?? "Sedang"}
-              description={
-                diagnosisPreview.disease?.description ??
-                diagnosisPreview.disease?.summary ??
-                "Deskripsi tidak tersedia."
-              }
-              symptoms={diagnosisPreview.disease?.symptoms ?? []}
-              preventions={diagnosisPreview.disease?.recommendations ?? []}
-              medicines={
-                (diagnosisPreview.disease as any)?.medicineRecommendations ?? []
-              }
-            />
+            {/* Render DiagnosisResultView dengan Fallback Obat */}
+            {(() => {
+              // Fallback logic for scientific name and medicine recommendations
+              const seedData = diagnosisPreview.disease
+                ? diseaseCatalogSeed.find(
+                    (seed) =>
+                      seed.commonName === diagnosisPreview.disease?.commonName,
+                  )
+                : null;
+
+              // If the API doesn't return medicine recommendations, use the seed data as a fallback
+              const finalMedicines =
+                (diagnosisPreview.disease as any)?.medicineRecommendations ||
+                seedData?.medicineRecommendations ||
+                [];
+
+              return (
+                <DiagnosisResultView
+                  imageUrl={
+                    previewUrl ||
+                    diagnosisPreview.imageUrl ||
+                    "https://placehold.co/600x400?text=Foto+Daun"
+                  }
+                  confidence={diagnosisPreview.confidence ?? 0}
+                  diseaseName={
+                    diagnosisPreview.disease?.commonName ?? "Tidak Diketahui"
+                  }
+                  scientificName={diagnosisPreview.disease?.label ?? ""}
+                  riskLevel={diagnosisPreview.disease?.riskLevel ?? "Sedang"}
+                  description={
+                    diagnosisPreview.disease?.description ??
+                    diagnosisPreview.disease?.summary ??
+                    "Deskripsi tidak tersedia."
+                  }
+                  symptoms={diagnosisPreview.disease?.symptoms ?? []}
+                  preventions={diagnosisPreview.disease?.recommendations ?? []}
+                  medicines={finalMedicines} // Datanya terhubung ke sini!
+                />
+              );
+            })()}
 
             {/* All Model Predictions */}
             {diagnosisPreview.predictions &&
