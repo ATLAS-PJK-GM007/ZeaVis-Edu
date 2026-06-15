@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUiStore } from "@/store/ui-store";
 import { apiClient } from "@/lib/api-client";
-import bg from "@/assets/images/dashboard-bg.webp";
 
 export function DashboardPage() {
   const { dashboardCompact } = useUiStore();
@@ -74,7 +73,7 @@ export function DashboardPage() {
       {/* Hero header */}
       <header
         className="relative overflow-hidden rounded-3xl bg-cover bg-center bg-no-repeat shadow-sm"
-        style={{ backgroundImage: `url(${bg})` }}
+        style={{ backgroundImage: `url(https://cdn.pixabay.com/photo/2014/09/09/19/07/corn-field-440338_1280.jpg)`, backgroundPosition: "bottom", backgroundSize: "cover" }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#2F6E1A]/60 to-black/30" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 p-6 md:p-10">
