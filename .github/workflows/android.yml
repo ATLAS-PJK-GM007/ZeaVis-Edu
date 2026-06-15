@@ -136,7 +136,11 @@ jobs:
           rm -rf gen/android
           bun tauri android init
 
-      - name: Patch AndroidManifest (CAMERA permission)
+      - name: Generate Android launcher icons from SVG logo
+        working-directory: apps/tauri
+        run: bun run scripts/generate-icons.js
+
+      - name: Patch AndroidManifest (CAMERA permission + deep link)
         working-directory: apps/tauri
         run: bash scripts/patch-android-manifest.sh
 
