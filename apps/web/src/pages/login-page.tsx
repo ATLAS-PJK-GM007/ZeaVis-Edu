@@ -1,23 +1,28 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthForm } from "@/components/auth-form";
 import { apiClient, setAuthToken } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
+
+function getUrlParam(name: string): string | null {
+  return new URLSearchParams(window.location.search).get(name);
+}
 
 export function LoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState<string | null>(null);
-  const [searchParams] = useSearchParams();
   const oauthTokenConsumed = useRef(false);
+  const [oauthProcessing, setOauthProcessing] = useState(false);
 
   // Handle OAuth callback: the API redirects to /login?token=<session_token>
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token = getUrlParam("token");
     if (!token || oauthTokenConsumed.current) return;
     oauthTokenConsumed.current = true;
+    setOauthProcessing(true);
 
     // Store token for future API calls and fetch user
     setAuthToken(token);
@@ -31,12 +36,13 @@ export function LoginPage() {
       })
       .catch((err) => {
         setAuthToken(null);
+        setOauthProcessing(false);
         setError(err instanceof Error ? err.message : "Google login gagal");
       });
-  }, [searchParams, setUser, queryClient, navigate]);
+  }, [setUser, queryClient, navigate]);
 
   // Show OAuth error from query param
-  const oauthError = searchParams.get("error");
+  const oauthError = getUrlParam("error");
   const meQuery = useQuery({
     queryKey: ["auth", "me"],
     queryFn: () => apiClient.getMe(),
@@ -52,6 +58,18 @@ export function LoginPage() {
     onError: (err) =>
       setError(err instanceof Error ? err.message : "Login gagal"),
   });
+
+  // Show loading spinner while OAuth token is being processed
+  if (oauthProcessing) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-6 py-12">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm">Menyelesaikan login dengan Google...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
