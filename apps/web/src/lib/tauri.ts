@@ -35,20 +35,25 @@ export async function setupDeepLinkHandler(): Promise<void> {
   const { onOpenUrl } = await import('@tauri-apps/plugin-deep-link');
   onOpenUrl((urls) => {
     for (const url of urls) {
-      // url looks like: zeavisedu://zeavisedu.asepharyana.my.id/login?token=xxx
+      // url looks like: zeavisedu://login/login?token=xxx
       // Extract path + query after the host
       try {
         const u = new URL(url);
         const target = u.pathname + u.search + u.hash;
         if (target && target !== '/') {
           window.location.href = target;
+          return;
         }
-      } catch {
-        // If URL parsing fails, try to extract everything after the scheme
-        const match = url.match(/^[^:]+:\/\/(?:[^/]+)?(\/.*)?$/);
-        if (match?.[1]) {
-          window.location.href = match[1];
-        }
+      } catch { /* try fallback below */ }
+
+      // Fallback: extract everything after scheme, handling both // and /
+      let match = url.match(/^[^:]+:\/\/(?:[^/]+)?(\/.*)?$/);
+      if (!match) {
+        // Also handle single-slash non-hierarchical URLs (e.g. zeavisedu:/path)
+        match = url.match(/^[^:]+:\/(\/.*)?$/);
+      }
+      if (match?.[1]) {
+        window.location.href = match[1];
       }
     }
   });

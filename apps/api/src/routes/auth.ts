@@ -80,7 +80,9 @@ function renderTauriDeepLinkPage(targetUrl: string): Response {
   const escapedPath = pathAndQuery.replace(/"/g, '&quot;');
   // intent:// scheme: Chrome on Android opens the target app by package name
   // browser_fallback_url: shown if the app isn't installed
-  const intentUrl = `intent:${escapedPath}#Intent;scheme=zeavisedu;package=com.zeavis.edu;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
+  // Use intent://login/... to produce data URI zeavisedu://login/login?token=xxx
+  // which new URL() can parse (single-slash non-hierarchical URLs break WebView)
+  const intentUrl = `intent://login${escapedPath}#Intent;scheme=zeavisedu;package=com.zeavis.edu;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
