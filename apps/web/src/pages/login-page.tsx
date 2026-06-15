@@ -65,15 +65,29 @@ export function LoginPage() {
       <main className="flex min-h-screen items-center justify-center px-6 py-12">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">Menyelesaikan login dengan Google...</p>
+          <p className="text-gray-500 text-sm">
+            Menyelesaikan login dengan Google...
+          </p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm md:max-w-md space-y-4">
+    <main className="relative flex min-h-screen items-center justify-center px-6 py-12">
+      {/* Background Image with Overlay */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(https://cdn.pixabay.com/photo/2014/09/09/19/07/corn-field-440338_1280.jpg)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+
+      {/* Glassmorphism Container */}
+      <div className="relative z-10 w-full max-w-sm md:max-w-md space-y-6 bg-white/60 backdrop-blur-md p-8 md:p-10 rounded-3xl shadow-2xl border border-white/50">
         <AuthForm
           mode="login"
           isSubmitting={mutation.isPending}
@@ -87,9 +101,13 @@ export function LoginPage() {
           }}
           onFieldChange={() => setError(null)}
         />
-        <p className="text-center text-sm text-muted-foreground">
+
+        <p className="text-center text-sm text-slate-700">
           Belum punya akun?{" "}
-          <Link className="text-primary" to="/register">
+          <Link
+            className="text-emerald-700 font-bold hover:underline"
+            to="/register"
+          >
             Daftar
           </Link>
         </p>

@@ -37,12 +37,12 @@ export function AuthForm({ mode, isSubmitting, error, googleOAuthEnabled, onSubm
   }, []);
 
   return (
-    <Card className="mx-auto w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{mode === 'login' ? 'Masuk ke ZeaVis Edu' : 'Buat akun ZeaVis Edu'}</CardTitle>
-        <CardDescription>
+    <Card className="mx-auto w-full max-w-md bg-transparent border-none shadow-none">
+      <CardHeader className="text-center space-y-2">
+        <CardTitle className="text-2xl font-bold text-emerald-900">{mode === 'login' ? 'Masuk Akun ZeaVis Edu' : 'Buat akun ZeaVis Edu'}</CardTitle>
+        <CardDescription className="text-sm text-emerald-800/80">
           {mode === 'login'
-            ? 'Masuk untuk melihat riwayat diagnosis daun jagung Anda.'
+            ? 'Masuk untuk menyimpan diagnosis dan mengikuti review pakar.'
             : 'Daftar untuk menyimpan diagnosis dan mengikuti review pakar.'}
         </CardDescription>
       </CardHeader>
