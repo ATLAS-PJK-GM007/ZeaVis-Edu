@@ -5,6 +5,7 @@ COPY package.json bun.lock bunfig.toml tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
+COPY apps/tauri/package.json apps/tauri/package.json
 RUN bun install
 
 COPY packages/shared packages/shared
