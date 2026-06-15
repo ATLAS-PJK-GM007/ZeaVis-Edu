@@ -11,6 +11,7 @@ const webAppUrl = Bun.env.WEB_APP_URL ?? 'http://localhost:5173';
 const allowedOrigins = [
   webAppUrl,
   'https://tauri.localhost',
+  'http://tauri.localhost',
   'tauri://localhost',
   'http://localhost:5173',
 ];
