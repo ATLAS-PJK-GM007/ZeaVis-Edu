@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUiStore } from "@/store/ui-store";
 import { apiClient } from "@/lib/api-client";
-import bg from "@/assets/images/dashboard-bg.webp";
 
 export function DashboardPage() {
   const { dashboardCompact } = useUiStore();
@@ -23,16 +22,17 @@ export function DashboardPage() {
   const summary = summaryQuery.data;
   const diseases = diseasesQuery.data ?? [];
 
-  const diseasesQuick = useMemo(() =>
-    diseases
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .map((d) => ({
-        name: d.commonName,
-        sci: d.label,
-        color: d.accentColor,
-        slug: d.slug,
-      })),
-    [diseases]
+  const diseasesQuick = useMemo(
+    () =>
+      diseases
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map((d) => ({
+          name: d.commonName,
+          sci: d.label,
+          color: d.accentColor,
+          slug: d.slug,
+        })),
+    [diseases],
   );
 
   const missionCards = [
@@ -74,7 +74,11 @@ export function DashboardPage() {
       {/* Hero header */}
       <header
         className="relative overflow-hidden rounded-3xl bg-cover bg-center bg-no-repeat shadow-sm"
-        style={{ backgroundImage: `url(${bg})` }}
+        style={{
+          backgroundImage: `url(https://cdn.pixabay.com/photo/2014/09/09/19/07/corn-field-440338_1280.jpg)`,
+          backgroundPosition: "bottom",
+          backgroundSize: "cover",
+        }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#2F6E1A]/60 to-black/30" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 p-6 md:p-10">
@@ -82,7 +86,9 @@ export function DashboardPage() {
             <span className="inline-block rounded-full bg-[#1E8A2A]/80 px-4 py-2 text-xs font-semibold">
               AI FOR SMART EDUCATION
             </span>
-            <h1 className="text-2xl md:text-4xl font-extrabold">Selamat Datang di</h1>
+            <h1 className="text-2xl md:text-4xl font-extrabold">
+              Selamat Datang di
+            </h1>
             <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-[#9AD872]">
               ZeaVis Edu
             </h2>
@@ -107,10 +113,7 @@ export function DashboardPage() {
                 variant="outline"
                 className="px-4 md:px-6 py-3 md:py-6 text-sm md:text-lg font-semibold text-white hover:bg-[#1E8A2A]"
               >
-                <Link
-                  to="/catalog"
-                  className="inline-flex items-center gap-2"
-                >
+                <Link to="/catalog" className="inline-flex items-center gap-2">
                   Pustaka Penyakit
                   <ChevronRight className="h-5 w-6" />
                 </Link>
@@ -169,7 +172,10 @@ export function DashboardPage() {
                   <div className="text-3xl font-bold">
                     {summary.imageClassificationCount}
                   </div>
-                  <Link to="/diagnoses" className="text-emerald-600 ml-auto hover:underline">
+                  <Link
+                    to="/diagnoses"
+                    className="text-emerald-600 ml-auto hover:underline"
+                  >
                     Lihat daftar
                   </Link>
                 </CardContent>
@@ -186,7 +192,10 @@ export function DashboardPage() {
                   <div className="text-3xl font-bold text-amber-600">
                     {summary.needsReviewCount}
                   </div>
-                  <Link to="/diagnoses?status=needs_review" className="text-amber-600 ml-auto hover:underline">
+                  <Link
+                    to="/diagnoses?status=needs_review"
+                    className="text-amber-600 ml-auto hover:underline"
+                  >
                     Lihat daftar
                   </Link>
                 </CardContent>
@@ -200,10 +209,11 @@ export function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="h-full flex flex-col justify-start pt-2">
-                  <div className="text-3xl font-bold text-red-600">
-                    —
-                  </div>
-                  <Link to="/diagnoses?status=failed" className="text-red-600 ml-auto hover:underline">
+                  <div className="text-3xl font-bold text-red-600">—</div>
+                  <Link
+                    to="/diagnoses?status=failed"
+                    className="text-red-600 ml-auto hover:underline"
+                  >
                     Lihat daftar
                   </Link>
                 </CardContent>
@@ -220,7 +230,10 @@ export function DashboardPage() {
                   <div className="text-3xl font-bold text-red-600">
                     {summary.riskDistribution.high}
                   </div>
-                  <Link to="/catalog?risk=high" className="text-red-600 ml-auto hover:underline">
+                  <Link
+                    to="/catalog?risk=high"
+                    className="text-red-600 ml-auto hover:underline"
+                  >
                     Lihat pustaka
                   </Link>
                 </CardContent>
@@ -276,7 +289,8 @@ export function DashboardPage() {
                   Penyakit yang Dapat Dideteksi
                 </h3>
                 <p className="text-[15px] font-normal text-muted-foreground">
-                  {diseases.length} kelas penyakit dan kondisi daun jagung dalam sistem kami
+                  {diseases.length} kelas penyakit dan kondisi daun jagung dalam
+                  sistem kami
                 </p>
               </div>
               <Link
@@ -295,9 +309,7 @@ export function DashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {diseasesQuick.map((d) => (
                   <Link key={d.slug} to={`/catalog/${d.slug}`}>
-                    <Card
-                      className="rounded-2xl bg-white p-4 shadow-sm h-full transition-transform hover:scale-[1.03] hover:shadow-md cursor-pointer"
-                    >
+                    <Card className="rounded-2xl bg-white p-4 shadow-sm h-full transition-transform hover:scale-[1.03] hover:shadow-md cursor-pointer">
                       <CardContent className="h-full p-4 flex flex-col justify-between">
                         <div className="flex items-start gap-3">
                           <div
@@ -324,7 +336,9 @@ export function DashboardPage() {
           {/* Scan quick access */}
           <div className="mt-12 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 bg-[#1E8A2A] rounded-3xl p-5 sm:p-6">
             <div className="flex-1 text-white">
-              <h3 className="text-2xl font-bold">Siap Mendeteksi Penyakit Daun?</h3>
+              <h3 className="text-2xl font-bold">
+                Siap Mendeteksi Penyakit Daun?
+              </h3>
               <p className="text-sm text-[#9AD872] font-normal mt-2">
                 Unggah foto daun jagung Anda dan dapatkan hasil analisis AI
                 dalam hitungan detik.
