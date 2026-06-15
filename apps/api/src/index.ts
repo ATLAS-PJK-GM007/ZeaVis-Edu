@@ -17,7 +17,7 @@ assertRequiredEnv();
 
 const app = new Elysia()
   .use(cors({
-    origin: env.webAppUrl,
+    origin: env.allowedOrigins,
     credentials: true,
   }))
   .use(metricsRoutes)

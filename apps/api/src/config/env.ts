@@ -8,6 +8,12 @@ const googleOAuthEnabled = Boolean(
 );
 
 const webAppUrl = Bun.env.WEB_APP_URL ?? 'http://localhost:5173';
+const allowedOrigins = [
+  webAppUrl,
+  'https://tauri.localhost',
+  'tauri://localhost',
+  'http://localhost:5173',
+];
 const secureCookies = Bun.env.SECURE_COOKIES === 'true' || webAppUrl.startsWith('https://');
 
 export const env = {
@@ -24,6 +30,7 @@ export const env = {
   googleClientSecret: Bun.env.GOOGLE_CLIENT_SECRET,
   googleRedirectUri: Bun.env.GOOGLE_REDIRECT_URI,
   webAppUrl,
+  allowedOrigins,
   secureCookies,
 };
 
