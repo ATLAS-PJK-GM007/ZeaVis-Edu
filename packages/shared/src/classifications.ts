@@ -66,6 +66,7 @@ export type RegisterRequest = AuthRequest & {
 export type AuthResponse = {
   user: AuthUser;
   features: AuthFeatures;
+  token?: string;
 };
 
 export type DiagnosisPrediction = {

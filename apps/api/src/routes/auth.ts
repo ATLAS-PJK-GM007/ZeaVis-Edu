@@ -32,7 +32,7 @@ function validatePassword(password: unknown) {
 
 export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
   .get('/me', async ({ request }) => {
-    const user = await getCurrentUser(request.headers.get('cookie'));
+    const user = await getCurrentUser(request.headers.get('cookie'), request.headers);
     return {
       user,
       features: getAuthFeatures(),
@@ -73,6 +73,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
           name: user.name,
           role: 'user' as const,
         },
+        token,
         features: getAuthFeatures(),
       };
     } catch (error) {
@@ -109,6 +110,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
           name: user.name,
           role: user.role === 'expert' ? 'expert' as const : 'user' as const,
         },
+        token,
         features: getAuthFeatures(),
       };
     } catch (error) {
