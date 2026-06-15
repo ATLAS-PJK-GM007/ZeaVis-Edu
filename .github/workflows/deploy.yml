@@ -179,6 +179,9 @@ jobs:
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             WEB_APP_URL=https://zeavisedu.asepharyana.my.id
             ML_SERVICE_URL=http://zeavis-ml:8000
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_REDIRECT_URI=https://zeavisedu.asepharyana.my.id/api/v1/auth/google/callback
             ENVEOF
             } > .env
 
