@@ -10,27 +10,32 @@ type AuthGuardProps = {
 };
 
 export function AuthGuard({ children, requireExpert = false }: AuthGuardProps) {
+  const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const query = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: () => apiClient.getMe(),
+    staleTime: 30_000,
   });
 
   useEffect(() => {
-    if (query.data) {
+    if (query.data?.user) {
       setUser(query.data.user);
     }
   }, [query.data, setUser]);
 
-  if (query.isLoading) {
+  // Tunjukkan loading hanya jika belum ada user di store
+  if (query.isLoading && !user) {
     return <main className="min-h-screen p-8 text-center text-muted-foreground">Memeriksa sesi...</main>;
   }
 
-  if (!query.data?.user) {
+  // Cek store dulu, baru query — mencegah redirect saat refetch background
+  const currentUser = query.data?.user ?? user;
+  if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
 
-  if (requireExpert && query.data.user.role !== 'expert') {
+  if (requireExpert && currentUser.role !== 'expert') {
     return <Navigate to="/dashboard" replace />;
   }
 

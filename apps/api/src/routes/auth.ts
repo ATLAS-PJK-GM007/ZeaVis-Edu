@@ -38,7 +38,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       features: getAuthFeatures(),
     };
   })
-  .post('/register', async ({ body, set }) => {
+  .post('/register', async ({ body, set, request }) => {
     const req = body as Partial<RegisterRequest> | undefined;
     const email = normalizeEmail(req?.email);
     const name = normalizeName(req?.name);
@@ -62,7 +62,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
 
       const user = inserted[0];
       const token = await createSession(user.id);
-      set.headers['Set-Cookie'] = createSessionCookie(token);
+      set.headers['Set-Cookie'] = createSessionCookie(token, request.headers);
 
       authCounter.labels('register', 'true').inc();
 
@@ -79,7 +79,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       return serviceUnavailable('Database unavailable');
     }
   })
-  .post('/login', async ({ body, set }) => {
+  .post('/login', async ({ body, set, request }) => {
     const req = body as Partial<AuthRequest> | undefined;
     const email = normalizeEmail(req?.email);
 
@@ -98,7 +98,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
       }
 
       const token = await createSession(user.id);
-      set.headers['Set-Cookie'] = createSessionCookie(token);
+      set.headers['Set-Cookie'] = createSessionCookie(token, request.headers);
 
       authCounter.labels('login', 'true').inc();
 
@@ -116,8 +116,9 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
     }
   })
   .post('/logout', async ({ request, set }) => {
-    await deleteSession(readSessionToken(request.headers.get('cookie')));
-    set.headers['Set-Cookie'] = clearSessionCookie();
+    const cookieHeader = request.headers.get('cookie');
+    await deleteSession(readSessionToken(cookieHeader));
+    set.headers['Set-Cookie'] = clearSessionCookie(request.headers);
     return { ok: true };
   })
   .get('/google', ({ set }) => {

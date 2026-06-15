@@ -9,6 +9,7 @@ export function AuthInitializer() {
     queryKey: ['auth', 'me'],
     queryFn: () => apiClient.getMe(),
     retry: false,
+    staleTime: 30_000,
   });
 
   useEffect(() => {

@@ -28,14 +28,26 @@ function hashToken(token: string) {
   return createHash('sha256').update(`${env.sessionSecret}:${token}`).digest('hex');
 }
 
-export function createSessionCookie(token: string) {
+function isSecureRequest(headers?: { get(name: string): string | null }) {
+  if (env.secureCookies) return true;
+  // Detect HTTPS behind proxy (X-Forwarded-Proto)
+  const proto = headers?.get('x-forwarded-proto');
+  if (proto === 'https') return true;
+  return false;
+}
+
+function buildSameSite(headers?: { get(name: string): string | null }) {
+  return isSecureRequest(headers) ? 'SameSite=None; Secure' : 'SameSite=Lax';
+}
+
+export function createSessionCookie(token: string, headers?: { get(name: string): string | null }) {
   const maxAge = 60 * 60 * 24 * 30;
-  const sameSite = env.secureCookies ? 'SameSite=None; Secure' : 'SameSite=Lax';
+  const sameSite = buildSameSite(headers);
   return `${sessionCookieName}=${token}; HttpOnly; Path=/; ${sameSite}; Max-Age=${maxAge}`;
 }
 
-export function clearSessionCookie() {
-  const sameSite = env.secureCookies ? 'SameSite=None; Secure' : 'SameSite=Lax';
+export function clearSessionCookie(headers?: { get(name: string): string | null }) {
+  const sameSite = buildSameSite(headers);
   return `${sessionCookieName}=; HttpOnly; Path=/; ${sameSite}; Max-Age=0`;
 }
 
