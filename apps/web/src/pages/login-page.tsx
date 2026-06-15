@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthForm } from "@/components/auth-form";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, setAuthToken } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 
 export function LoginPage() {
@@ -10,6 +10,33 @@ export function LoginPage() {
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const oauthTokenConsumed = useRef(false);
+
+  // Handle OAuth callback: the API redirects to /login?token=<session_token>
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (!token || oauthTokenConsumed.current) return;
+    oauthTokenConsumed.current = true;
+
+    // Store token for future API calls and fetch user
+    setAuthToken(token);
+
+    apiClient
+      .getMe()
+      .then((data) => {
+        setUser(data.user);
+        queryClient.setQueryData(["auth", "me"], data);
+        navigate("/dashboard", { replace: true });
+      })
+      .catch((err) => {
+        setAuthToken(null);
+        setError(err instanceof Error ? err.message : "Google login gagal");
+      });
+  }, [searchParams, setUser, queryClient, navigate]);
+
+  // Show OAuth error from query param
+  const oauthError = searchParams.get("error");
   const meQuery = useQuery({
     queryKey: ["auth", "me"],
     queryFn: () => apiClient.getMe(),
@@ -32,7 +59,7 @@ export function LoginPage() {
         <AuthForm
           mode="login"
           isSubmitting={mutation.isPending}
-          error={error}
+          error={oauthError || error}
           googleOAuthEnabled={Boolean(
             meQuery.data?.features.googleOAuthEnabled,
           )}

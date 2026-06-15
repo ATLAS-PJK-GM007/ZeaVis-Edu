@@ -18,6 +18,54 @@ import {
 import { env } from '../config/env';
 import { authCounter } from '../lib/telemetry';
 
+// ── Google OAuth Helpers ──────────────────────────────────────────────
+
+interface GoogleTokenResponse {
+  access_token: string;
+  id_token: string;
+}
+
+interface GoogleIdPayload {
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  name: string;
+  picture?: string;
+}
+
+async function exchangeGoogleCode(code: string): Promise<GoogleTokenResponse> {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: env.googleClientId!,
+      client_secret: env.googleClientSecret!,
+      redirect_uri: env.googleRedirectUri!,
+      grant_type: 'authorization_code',
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Google token exchange failed: ${res.status} ${err}`);
+  }
+
+  return res.json() as Promise<GoogleTokenResponse>;
+}
+
+function decodeGoogleIdToken(idToken: string): GoogleIdPayload {
+  // JWT: header.payload.signature — we only need the payload
+  // Google's id_token is verified via the token endpoint (direct server-to-server),
+  // so we can safely decode without verifying the signature here.
+  const parts = idToken.split('.');
+  if (parts.length !== 3) {
+    throw new Error('Invalid id_token format');
+  }
+  const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+  return JSON.parse(payload);
+}
+
 function normalizeEmail(email: unknown) {
   return typeof email === 'string' ? email.trim().toLowerCase() : '';
 }
@@ -140,11 +188,76 @@ export const authRoutes = new Elysia({ prefix: '/api/v1/auth' })
 
     set.redirect = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   })
-  .get('/google/callback', ({ set }) => {
+  .get('/google/callback', async ({ query, set, request }) => {
     if (!env.googleOAuthEnabled) {
       set.status = 404;
       return { error: 'Google OAuth is not configured' };
     }
 
-    set.redirect = `${env.webAppUrl}/login?oauth=not-implemented`;
+    const code = (query as Record<string, string>).code;
+    const error = (query as Record<string, string>).error;
+
+    // User denied or Google returned an error
+    if (error || !code) {
+      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent(error ?? 'missing_code')}`;
+      return;
+    }
+
+    // Exchange authorization code for tokens
+    let idPayload: GoogleIdPayload;
+    try {
+      const tokens = await exchangeGoogleCode(code);
+      idPayload = decodeGoogleIdToken(tokens.id_token);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Google auth failed';
+      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent(msg)}`;
+      return;
+    }
+
+    // Validate email
+    if (!idPayload.email_verified || !idPayload.email) {
+      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent('Email not verified by Google')}`;
+      return;
+    }
+
+    const googleId = idPayload.sub;
+    const email = idPayload.email.trim().toLowerCase();
+    const name = idPayload.name?.trim() ?? email.split('@')[0];
+
+    try {
+      const db = createDbClient();
+
+      // 1. Try to find user by googleId
+      let user = await db.select().from(users).where(eq(users.googleId, googleId)).limit(1).then(r => r[0] ?? null);
+
+      // 2. If not found, try by email (link existing account)
+      if (!user) {
+        user = await db.select().from(users).where(eq(users.email, email)).limit(1).then(r => r[0] ?? null);
+        if (user) {
+          // Link googleId to existing account
+          await db.update(users).set({ googleId }).where(eq(users.id, user.id));
+        }
+      }
+
+      // 3. Create new user if nothing matched
+      if (!user) {
+        const inserted = await db
+          .insert(users)
+          .values({ email, name, googleId, role: 'user' })
+          .returning();
+        user = inserted[0];
+        authCounter.labels('register', 'true').inc();
+      }
+
+      // Create session
+      const token = await createSession(user.id);
+      set.headers['Set-Cookie'] = createSessionCookie(token, request.headers);
+
+      authCounter.labels('login', 'true').inc();
+
+      // Redirect to web app with token in URL for localStorage fallback
+      set.redirect = `${env.webAppUrl}/login?token=${encodeURIComponent(token)}`;
+    } catch (err) {
+      set.redirect = `${env.webAppUrl}/login?error=${encodeURIComponent('Database unavailable')}`;
+    }
   });
