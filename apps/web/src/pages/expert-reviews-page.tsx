@@ -71,7 +71,7 @@ export function ExpertReviewsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-emerald-800">Review Pakar</h1>
+          <h1 className="text-2xl font-bold text-emerald-800">Tinjauan Pakar</h1>
           <p className="text-gray-500 mt-1 text-md">
             Tinjau hasil diagnosa dari scan yang telah dilakukan dan berikan
             feedback untuk meningkatkan akurasi sistem AI ZeaVis Edu

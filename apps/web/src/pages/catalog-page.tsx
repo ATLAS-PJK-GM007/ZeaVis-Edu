@@ -54,12 +54,12 @@ export function CatalogPage() {
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       {/* Page Title */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-[#214B11]">
+        <h1 className="text-2xl font-bold text-emerald-800">
           Pustaka Penyakit
         </h1>
-        <p className="mt-1 text-muted-foreground text-sm md:text-base">
+        <p className="text-gray-500 mt-1 text-md">
           Referensi lengkap penyakit dan kondisi daun jagung yang dapat
-          dideteksi oleh sistem AI ZeaVis Edu.
+          dideteksi oleh sistem AI ZeaVis Edu
         </p>
       </div>
 
