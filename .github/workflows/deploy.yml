@@ -189,8 +189,17 @@ jobs:
             docker rm -f zeavis-web zeavis-api zeavis-ml zeavis-node-exporter 2>/dev/null || true
             docker compose pull
             docker compose up -d
+            # Wait for containers to be healthy (up to 60s)
+            wait_container() {
+              local name=$1
+              for i in $(seq 1 30); do
+                docker compose ps | grep -q "${name}.*Up" && return 0
+                sleep 2
+              done
+              return 1
+            }
+            wait_container zeavis-web || exit 1
+            wait_container zeavis-api || exit 1
+            wait_container zeavis-ml || exit 1
+            wait_container zeavis-node-exporter || echo "⚠️  node_exporter not running (non-fatal)"
             docker compose ps
-            docker compose ps | grep -q "zeavis-web.*Up" || exit 1
-            docker compose ps | grep -q "zeavis-api.*Up" || exit 1
-            docker compose ps | grep -q "zeavis-ml.*Up" || exit 1
-            docker compose ps | grep -q "zeavis-node-exporter.*Up" || echo "⚠️  node_exporter not running (non-fatal)"
