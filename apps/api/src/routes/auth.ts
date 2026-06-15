@@ -64,23 +64,38 @@ function decodeGoogleIdToken(idToken: string): GoogleIdPayload {
 }
 
 /**
- * Render a page for the Android system browser that redirects back to the
- * Tauri app via a custom scheme (zeavisedu://). The app's AndroidManifest
- * must register an intent filter for this scheme.
+ * Render a page for the Android system browser that uses Chrome's native
+ * `intent://` protocol to open the Tauri app with the session URL.
+ * Falls back to a clickable button if the intent is blocked.
  */
 function renderTauriDeepLinkPage(targetUrl: string): Response {
-  // Rewrite https://... to zeavisedu://... for the custom scheme
-  const deepLink = targetUrl.replace(/^https?:\/\//, 'zeavisedu://');
+  // Extract the path + query from the full URL for the intent
+  let pathAndQuery = '/login';
+  try {
+    const u = new URL(targetUrl);
+    pathAndQuery = u.pathname + u.search + u.hash;
+  } catch { /* use default */ }
+
+  const displayUrl = targetUrl.replace(/"/g, '&quot;');
+  const escapedPath = pathAndQuery.replace(/"/g, '&quot;');
+  // intent:// scheme: Chrome on Android opens the target app by package name
+  // browser_fallback_url: shown if the app isn't installed
+  const intentUrl = `intent:${escapedPath}#Intent;scheme=zeavisedu;package=com.zeavis.edu;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
+
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kembali ke ZeaVis Edu</title></head>
 <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f0fdf4">
-<div style="text-align:center;padding:2rem">
-<p style="color:#166534;font-size:1.1rem;margin-bottom:1.5rem">Login berhasil!<br>Kembali ke aplikasi...</p>
-<a href="${deepLink.replace(/"/g, '&quot;')}" style="display:inline-block;background:#16a34a;color:white;padding:0.75rem 2rem;border-radius:0.5rem;text-decoration:none;font-weight:600;font-size:1rem">Buka ZeaVis Edu</a>
-<p style="color:#6b7280;font-size:0.8rem;margin-top:1rem">Jika tombol tidak berfungsi, salin URL ini:<br><code style="word-break:break-all;font-size:0.75rem">${deepLink.replace(/</g, '&lt;')}</code></p>
+<div style="text-align:center;padding:2rem;max-width:360px">
+<p style="color:#166534;font-size:1.1rem;margin-bottom:1.5rem">Login Google berhasil!<br>Kembali ke aplikasi...</p>
+<a href="${intentUrl.replace(/"/g, '&quot;')}" id="open-app" style="display:inline-block;background:#16a34a;color:white;padding:0.75rem 2rem;border-radius:0.5rem;text-decoration:none;font-weight:600;font-size:1rem;margin-bottom:1rem">Buka ZeaVis Edu</a>
+<p style="color:#6b7280;font-size:0.8rem">Jika tombol di atas tidak berfungsi, salin dan buka URL ini di aplikasi ZeaVis Edu:</p>
+<code style="display:block;word-break:break-all;font-size:0.7rem;color:#4b5563;background:#e5e7eb;padding:0.5rem;border-radius:0.25rem;margin-top:0.5rem">${displayUrl.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>
 </div>
-<script>window.location.href=${JSON.stringify(deepLink)};</script>
+<script>
+// Auto-open the intent
+window.location.href = ${JSON.stringify(intentUrl)};
+</script>
 </body></html>`;
   return new Response(html, {
     status: 200,
