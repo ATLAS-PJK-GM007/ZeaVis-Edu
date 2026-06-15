@@ -15,7 +15,7 @@ import { RiskBadge } from "@/components/risk-badge";
 
 type Props = {
   imageUrl: string;
-  confidence: number; // contoh: 0.95
+  confidence: number;
   diseaseName: string;
   scientificName: string;
   riskLevel: string;
@@ -42,8 +42,8 @@ export function DiagnosisResultView({
 
   const getRiskLevelKey = (level: string): "low" | "medium" | "high" => {
     const normalized = level.toLowerCase();
-    if (normalized.includes("rendah")) return "low";
-    if (normalized.includes("tinggi")) return "high";
+    if (normalized.includes("rendah") || normalized === "low") return "low";
+    if (normalized.includes("tinggi") || normalized === "high") return "high";
     return "medium";
   };
 
@@ -85,18 +85,35 @@ export function DiagnosisResultView({
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-sm font-bold text-slate-700">
               <span>Tingkat Keyakinan AI</span>
-              <span className="text-emerald-600">{confidencePercent}%</span>
+              <span
+                className={
+                  confidencePercent >= 75
+                    ? "text-emerald-600"
+                    : "text-amber-500"
+                }
+              >
+                {confidencePercent}%
+              </span>
             </div>
             <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-emerald-500 h-2.5 rounded-full transition-all duration-1000"
+                className={`h-2.5 rounded-full transition-all duration-1000 ${
+                  confidencePercent >= 75 ? "bg-emerald-500" : "bg-amber-500"
+                }`}
                 style={{ width: `${confidencePercent}%` }}
               ></div>
             </div>
-            <p className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
-              <CheckCircle2 className="w-3 h-3" /> Di atas ambang batas minimum
-              (75%)
-            </p>
+            {confidencePercent >= 75 ? (
+              <p className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                <CheckCircle2 className="w-3 h-3" /> Di atas ambang batas
+                minimum (75%)
+              </p>
+            ) : (
+              <p className="text-[11px] text-amber-600 flex items-center gap-1 font-medium">
+                <AlertTriangle className="w-3 h-3" /> Di bawah ambang batas
+                minimum (75%)
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3 pt-4 border-t border-amber-200/50">
