@@ -26,5 +26,13 @@
     "active": true,
     "targets": "all"
   },
-  "plugins": {}
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": ["zeavisedu"]
+        }
+      ]
+    }
+  }
 }
