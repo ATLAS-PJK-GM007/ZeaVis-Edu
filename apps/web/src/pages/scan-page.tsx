@@ -36,21 +36,18 @@ export function ScanPage() {
 
   // Camera mode state
   const [useCamera, setUseCamera] = useState(false);
-  const handleCameraCapture = useCallback(
-    (file: File) => {
-      setFileName(file.name);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+  const handleCameraCapture = useCallback((file: File) => {
+    setFileName(file.name);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
 
-      const img = new Image();
-      img.onload = () => {
-        setImageDimensions({ width: img.width, height: img.height });
-      };
-      img.src = url;
-      setUseCamera(false);
-    },
-    [],
-  );
+    const img = new Image();
+    img.onload = () => {
+      setImageDimensions({ width: img.width, height: img.height });
+    };
+    img.src = url;
+    setUseCamera(false);
+  }, []);
 
   const mutation = useMutation({
     mutationFn: (file: File) => apiClient.createDiagnosis(file),
@@ -107,10 +104,10 @@ export function ScanPage() {
       {/* Main Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-emerald-800">Scan Tanaman</h1>
+          <h1 className="text-2xl font-bold text-emerald-800">Pindai Daun</h1>
           <p className="text-gray-500 mt-1 text-md">
             Unggah foto daun jagung untuk dianalisis oleh sistem AI kami secara
-            real-time.
+            real-time
           </p>
         </div>
         <Button asChild variant="outline">
@@ -170,12 +167,16 @@ export function ScanPage() {
                         className="w-full border-2 border-dashed border-green-300 rounded-md p-10 h-60 text-center cursor-pointer"
                         onClick={() => inputRef.current?.click()}
                       >
-                        <Upload className="mx-auto text-green-500 mb-3" size={48} />
+                        <Upload
+                          className="mx-auto text-green-500 mb-3"
+                          size={48}
+                        />
                         <h3 className="font-semibold text-base text-gray-800 mb-1">
                           Seret & Lepas Foto Daun
                         </h3>
                         <p className="text-xs text-gray-500 mb-3">
-                          atau klik untuk memilih file berkas dari perangkat Anda
+                          atau klik untuk memilih file berkas dari perangkat
+                          Anda
                         </p>
                         <div className="flex flex-wrap gap-2 justify-center">
                           <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full inline-flex items-center gap-1 text-xs font-medium">

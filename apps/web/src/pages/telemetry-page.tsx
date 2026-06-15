@@ -286,12 +286,11 @@ export function TelemetryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-[28px] font-extrabold text-[#214B11] flex items-center gap-3">
-            <Activity className="h-7 w-7 text-[#48A111]" />
+          <h1 className="text-2xl font-bold text-emerald-800">
             Telemetry Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Real-time metrics from Prometheus
+          <p className="text-gray-500 mt-1 text-md">
+            Real-time monitoring dari performa sistem dan aplikasi ZeaVis Edu
             {error && <span className="text-amber-600 ml-2">(partial — {error})</span>}
           </p>
         </div>
