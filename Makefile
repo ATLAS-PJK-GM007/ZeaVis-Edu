@@ -2,7 +2,7 @@
 # ZeaVis Edu — Root Makefile
 #
 # Orchestrates the application stack (web, api, ml) and the telemetry
-# metric pipeline (Prometheus → Ingester → Vector → ClickHouse).
+# metric pipeline (Prometheus → Grafana).
 #
 # Telemetry commands operate on the submodule at telemetry/.
 # =============================================================================
