@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthForm } from "@/components/auth-form";
 import { apiClient, setAuthToken } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
+import { isTauri } from "@/lib/tauri";
 
 function getUrlParam(name: string): string | null {
   return new URLSearchParams(window.location.search).get(name);
@@ -13,11 +14,13 @@ export function LoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const oauthTokenConsumed = useRef(false);
   const [oauthProcessing, setOauthProcessing] = useState(false);
 
   // Handle OAuth callback: the API redirects to /login?token=<session_token>
+  // Must re-run on location.search change (SPA navigates to /login?token=xxx)
   useEffect(() => {
     const token = getUrlParam("token");
     if (!token || oauthTokenConsumed.current) return;
@@ -39,7 +42,36 @@ export function LoginPage() {
         setOauthProcessing(false);
         setError(err instanceof Error ? err.message : "Google login gagal");
       });
-  }, [setUser, queryClient, navigate]);
+  }, [setUser, queryClient, navigate, location.search]);
+
+  // Backup: when app returns from background (e.g. after Google OAuth browser)
+  // re-check URL params — the deep-link event may have been missed.
+  useEffect(() => {
+    if (!isTauri()) return;
+    if (getUrlParam("token") || oauthTokenConsumed.current) return;
+
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      const token = getUrlParam("token");
+      if (token && !oauthTokenConsumed.current) {
+        setOauthProcessing(true);
+      }
+    };
+
+    const onFocus = () => {
+      const token = getUrlParam("token");
+      if (token && !oauthTokenConsumed.current) {
+        setOauthProcessing(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
 
   // Show OAuth error from query param
   const oauthError = getUrlParam("error");
@@ -47,6 +79,13 @@ export function LoginPage() {
     queryKey: ["auth", "me"],
     queryFn: () => apiClient.getMe(),
   });
+
+  // Already authenticated — redirect to dashboard
+  useEffect(() => {
+    if (!meQuery.isLoading && meQuery.data?.user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [meQuery.data, meQuery.isLoading, navigate]);
 
   const mutation = useMutation({
     mutationFn: apiClient.login,

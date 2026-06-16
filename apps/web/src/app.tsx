@@ -3,6 +3,8 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
+  Outlet,
+  useNavigate,
 } from "react-router-dom";
 import { AuthInitializer } from "@/components/auth-initializer";
 import { AuthGuard } from "@/components/auth-guard";
@@ -18,10 +20,10 @@ import { TelemetryPage } from "@/pages/telemetry-page";
 import { LoginPage } from "@/pages/login-page";
 import { RegisterPage } from "@/pages/register-page";
 import { MainLayout } from "@/components/layout/main-layout";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { apiClient } from "@/lib/api-client";
-import { setupDeepLinkHandler } from "@/lib/tauri";
+import { setupDeepLinkHandler, consumeDeepLinkTarget } from "@/lib/tauri";
 
 function LogoutProses() {
   const setUser = useAuthStore((state) => state.setUser);
@@ -32,7 +34,7 @@ function LogoutProses() {
 
     }).catch((error) => {
       console.error("Oops, gagal logout dari server:", error);
-      setUser(null); 
+      setUser(null);
     });
   }, [setUser]);
 
@@ -43,104 +45,137 @@ import { trackPageView, trackError } from "./lib/telemetry";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
-  { path: "/", element: <Navigate to="/login" replace /> },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/register", element: <RegisterPage /> },
   {
-    path: "/dashboard",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <DashboardPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/scan",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <ScanPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/library",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <LibraryPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/diagnoses",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <DiagnosesPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/diagnoses/:id",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <DiagnosisDetailPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/expert/reviews",
-    element: (
-      <AuthGuard requireExpert={true}>
-        <MainLayout>
-          <ExpertReviewsPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/catalog",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <CatalogPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/catalog/:slug",
-    element: (
-      <AuthGuard>
-        <MainLayout>
-          <DiseaseDetailPage />
-        </MainLayout>
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/logout",
-    element: (
-      <LogoutProses />
-    ),
-  },
-  {
-    path: "/telemetry",
-    element: (
-      <MainLayout>
-        <TelemetryPage />
-      </MainLayout>
-    ),
+    element: <DeepLinkRouterHandler />,
+    children: [
+      { path: "/", element: <Navigate to="/login" replace /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+      {
+        path: "/dashboard",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <DashboardPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/scan",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <ScanPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/library",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <LibraryPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/diagnoses",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <DiagnosesPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/diagnoses/:id",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <DiagnosisDetailPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/expert/reviews",
+        element: (
+          <AuthGuard requireExpert={true}>
+            <MainLayout>
+              <ExpertReviewsPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/catalog",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <CatalogPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/catalog/:slug",
+        element: (
+          <AuthGuard>
+            <MainLayout>
+              <DiseaseDetailPage />
+            </MainLayout>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/logout",
+        element: <LogoutProses />,
+      },
+      {
+        path: "/telemetry",
+        element: (
+          <MainLayout>
+            <TelemetryPage />
+          </MainLayout>
+        ),
+      },
+    ],
   },
 ]);
+
+/**
+ * Listens for deep-link custom events and routes via React Router's navigate(),
+ * avoiding full page reloads that break the Tauri IPC bridge.
+ */
+function DeepLinkRouterHandler() {
+  const navigate = useNavigate();
+  const handled = useRef(new Set<string>());
+
+  useEffect(() => {
+    // Check for cold-start pending deep link
+    const pending = consumeDeepLinkTarget();
+    if (pending && !handled.current.has(pending)) {
+      handled.current.add(pending);
+      navigate(pending, { replace: true });
+    }
+
+    // Listen for warm-start deep links
+    const handler = (e: CustomEvent<string>) => {
+      const target = e.detail;
+      if (handled.current.has(target)) return;
+      handled.current.add(target);
+      navigate(target, { replace: true });
+    };
+    window.addEventListener('zeavis:deeplink', handler as EventListener);
+    return () => window.removeEventListener('zeavis:deeplink', handler as EventListener);
+  }, [navigate]);
+
+  return <Outlet />;
+}
 
 function PageViewTracker() {
   const location = window.location;

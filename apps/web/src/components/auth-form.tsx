@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { apiBaseUrl } from '@/lib/api-client';
 import { isTauri, openUrl } from '@/lib/tauri';
 
 type AuthFormProps = {
@@ -29,10 +30,7 @@ export function AuthForm({ mode, isSubmitting, error, googleOAuthEnabled, onSubm
   const handleGoogleLogin = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     const platform = isTauri() ? 'tauri' : 'web';
-    // Use API base URL, not window.location.origin — on Tauri Android
-    // the origin is http://tauri.localhost which is not the API server.
-    const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-    const googleUrl = `${apiBase}/api/v1/auth/google?platform=${platform}`;
+    const googleUrl = `${apiBaseUrl}/api/v1/auth/google?platform=${platform}`;
     await openUrl(googleUrl);
   }, []);
 

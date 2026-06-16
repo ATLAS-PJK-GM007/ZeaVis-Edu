@@ -1,6 +1,13 @@
 /**
  * Lightweight Tauri environment detection and utilities.
  * Uses raw __TAURI_INTERNALS__ IPC to avoid bundling/import issues on Android.
+ *
+ * Deep-link flow (no full page reloads — uses React Router navigate()):
+ *   1. Tauri deep-link plugin receives URL via intent/custom-scheme.
+ *   2. processDeepLinkUrl stores the target path in sessionStorage +
+ *      dispatches a custom DOM event.
+ *   3. <DeepLinkRouterHandler /> inside <RouterProvider> picks it up and
+ *      calls navigate(), keeping the React app alive.
  */
 
 let _isTauri: boolean | null = null;
@@ -22,7 +29,6 @@ function tauriInvoke(): (cmd: string, args?: Record<string, unknown>) => Promise
 
 export async function openUrl(url: string): Promise<void> {
   if (!isTauri()) {
-    // Not in Tauri — normal browser navigation
     window.location.href = url;
     return;
   }
@@ -31,26 +37,29 @@ export async function openUrl(url: string): Promise<void> {
     await invoke('plugin:opener|open_url', { url });
   } catch (err) {
     console.error('Tauri openUrl failed, trying fallback:', err);
-    // Fallback: navigate the WebView (Google will block, but best effort)
     window.location.href = url;
   }
 }
 
-function processDeepLinkUrl(url: string): void {
-  try {
-    const u = new URL(url);
-    const target = u.pathname + u.search + u.hash;
-    if (target && target !== '/') {
-      window.location.href = target;
-      return;
-    }
-  } catch { /* fall through */ }
+// ── Deep link handling (no full reload) ─────────────────────────────────
 
-  // Fallback: handle both :// and :/ custom schemes
-  let match = url.match(/^[^:]+:\/\/(?:[^/]+)?(\/.*)?$/);
-  if (!match) match = url.match(/^[^:]+:\/(\/.*)?$/);
-  if (match?.[1]) window.location.href = match[1];
+const DEEP_LINK_KEY = 'zeavis_pending_deeplink';
+const DEEP_LINK_EVENT = 'zeavis:deeplink';
+
+/** Store a target path for the React Router to pick up without page reload. */
+function storeDeepLinkTarget(target: string): void {
+  try { sessionStorage.setItem(DEEP_LINK_KEY, target); } catch { /* ignore */ }
 }
+
+/** Read and clear the stored deep link target. */
+export function consumeDeepLinkTarget(): string | null {
+  try {
+    const v = sessionStorage.getItem(DEEP_LINK_KEY);
+    if (v) sessionStorage.removeItem(DEEP_LINK_KEY);
+    return v;
+  } catch { return null; }
+}
+
 
 export async function setupDeepLinkHandler(): Promise<void> {
   if (!isTauri()) return;
@@ -58,20 +67,46 @@ export async function setupDeepLinkHandler(): Promise<void> {
   try {
     const invoke = tauriInvoke();
 
-    // Cold-start: app just opened via intent:// or custom scheme
+    // Cold-start: app opened via intent:// (e.g. from Google OAuth callback).
+    // Use window.location.href for this (full page reload) — at cold start there
+    // is no SPA state to lose, so redirecting via location.href avoids orphaned
+    // IPC promises that cause "Cannot read properties of undefined (reading 'runCallback')".
     invoke('plugin:deep-link|get_current')
       .then((urls: any) => {
-        if (urls?.[0]) processDeepLinkUrl(urls[0]);
+        if (!urls?.[0]) return;
+        const target = extractDeepLinkTarget(urls[0]);
+        if (target && target !== window.location.pathname + window.location.search + window.location.hash) {
+          window.location.href = target;
+        }
       })
-      .catch(() => { /* plugin may not be registered yet */ });
+      .catch(() => {});
 
-    // Warm-start: listen for new URLs while app is running
+    // Warm-start: listen for new URLs (already running app).
+    // Use React Router navigate() here since we have SPA state.
     const { listen } = await import('@tauri-apps/api/event');
     listen('deep-link://new-url', (event: any) => {
       const urls = event.payload as string[];
-      for (const url of urls) processDeepLinkUrl(url);
+      for (const url of urls) {
+        const target = extractDeepLinkTarget(url);
+        if (target) {
+          storeDeepLinkTarget(target);
+          window.dispatchEvent(new CustomEvent(DEEP_LINK_EVENT, { detail: target }));
+        }
+      }
     });
   } catch (err) {
     console.error('Tauri deep-link setup failed:', err);
+  }
+}
+
+/** Extract path+query+hash from a deep-link URL. */
+function extractDeepLinkTarget(url: string): string {
+  try {
+    const u = new URL(url);
+    return u.pathname + u.search + u.hash;
+  } catch {
+    let m = url.match(/^[^:]+:\/\/(?:[^/]+)?(\/.*)?$/);
+    if (!m) m = url.match(/^[^:]+:\/(\/.*)?$/);
+    return m?.[1] ?? '';
   }
 }

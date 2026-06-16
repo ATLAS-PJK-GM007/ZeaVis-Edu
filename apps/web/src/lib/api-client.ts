@@ -14,7 +14,7 @@ import type {
 } from '@zeavis/shared';
 import { recordApiCall } from './telemetry';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'https://zeavisedu.asepharyana.my.id';
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'https://zeavisedu.asepharyana.my.id';
 
 const AUTH_TOKEN_KEY = 'zeavis_auth_token';
 
