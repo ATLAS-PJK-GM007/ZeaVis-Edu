@@ -119,8 +119,8 @@ export function ScanPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Upload Area */}
         <div className="lg:col-span-2 space-y-4">
-          <Card className="w-full lg:h-117 py-3">
-            <CardContent className="px-6 py-4 h-full flex flex-col">
+          <Card className="w-full h-fit py-3">
+            <CardContent className="px-6 py-4 flex flex-col">
               <div className="text-black flex items-center gap-2 mb-3 text-lg font-semibold">
                 <Camera className="text-green-500" size={25} />
                 Area Unggah Gambar
