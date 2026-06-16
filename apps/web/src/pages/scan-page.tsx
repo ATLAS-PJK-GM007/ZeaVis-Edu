@@ -33,6 +33,7 @@ export function ScanPage() {
   const imageRef = useRef<HTMLImageElement | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [isDragging, setIsDragging] = useState(false);
 
   // Camera mode state
   const [useCamera, setUseCamera] = useState(false);
@@ -164,8 +165,25 @@ export function ScanPage() {
                   ) : (
                     <>
                       <div
-                        className="w-full border-2 border-dashed border-green-300 rounded-md p-10 h-60 text-center cursor-pointer"
+                        className={`w-full border-2 border-dashed rounded-md p-10 h-60 text-center cursor-pointer transition-colors duration-200 ${
+                          isDragging
+                            ? "border-blue-500 bg-blue-100"
+                            : "border-green-300"
+                        }`}
                         onClick={() => inputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragging(true);
+                        }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragging(false);
+                          const droppedFile = e.dataTransfer.files?.[0];
+                          if (droppedFile) {
+                            handleFile(droppedFile);
+                          }
+                        }}
                       >
                         <Upload
                           className="mx-auto text-green-500 mb-3"
