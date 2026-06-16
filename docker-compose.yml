@@ -31,6 +31,8 @@ services:
     networks:
       - app-shared-net
       - telemetry-net
+    ports:
+      - "${TS_IP:-0.0.0.0}:3000:3000"
     env_file:
       - .env
     environment:
@@ -51,6 +53,8 @@ services:
     image: prom/node-exporter:v1.8.2
     container_name: zeavis-node-exporter
     restart: unless-stopped
+    ports:
+      - "${TS_IP:-0.0.0.0}:9100:9100"
     command:
       - "--path.rootfs=/host"
       - "--web.listen-address=:9100"
@@ -68,6 +72,8 @@ services:
     networks:
       - app-shared-net
       - telemetry-net
+    ports:
+      - "${TS_IP:-0.0.0.0}:8000:8000"
     env_file:
       - .env
     environment:
