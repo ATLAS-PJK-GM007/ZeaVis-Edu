@@ -66,7 +66,10 @@ ZeaVis Edu menggunakan **Computer Vision** sebagai asisten edukasi interaktif:
 |---|---|
 | Arsitektur Model | **EfficientNetV2B0** — keseimbangan optimal antara akurasi dan efisiensi parameter |
 | Metode Pelatihan | **Transfer Learning** pada Google Colab (GPU T4) |
-| Sumber Dataset | Kaggle — [Corn Leaf Disease](https://www.kaggle.com/datasets/ndisan/corn-leaf-disease) |
+| Sumber Dataset 1 | Kaggle — [Corn Leaf Disease](https://www.kaggle.com/datasets/ndisan/corn-leaf-disease) |
+| Sumber Dataset 2 | Kaggle — [Corn or Maize Leaf Disease Dataset](https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset) |
+| Sumber Dataset 3 | scidb — [Dataset of Corn Leaf Diseases based on Manual Annotation and Contrast Generation Model](https://www.scidb.cn/en/detail?dataSetId=19536c73f6d74946a212719a94f53ab3) |
+
 | Deployment | VPS dengan Docker, ONNX Runtime untuk inferensi real-time |
 
 ---
