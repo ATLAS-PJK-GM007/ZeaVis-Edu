@@ -10,10 +10,10 @@ import onnxruntime as ort
 import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
 
-
+# Definisi label kelas sesuai urutan output model klasifikasi
 LABELS = ["Bercak Daun", "Daun Sehat", "Karat Daun", "Hawar Daun"]
 
-
+# Kelas eksepsi kustom untuk menangani ketidaksesuaian akurasi prediksi
 class ParityError(RuntimeError):
     """Raised when Keras and ONNX predictions do not match."""
     pass
@@ -33,16 +33,19 @@ def preprocess_image(image_path, input_size):
     Raises:
         ParityError: If image cannot be loaded or processed.
     """
+    # Penanganan error secara aman saat memuat gambar ke format RGB
     try:
         img = Image.open(image_path).convert("RGB")
     except (FileNotFoundError, UnidentifiedImageError, OSError) as e:
         raise ParityError(f"Failed to load image {image_path}: {e}")
 
+    # Penyesuaian resolusi gambar menggunakan metode interpolasi Bilinear
     try:
         img = img.resize((input_size, input_size), Image.Resampling.BILINEAR)
     except Exception as e:
         raise ParityError(f"Failed to resize image {image_path}: {e}")
 
+    # Konversi ke matriks float32 dan penambahan dimensi batch (1, H, W, C)
     img_array = np.array(img, dtype=np.float32)
     img_batch = np.expand_dims(img_array, axis=0)
 
@@ -60,6 +63,7 @@ def predict_keras(model, image_batch):
     Returns:
         Predictions array (1, num_classes).
     """
+    # Eksekusi inferensi pada model TensorFlow/Keras tanpa log proses
     predictions = model.predict(image_batch, verbose=0)
     return predictions
 
@@ -75,6 +79,7 @@ def predict_onnx(session, image_batch):
     Returns:
         Predictions array (1, num_classes).
     """
+    # Eksekusi inferensi secara dinamis pada model ONNX menggunakan sesi runtime
     input_name = session.get_inputs()[0].name
     predictions = session.run(None, {input_name: image_batch})
     return predictions[0]
@@ -94,14 +99,18 @@ def validate_image(image_path, keras_model, onnx_session, input_size, atol):
     Raises:
         ParityError: If predictions do not match or image cannot be processed.
     """
+    # Menyiapkan tensor gambar untuk pengujian
     img_batch = preprocess_image(image_path, input_size)
 
+    # Mengekstrak matriks probabilitas dari kedua format model
     keras_pred = predict_keras(keras_model, img_batch)
     onnx_pred = predict_onnx(onnx_session, img_batch)
 
+    # Mendapatkan indeks kelas dengan probabilitas tertinggi (Top-1)
     keras_label_idx = np.argmax(keras_pred[0])
     onnx_label_idx = np.argmax(onnx_pred[0])
 
+    # Validasi keselarasan keputusan klasifikasi utama
     if keras_label_idx != onnx_label_idx:
         keras_label = LABELS[keras_label_idx]
         onnx_label = LABELS[onnx_label_idx]
@@ -110,6 +119,7 @@ def validate_image(image_path, keras_model, onnx_session, input_size, atol):
             f"Keras={keras_label}, ONNX={onnx_label}"
         )
 
+    # Validasi selisih nilai desimal probabilitas menggunakan toleransi absolut
     if not np.allclose(keras_pred, onnx_pred, atol=atol):
         max_diff = np.max(np.abs(keras_pred - onnx_pred))
         raise ParityError(
@@ -117,6 +127,7 @@ def validate_image(image_path, keras_model, onnx_session, input_size, atol):
             f"max difference={max_diff:.6e} (atol={atol})"
         )
 
+    # Pencatatan log sistem jika kedua model presisi 100%
     label = LABELS[keras_label_idx]
     logging.info(f"PASS: {image_path} -> {label}")
 
@@ -125,6 +136,7 @@ def main():
     """Validate parity between Keras and ONNX models."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+    # Inisialisasi parser argumen untuk antarmuka CLI (Command Line Interface)
     parser = argparse.ArgumentParser(
         description="Validate parity between Keras and ONNX models"
     )
@@ -161,6 +173,7 @@ def main():
 
     args = parser.parse_args()
 
+    # Pengecekan eksistensi berkas model sebelum memuat memori
     if not args.keras_model.exists():
         msg = f"Keras model not found at {args.keras_model}"
         logging.error(msg)
@@ -171,15 +184,18 @@ def main():
         logging.error(msg)
         raise FileNotFoundError(msg)
 
+    # Memuat model Keras (tanpa kompilasi agar lebih hemat beban komputasi)
     logging.info(f"Loading Keras model from {args.keras_model}...")
     keras_model = tf.keras.models.load_model(args.keras_model, compile=False)
 
+    # Memuat sesi ONNX dengan penyedia eksekusi CPU murni
     logging.info(f"Loading ONNX model from {args.onnx_model}...")
     onnx_session = ort.InferenceSession(
         str(args.onnx_model),
         providers=["CPUExecutionProvider"],
     )
 
+    # Iterasi pengujian paritas (kesetaraan performa) untuk setiap gambar
     logging.info(f"Validating {len(args.images)} image(s)...")
     for image_path in args.images:
         try:
