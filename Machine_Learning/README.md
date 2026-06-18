@@ -92,7 +92,7 @@ Proyek ini menggabungkan **3 dataset** dari sumber berbeda untuk menghasilkan da
 ### Dataset 1 — Kaggle (Corn Leaf Disease - Indonesia)
 > 🔗 https://www.kaggle.com/datasets/ndisan/corn-leaf-disease
 
-Berisi gambar penyakit daun jagung dengan label dalam Bahasa Indonesia. Dataset ini memiliki **4 folder**, namun label **"Karat Daun" tidak digunakan** karena gambar di dalamnya tidak merepresentasikan penyakit karat yang sebenarnya.
+Dataset ini berisi 4.000 citra RGB daun jagung yang terbagi ke dalam empat kelas, yaitu daun sehat, hawar daun, bercak daun, dan karat daun. Data dikumpulkan dari lahan jagung di Kabupaten Sampang menggunakan kamera ponsel 16 MP dengan teknik pengambilan gambar yang terkontrol untuk mendukung proses klasifikasi. Pelabelan dan validasi data dilakukan oleh pihak Dinas Pertanian dan POPT Kabupaten Sampang guna menjamin kualitas serta keakuratan dataset.
 
 | Folder di Dataset 1 | Tindakan |
 |---|---|
@@ -104,6 +104,7 @@ Berisi gambar penyakit daun jagung dengan label dalam Bahasa Indonesia. Dataset 
 ### Dataset 2 — Kaggle (Corn or Maize Leaf Disease)
 > 🔗 https://www.kaggle.com/datasets/smaranjitghose/corn-or-maize-leaf-disease-dataset
 
+Dataset Corn or Maize Leaf Disease Dataset berisi 4.188 citra RGB daun jagung yang terbagi ke dalam empat kelas, yaitu Common Rust, Gray Leaf Spot, Blight, dan Healthy. Dataset ini merupakan hasil penggabungan PlantVillage dan PlantDoc, sehingga cocok digunakan untuk penelitian klasifikasi penyakit daun jagung menggunakan metode Machine Learning maupun Deep Learning.
 Digunakan untuk **menggantikan** data Karat Daun dari Dataset 1 dan menambah variasi gambar Daun Sehat.
 
 | Folder di Dataset 2 | Dipetakan ke Label |
@@ -116,7 +117,7 @@ Digunakan untuk **menggantikan** data Karat Daun dari Dataset 1 dan menambah var
 ### Dataset 3 — SciDB (China Agricultural Dataset)
 > 🔗 https://www.scidb.cn/en/detail?dataSetId=19536c73f6d74946a212719a94f53ab3
 
-Dataset dengan label berbahasa Mandarin. Digunakan untuk **menambah variasi data** pada tiga kelas utama. Pemetaan label dilakukan menggunakan file `desc.json` yang disertakan dalam dataset.
+Dataset dengan label berbahasa Mandarin. Digunakan untuk **menambah variasi data** pada tiga kelas utama. Pemetaan label dilakukan menggunakan file `desc.json` yang disertakan dalam dataset. Dataset ini terdiri dari 1.653 pasangan data gambar dan deskripsi teks penyakit daun tanaman. Data gambar dikumpulkan dari berbagai sumber terbuka dan sumber internal, mencakup sembilan jenis penyakit daun. Sementara itu, data teks dibuat melalui anotasi manual berdasarkan literatur dan sumber ilmiah, yang memuat informasi mengenai jenis penyakit, ciri patologis, serta tingkat keparahannya.
 
 | Label Mandarin | Dipetakan ke Label |
 |---|---|
